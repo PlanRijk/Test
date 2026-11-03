@@ -156,7 +156,7 @@ def activate(ref,origin,email):
     if not rows:sql(ref,'select vault.create_secret('+literal(cron)+",'paperlab_cron_token');")
     request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_CRON_TOKEN','value':cron}])
     base='https://'+ref+'.supabase.co/functions/v1/'
-    for job,schedule,slug in [('paperlab-tick','*/5 * * * *','paper-tick'),('paperlab-research','30 22 * * 1-5','paper-research')]:
+    for job,schedule,slug in [('paperlab-tick','*/5 7-20 * * 1-5','paper-tick'),('paperlab-research','30 22 * * 1-5','paper-research')]:
         command="select net.http_post(url := "+literal(base+slug)+", headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and (state->>'run_until')::timestamptz>now()"+(" and (state->>'running')::boolean" if slug=='paper-tick' else '')+");"
         sql(ref,'select cron.schedule('+literal(job)+','+literal(schedule)+','+literal(command)+');')
     private_json('activation-status.json',{'owner_id':owner,'origin':origin,'activation_file':str(ROOT/'.data/managed/PRIVE-ACTIVATIE.html'),'jobs_installed':True,'email_sent':False})

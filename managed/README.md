@@ -52,8 +52,10 @@ privéactivatielink wordt niet gemaild of publiek gepubliceerd.
 - De bronnenroutine controleert bereikbaarheid; zij vervangt het eerdere
   historische onderzoek of een volledige nieuws-/bedrijfsanalyse niet.
 - Geen brokerverbinding, IBKR Gateway, zelflerend model of echte transacties.
-- De bestaande proef stopt op 6 november 2026 om 21:00 UTC / 22:00 Brussel.
-  De einddatum wordt niet stilzwijgend verlengd.
+- Op verzoek is de bestaande einddatum met dertig dagen verlengd tot 6 december
+  2026 om 21:00 UTC / 22:00 Brussel. Verdere verlenging gebeurt alleen op verzoek.
+- Zie [FREE-PLAN.md](FREE-PLAN.md) voor de gecontroleerde quota, verbruiksraming,
+  automatische pauzes en beperkingen van de Render-kostenbewaking.
 
 ## Validatie
 
@@ -62,6 +64,7 @@ Vanuit de bestaande checkout:
 ```sh
 node managed/tests/engine.test.mjs
 node managed/tests/security.test.mjs
+node managed/tests/usage.test.mjs
 node managed/check-public.mjs
 ```
 

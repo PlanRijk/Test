@@ -27,7 +27,9 @@ def status():
       (select max(start_time) from cron.job_run_details d where d.jobid=j.jobid) as latest_run,
       (select d.status from cron.job_run_details d where d.jobid=j.jobid order by start_time desc limit 1) as latest_run_status
       from cron.job j where j.jobname in ('paperlab-tick','paperlab-research') order by j.jobname""",True)
+    budget=sql(REF,"select * from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date",True)
     return {'site':'https://paperlab-prive.onrender.com','portfolio':portfolio,'jobs':jobs,
+            'automatic_processing_budget':budget,
             'real_broker_connected':False,'source_age_limit_seconds':120,
             'freshness_note':'Fresh count describes the last check, not the current age of those quotes.'}
 

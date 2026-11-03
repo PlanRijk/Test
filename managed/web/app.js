@@ -1,5 +1,6 @@
 import {CONFIG} from './config.js';
 import {COMPANIES,BY_SYMBOL} from './catalogue.js';
+import {freeBudgetAlert} from './usage.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -82,6 +83,9 @@ function render(){
  $('#tradeRows').innerHTML=(data.trades||[]).map(t=>`<tr><td>${esc(when(t.time))}</td><td><strong>${esc(t.symbol)}</strong><small>${esc(BY_SYMBOL[t.symbol]?.name||'')}</small></td><td><span class="${t.side==='koop'?'buy':'sell'}">${t.side==='koop'?'Aankoop':'Verkoop'}</span></td><td>${esc(num.format(t.price))} ${esc(t.currency||'USD')}</td><td class="${t.pnl<0?'negative':t.pnl>0?'positive':''}">${t.side==='verkoop'?esc(euros(t.pnl)):'—'}</td><td><button class="secondary" data-receipt="${t.id}">Bewijs</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">Nog geen transacties.</td></tr>';
  document.querySelectorAll('[data-receipt]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.receipt)));
  const research=data.research;$('#researchStatus').textContent=research?`Laatste controle: ${when(research.checked_at)}. ${research.ok_sources??0} bronnen gecontroleerd. ${research.note||''}`:'De bronnenroutine heeft op deze installatie nog geen rapport opgeslagen. Onderzoek past de handelsregels niet automatisch aan.';
+ const usage=data.free_usage,budget=usage?.automatic_budget;
+ const warning=freeBudgetAlert(usage);$('#usageWarning').textContent=warning;$('#usageWarning').hidden=!warning;
+ $('#freeUsage').textContent=usage?`Database: ${num.format(usage.database_bytes/1e6)} MB. Automatische pauze vanaf ${num.format((budget?.max_database_bytes||300000000)/1e6)} MB. ${budget?.tick_attempts||0} koersrondes deze maand; maandbudget ${budget?.max_tick_attempts||10000}. Geraamd automatisch dataverkeer: ${num.format((budget?.estimated_worker_egress_bytes||0)/1e9)} / ${num.format((budget?.max_worker_egress_bytes||3000000000)/1e9)} GB.`:'Verbruiksbeveiliging wordt voorbereid.';
  renderCatalogue();
 }
 function renderCatalogue(){

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {fill,tick,equity,profitTarget,sale,possibleSession,validQuote} from '../functions/_shared/engine.js';
+import {fill,tick,equity,profitTarget,sale,possibleSession,validQuote,HISTORY_LIMIT} from '../functions/_shared/engine.js';
 import {parseEcb,parseYahoo,fetchMarket} from '../functions/_shared/market.js';
 import {BY_SYMBOL,COMPANIES} from '../functions/_shared/catalogue.js';
 const fixture=JSON.parse(fs.readFileSync(new URL('./python-fixtures.json',import.meta.url))),NOW=Date.parse('2026-11-03T15:00:00Z');
@@ -64,6 +64,14 @@ test('missing held fresh quote blocks additional buys; immutable input',()=>{
 test('pause and hard trial deadline prevent fresh orders',()=>{
  const s=state('KBC.BR');s.running=false;assert.equal(tick(s,{},NOW).state.tick,s.tick);
  s.running=true;s.run_until=new Date(NOW-1).toISOString();const out=tick(s,{},NOW);assert.equal(out.state.running,false);assert.equal(out.trades.length,0);
+});
+test('rolling history remains bounded without losing the six signal samples',()=>{
+ const s=state('AAPL');
+ const samples=Array.from({length:40},(_,i)=>({time:new Date(NOW-(40-i)*300000).toISOString(),price:100,quote_time:new Date(NOW-(40-i)*300000).toISOString()}));
+ s.history.AAPL=clone(samples);s.history.MSFT=clone(samples);
+ const original=JSON.stringify(s),q=fixture.cases.find(x=>x.symbol==='AAPL').buy_quote;
+ const out=tick(s,{quotes:{AAPL:q},expected_open:['AAPL'],closed_symbols:['MSFT'],fx:{usd_per_eur:1.1,date:'2026-11-03'}},NOW);
+ assert.equal(HISTORY_LIMIT,12);assert.equal(out.state.history.AAPL.length,12);assert.deepEqual(out.state.history.AAPL.slice(-6,-1),samples.slice(-5));assert.equal(out.state.history.MSFT.length,12);assert.equal(JSON.stringify(s),original);
 });
 test('day loss / peak loss latch and block fresh buys',()=>{
  const s=state('KBC.BR');s.risk.day='2026-11-03';s.risk.day_start_equity=520;s.peak=530;

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from datetime import datetime,timedelta,timezone
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from scripts.deploy_managed import source_export,import_sql
 
@@ -29,7 +30,10 @@ def main():
     query("do $$begin create role anon;exception when duplicate_object then null;end$$;do $$begin create role authenticated;exception when duplicate_object then null;end$$;do $$begin create role service_role;exception when duplicate_object then null;end$$;")
     schema=(ROOT/'managed/sql/001_paperlab.sql').read_text()
     query(schema)
-    state,records,manifest=source_export();source=import_sql(state,records);query(source)
+    state,records,manifest=source_export()
+    # Isolated fixture only: SQL lease checks must not expire with the real trial.
+    state['run_until']=(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()
+    source=import_sql(state,records);query(source)
     before=query("select count(*),(select state->>'cash' from paperlab.portfolio) from paperlab.trades;")
     query(schema);query(source)
     assert query("select count(*),(select state->>'cash' from paperlab.portfolio) from paperlab.trades;")==before
@@ -68,6 +72,24 @@ def main():
         if public.paper_session('11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333',false) then raise exception 'Revoked session accepted';end if;
         end$$;rollback;"""
     }
+    for name,change in [('free_attempt_budget','tick_attempts=10000'),('free_transfer_budget','estimated_worker_egress_bytes=3000000000'),('free_storage_budget','max_database_bytes=1')]:
+        tests[name]="""begin;
+          update paperlab.portfolio set state=jsonb_set(state,'{running}','true'),last_attempt=null,lease=null,lease_until=null;
+          insert into paperlab.free_usage(month) values(date_trunc('month',now() at time zone 'UTC')::date) on conflict do nothing;
+          update paperlab.free_usage set %s where month=date_trunc('month',now() at time zone 'UTC')::date;
+          do $$begin
+          if public.paper_claim_tick(false) is not null then raise exception 'Budget bypass';end if;
+          if (select (state->>'running')::boolean from paperlab.portfolio) then raise exception 'Budget did not pause';end if;
+          if (select last_tick_status from paperlab.portfolio)<>'free_budget_paused' then raise exception 'No budget status';end if;
+          end$$;rollback;"""%change
+    tests['fresh_month_counts_budget']= """begin;
+      update paperlab.portfolio set state=jsonb_set(state,'{running}','true'),last_attempt=null,lease=null,lease_until=null;
+      delete from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date;
+      do $$declare l jsonb;begin
+      l:=public.paper_claim_tick(false);if l is null then raise exception 'Fresh budget rejected';end if;
+      if (select tick_attempts from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date)<>1 then raise exception 'Attempt not counted';end if;
+      if (select estimated_worker_egress_bytes from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date)<=0 then raise exception 'Transfer not counted';end if;
+      end$$;rollback;"""
     for name,sql in tests.items():query(sql);checks.append(name)
     assert query("select count(*),(select state->>'cash' from paperlab.portfolio) from paperlab.trades;")==before
     print(json.dumps({'result':'passed','database':'isolated PostgreSQL17, no network','checks':checks,

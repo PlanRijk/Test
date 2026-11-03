@@ -1,6 +1,8 @@
 // Deterministic paper engine. No broker endpoints or AI calls.
 import { COMPANIES, BY_SYMBOL } from './catalogue.js';
 export const VERSION = 'global-paper-v1';
+// Six samples drive the strategy; twelve retain an hour of decision context.
+export const HISTORY_LIMIT = 12;
 const formatters = new Map();
 export const iso = ms => new Date(ms).toISOString();
 export function localParts(time, zone) {
@@ -125,6 +127,7 @@ export function tick(input,batch,time=Date.now()) {
   const s=structuredClone(input),out={state:s,trades:[],events:[],observations:[],equity:null};
   if(!s.running)return out;
   if(!s.run_until||time>=Date.parse(s.run_until)){s.running=false;s.error='Proefeindtijd bereikt.';return out;}
+  for(const k of Object.keys(s.history))s.history[k]=s.history[k].slice(-HISTORY_LIMIT);
   const before=equity(s);s.multi_market.expected_open=batch.expected_open||[];s.multi_market.closed_symbols=batch.closed_symbols||[];
   const quotes={};for(const[k,q]of Object.entries(batch.quotes||{}))if(validQuote(k,q,time))quotes[k]=q;
   s.multi_market.entry_symbols=Object.keys(quotes);
@@ -136,7 +139,7 @@ export function tick(input,batch,time=Date.now()) {
   s.error=Object.keys(batch.errors||{}).length?'Onvolledige actuele koersdekking; alleen verse kandidaten en uitvoeringen.':null;s.tick++;s.last_update=iso(time);
   for(const[k,q]of Object.entries(quotes)){
     s.prices[k]=(q.bid+q.ask)/2;s.price_fx[k]=q.fx_per_eur;s.last_observation[k]={time:q.time,delay_seconds:(time-Date.parse(q.time))/1000,indicative:true};
-    const h=s.history[k]||(s.history[k]=[]);if(!h.length||Math.floor(Date.parse(h.at(-1).time)/300000)<Math.floor(time/300000)){h.push({time:iso(time),price:s.prices[k],quote_time:q.time});s.history[k]=h.slice(-200);}
+    const h=s.history[k]||(s.history[k]=[]);if(!h.length||Math.floor(Date.parse(h.at(-1).time)/300000)<Math.floor(time/300000)){h.push({time:iso(time),price:s.prices[k],quote_time:q.time});s.history[k]=h.slice(-HISTORY_LIMIT);}
     out.observations.push({received:iso(time),symbol:k,source:'yahoo',quote_time:q.time,payload:q,fx:batch.fx});
   }
   let guard=assess(s,time,quotes,before);const remaining=[];
