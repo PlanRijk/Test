@@ -1,0 +1,27 @@
+# Only a free static site. No paid compute, disks, database or cron services.
+services:
+  - type: web
+    name: paperlab-prive
+    runtime: static
+    buildCommand: node managed/check-public.mjs
+    staticPublishPath: ./managed/web
+    autoDeployTrigger: "off"
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://kdyzlbknygeqinqduuic.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      - path: /*
+        name: Cache-Control
+        value: no-store
+      - path: /*
+        name: Permissions-Policy
+        value: "camera=(), microphone=(), geolocation=()"

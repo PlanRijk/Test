@@ -149,7 +149,9 @@ def activate(ref,origin,email):
     else:owner=account['id']
     sql(ref,"do $$begin if exists(select 1 from paperlab.settings where owner_id is not null and owner_id<>"+literal(owner)+"::uuid) then raise exception 'Owner mismatch';end if;end$$; update paperlab.settings set owner_id="+literal(owner)+"::uuid,origin="+literal(origin)+" where singleton;")
     sql(ref,'create extension if not exists pg_cron; create extension if not exists pg_net with schema extensions;')
-    rows=sql(ref,"select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token'",True)
+    # The read-only API uses a restricted DB role without Vault decryption rights.
+    # Read through the admin endpoint; never log the returned secret.
+    rows=sql(ref,"select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token'")
     cron=rows[0]['decrypted_secret'] if rows else secrets.token_hex(32)
     if not rows:sql(ref,'select vault.create_secret('+literal(cron)+",'paperlab_cron_token');")
     request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_CRON_TOKEN','value':cron}])
