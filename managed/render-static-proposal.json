@@ -1,0 +1,13 @@
+{
+  "type": "static_site",
+  "name": "paperlab-prive",
+  "ownerId": "REQUIRES_RENDER_WORKSPACE_ID",
+  "repo": "https://github.com/PlanRijk/Test",
+  "branch": "paperlab-managed",
+  "autoDeployTrigger": "off",
+  "serviceDetails": {
+    "buildCommand": "node managed/check-public.mjs",
+    "publishPath": "managed/web",
+    "pullRequestPreviewsEnabled": "no"
+  }
+}

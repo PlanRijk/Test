@@ -1,0 +1,1 @@
+{"name":"paperlab-managed","private":true,"type":"module","scripts":{"test":"node tests/engine.test.mjs && node tests/security.test.mjs"}}
