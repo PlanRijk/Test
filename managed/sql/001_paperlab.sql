@@ -1,6 +1,7 @@
 -- Private schema and narrowly exposed RPCs. Run as project administrator.
 begin;
 create schema if not exists paperlab;
+comment on schema paperlab is 'PaperLab managed-v1';
 revoke all on schema paperlab from public, anon, authenticated;
 create table if not exists paperlab.settings (
   singleton boolean primary key default true check(singleton),

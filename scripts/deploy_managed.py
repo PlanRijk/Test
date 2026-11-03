@@ -70,7 +70,9 @@ def import_sql(state,records):
 
 def database(ref):
     # Test actual SQL permission before applying any schema changes.
-    sql(ref,'select current_database() as database',True)
+    existing=sql(ref,"select obj_description(oid,'pg_namespace') as marker from pg_namespace where nspname='paperlab'",True)
+    if existing and existing[0].get('marker')!='PaperLab managed-v1':
+        raise RuntimeError('An unrelated paperlab schema already exists. No schema changed.')
     state,records,manifest=source_export()
     sql(ref,(ROOT/'managed/sql/001_paperlab.sql').read_text())
     sql(ref,import_sql(state,records))
