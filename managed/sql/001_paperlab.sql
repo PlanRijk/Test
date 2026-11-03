@@ -50,8 +50,19 @@ create table if not exists paperlab.free_usage (
   max_worker_egress_bytes bigint not null default 3000000000 check(max_worker_egress_bytes between 1 and 3000000000),
   max_database_bytes bigint not null default 300000000 check(max_database_bytes between 1 and 300000000)
 );
+create table if not exists paperlab.daily_quality (
+  day date primary key,rounds integer not null default 0 check(rounds>=0),expected integer not null default 0 check(expected>=0),
+  fresh integer not null default 0 check(fresh>=0 and fresh<=expected),failures integer not null default 0 check(failures>=0),venues jsonb not null default '{}'
+);
+create or replace function paperlab.merge_quality(a jsonb,b jsonb) returns jsonb
+language sql immutable set search_path=pg_catalog,pg_temp as $$
+ select coalesce(jsonb_object_agg(k,jsonb_build_object(
+  'expected',coalesce((a->k->>'expected')::integer,0)+coalesce((b->k->>'expected')::integer,0),
+  'fresh',coalesce((a->k->>'fresh')::integer,0)+coalesce((b->k->>'fresh')::integer,0))),'{}'::jsonb)
+ from (select jsonb_object_keys(coalesce(a,'{}')||coalesce(b,'{}')) as k) q;
+$$;
 do $$declare n text;begin
-  foreach n in array array['settings','portfolio','trades','events','equity','observations','sessions','recovery','research','free_usage'] loop
+  foreach n in array array['settings','portfolio','trades','events','equity','observations','sessions','recovery','research','free_usage','daily_quality'] loop
     execute format('alter table paperlab.%I enable row level security',n);
     execute format('revoke all on paperlab.%I from public, anon, authenticated, service_role',n);
   end loop;
@@ -181,22 +192,36 @@ begin
   if p_output->'equity' is not null and p_output->'equity'<>'null' then
     insert into paperlab.equity(time,value,benchmark) values((p_output->'equity'->>'time')::timestamptz,(p_output->'equity'->>'value')::double precision,(p_output->'equity'->>'benchmark')::double precision);
   end if;
+  if jsonb_typeof(p_output->'quality')='object' then
+    insert into paperlab.daily_quality(day,rounds,expected,fresh,venues)
+      values((p_output->'quality'->>'day')::date,1,(p_output->'quality'->>'expected')::integer,(p_output->'quality'->>'fresh')::integer,p_output->'quality'->'venues')
+      on conflict(day) do update set rounds=paperlab.daily_quality.rounds+1,
+      expected=paperlab.daily_quality.expected+excluded.expected,fresh=paperlab.daily_quality.fresh+excluded.fresh,
+      venues=paperlab.merge_quality(paperlab.daily_quality.venues,excluded.venues);
+  end if;
   update paperlab.portfolio set state=s,revision=revision+1,lease=null,lease_until=null,
     last_tick_status=case when s->>'error' is not null then 'partial_or_waiting' else 'collecting' end where singleton;
   -- Raw data is bounded; trade receipts and equity/audit histories are retained.
   if (s->>'tick')::integer%12=0 then
     delete from paperlab.observations where received<now()-interval '2 days';
     delete from paperlab.events where kind in('wacht','fout') and time<now()-interval '7 days';
+    delete from paperlab.daily_quality where day<(now() at time zone 'UTC')::date-90;
   end if;
   return true;
 end$$;
 
 create or replace function public.paper_fail_tick(p_token uuid,p_message text) returns boolean
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
+declare changed boolean;
 begin
   update paperlab.portfolio set lease=null,lease_until=null,last_tick_status='error',
     state=jsonb_set(state,'{error}',to_jsonb(left(p_message,250))),revision=revision+1 where singleton and lease=p_token;
-  return found;
+  changed:=found;
+  if changed then
+    insert into paperlab.daily_quality(day,failures) values((now() at time zone 'UTC')::date,1)
+      on conflict(day) do update set failures=paperlab.daily_quality.failures+1;
+  end if;
+  return changed;
 end$$;
 
 create or replace function public.paper_recovery(p_owner uuid,p_action text,p_hashes jsonb default '[]',p_hash text default '') returns boolean
@@ -218,10 +243,22 @@ end$$;
 create or replace function public.paper_research(p_report jsonb) returns boolean
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
 begin
+  if jsonb_typeof(p_report)<>'object' or octet_length(p_report::text)>128000 then raise exception 'Invalid report';end if;
   insert into paperlab.research(report) values(p_report);
   delete from paperlab.research where time<now()-interval '14 days';
   return true;
 end$$;
+
+create or replace function public.paper_research_input() returns jsonb
+language sql security definer set search_path=pg_catalog,pg_temp as $$
+ select jsonb_build_object(
+  'trades',(select coalesce(jsonb_agg(q order by q.id),'[]'::jsonb) from
+    (select id,time,symbol,side,fee,pnl,snapshot->>'strategy_version' as strategy_version,
+      snapshot->>'transport_version' as transport_version,snapshot->>'decision_time' as decision_time,
+      snapshot->'quote'->>'time' as quote_time,snapshot->'tax_detail' as tax_detail from paperlab.trades) q),
+  'quality',(select coalesce(jsonb_agg(q order by q.day),'[]'::jsonb) from
+    (select * from paperlab.daily_quality where day>=(now() at time zone 'UTC')::date-30) q));
+$$;
 
 do $$declare f record;begin
   for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'paper\_%' escape '\' loop

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {verifyOwner} from '../functions/_shared/platform.js';
 import {handler as apiHandler} from '../functions/paper-api/index.js';
 import {handler as tickHandler} from '../functions/paper-tick/index.js';
+import {handler as researchHandler} from '../functions/paper-research/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
 globalThis.Deno={env:{get:name=>({SUPABASE_URL:'https://testproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-test-key',PAPERLAB_CRON_TOKEN:'test-cron-secret'})[name]}};
@@ -28,4 +29,6 @@ test('foreign site rejected before authentication or state read',async()=>{mock(
 test('expired/revoked application session denied',async()=>{mock({session:false});const r=await apiHandler(req());assert.equal(r.status,401);});
 test('browser cannot choose arbitrary database commands',async()=>{mock();const r=await apiHandler(req({method:'POST',body:{action:'reset',query:'drop database'}}));assert.equal(r.status,400);});
 test('cron is not executable without the independent cron secret',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await tickHandler(new Request('https://test/functions/v1/paper-tick',{method:'POST',body:'{}'}));assert.equal(r.status,401);});
+test('manual research cannot bypass its cron-secret gate using an owner JWT',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{Authorization:'Bearer '+jwt()},body:'{"manual":true}'}));assert.equal(r.status,401);});
+test('malformed operator research request rejected before source or database access',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'bad json'}));assert.equal(r.status,400);});
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});

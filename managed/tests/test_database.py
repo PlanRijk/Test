@@ -90,7 +90,25 @@ def main():
       if (select tick_attempts from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date)<>1 then raise exception 'Attempt not counted';end if;
       if (select estimated_worker_egress_bytes from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date)<=0 then raise exception 'Transfer not counted';end if;
       end$$;rollback;"""
+    tests['daily_quality_is_atomic_and_failure_counted_once']="""begin;
+      delete from paperlab.daily_quality where day=(now() at time zone 'UTC')::date;
+      update paperlab.portfolio set state=jsonb_set(state,'{running}','true'),last_attempt=null,lease=null,lease_until=null;
+      do $$declare l jsonb;o jsonb;begin
+      l:=public.paper_claim_tick(false);
+      o:=jsonb_build_object('state',l->'state','trades','[]'::jsonb,'quality',jsonb_build_object('day',(now() at time zone 'UTC')::date,'expected',10,'fresh',7,'venues','{"XNAS":{"expected":10,"fresh":7}}'::jsonb));
+      if not public.paper_commit_tick((l->>'token')::uuid,(l->>'revision')::bigint,o) then raise exception 'Quality commit failed';end if;
+      if public.paper_commit_tick((l->>'token')::uuid,(l->>'revision')::bigint,o) then raise exception 'Duplicate quality commit';end if;
+      update paperlab.portfolio set last_attempt=null;
+      l:=public.paper_claim_tick(false);o:=jsonb_set(o,'{state}',l->'state');
+      if not public.paper_commit_tick((l->>'token')::uuid,(l->>'revision')::bigint,o) then raise exception 'Second quality commit failed';end if;
+      if (select rounds<>2 or expected<>20 or fresh<>14 or (venues->'XNAS'->>'fresh')::integer<>14 from paperlab.daily_quality where day=(now() at time zone 'UTC')::date) then raise exception 'Quality aggregation failed';end if;
+      update paperlab.portfolio set last_attempt=null;
+      l:=public.paper_claim_tick(false);perform public.paper_fail_tick((l->>'token')::uuid,'Synthetic failure');perform public.paper_fail_tick((l->>'token')::uuid,'Duplicate synthetic failure');
+      if (select failures from paperlab.daily_quality where day=(now() at time zone 'UTC')::date)<>1 then raise exception 'Failure counted incorrectly';end if;
+      end$$;rollback;"""
     for name,sql in tests.items():query(sql);checks.append(name)
+    query('set role anon;select public.paper_research_input();',True,'permission denied');checks.append('research_input_is_private')
+    query("begin;select public.paper_research(jsonb_build_object('text',repeat('x',128000)));rollback;",True,'Invalid report');checks.append('research_report_size_bounded')
     assert query("select count(*),(select state->>'cash' from paperlab.portfolio) from paperlab.trades;")==before
     print(json.dumps({'result':'passed','database':'isolated PostgreSQL17, no network','checks':checks,
                       'cash_eur':manifest['cash_eur'],'preserved_trade_actions':manifest['trades'],'real_supabase_modified':False},indent=2))

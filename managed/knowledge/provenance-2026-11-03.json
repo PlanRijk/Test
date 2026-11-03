@@ -1,0 +1,82 @@
+[
+  {
+    "name": "odean_author",
+    "url": "https://faculty.haas.berkeley.edu/odean/",
+    "final_url": "https://faculty.haas.berkeley.edu/odean/",
+    "content_type": "text/html",
+    "bytes": 16095,
+    "sha256": "23a71026616ceb6390d349b0446f5459b86b524d1ba093bdb7105c4fa8b50be9",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "author bibliography and links"
+  },
+  {
+    "name": "backtest_probability",
+    "url": "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf",
+    "final_url": "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf",
+    "content_type": "application/pdf",
+    "bytes": 1145522,
+    "sha256": "d8bfbadaaedb430d9dec929646d92f3580fdf18238f34121ae7738fa1c69a63d",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "original PDF: abstract, introduction and relevant methodology"
+  },
+  {
+    "name": "deflated_sharpe",
+    "url": "https://www.davidhbailey.com/dhbpapers/deflated-sharpe.pdf",
+    "final_url": "https://www.davidhbailey.com/dhbpapers/deflated-sharpe.pdf",
+    "content_type": "application/pdf",
+    "bytes": 1048118,
+    "sha256": "ca4a1e834a2954b84eb560776e903329cd9cef318d458aadf6d67bc8166d10b5",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "original PDF: abstract, introduction and relevant methodology"
+  },
+  {
+    "name": "sharpe_statistics",
+    "url": "https://alo.mit.edu/wp-content/uploads/2017/06/The-Statistics-of-Sharpe-Ratios.pdf",
+    "status": "http_error",
+    "http": 403,
+    "checked_date": "2026-11-03",
+    "read_scope": "not read"
+  },
+  {
+    "name": "momentum_primary",
+    "url": "https://www.aqr.com/Insights/Research/Journal-Article/Time-Series-Momentum",
+    "final_url": "https://www.aqr.com/Insights/Research/Journal-Article/Time-Series-Momentum",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 71369,
+    "sha256": "0c81f27849635edc8d115d72a6422a10942ac8d48abe223971b98f48c2a7fe2f",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "public summary, not full paper"
+  },
+  {
+    "name": "multiple_testing",
+    "url": "https://www.nber.org/papers/w20592",
+    "final_url": "https://www.nber.org/papers/w20592",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 90208,
+    "sha256": "28c5058bfb86b34ef649e9bc862f9d12db281e2747ad25b6a0aa58d908f7540b",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "public summary, not full paper"
+  },
+  {
+    "name": "index_costs",
+    "url": "https://www.investor.gov/introduction-investing/investing-basics/investment-products/mutual-funds-and-exchange-traded-funds/fees",
+    "status": "http_error",
+    "http": 404,
+    "checked_date": "2026-11-03",
+    "read_scope": "not read"
+  },
+  {
+    "name": "barber_odean",
+    "url": "https://faculty.haas.berkeley.edu/odean/Papers%20current%20versions/Individual_Investor_Performance_Final.pdf",
+    "bytes": 268001,
+    "sha256": "39e47b24fb88e76ea1781a1d14b3793fb35999cedc1aff55bb17431fa75e9a7c",
+    "status": "readable",
+    "checked_date": "2026-11-03",
+    "read_scope": "original PDF: abstract, introduction and relevant methodology"
+  }
+]

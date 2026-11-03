@@ -130,6 +130,12 @@ export function tick(input,batch,time=Date.now()) {
   for(const k of Object.keys(s.history))s.history[k]=s.history[k].slice(-HISTORY_LIMIT);
   const before=equity(s);s.multi_market.expected_open=batch.expected_open||[];s.multi_market.closed_symbols=batch.closed_symbols||[];
   const quotes={};for(const[k,q]of Object.entries(batch.quotes||{}))if(validQuote(k,q,time))quotes[k]=q;
+  const venues={};
+  for(const k of new Set(batch.expected_open||[])){
+    const venue=BY_SYMBOL[k]?.exchange;if(!venue)continue;
+    venues[venue]||={expected:0,fresh:0};venues[venue].expected++;if(quotes[k])venues[venue].fresh++;
+  }
+  out.quality={day:new Date(time).toISOString().slice(0,10),expected:Object.values(venues).reduce((n,v)=>n+v.expected,0),fresh:Object.values(venues).reduce((n,v)=>n+v.fresh,0),venues};
   s.multi_market.entry_symbols=Object.keys(quotes);
   // Also expose the current batch when no executable quotes were received.
   s.data_info={source:'Yahoo Finance',indicative:true,assumed_spread_bps:10,checked_at:iso(time),fx:batch.fx||null,quote_errors:batch.errors||{},fresh_symbols:Object.keys(quotes).length,multi_market:true,closed_symbols:s.multi_market.closed_symbols};

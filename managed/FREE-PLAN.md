@@ -21,13 +21,17 @@ in hetzelfde account. De dashboardmeters van de providers blijven leidend.
   Bronbevestiging van de eigen beurssessie blijft vereist; gesloten markten worden
   niet gebruikt. Dit tijdvak omvat de geselecteerde markten bij zomer- en wintertijd.
 - Maximaal 3.864 geplande koersrondes in een maand met 23 werkdagen, plus hoogstens
-  23 dagelijkse bronnencontroles. Eén continu open dashboard voegt hoogstens circa
+  46 bronnencontroles. Eén continu open dashboard voegt hoogstens circa
   44.640 API-aanroepen per 31 dagen toe, afgezien van handmatige bediening.
 - Twaalf koerspunten per bedrijf in de actieve status. De strategie gebruikt
   zes punten; de signaalregels blijven gelijk. Bestaande transactiebewijzen blijven
   behouden. Ruwe geaccepteerde quotes blijven twee dagen beschikbaar.
 - Routinefout- en wachtmeldingen worden na zeven dagen verwijderd; bronrapporten
   na veertien dagen. Transacties, hun bewijzen en portefeuillecurve blijven behouden.
+- Compacte dagaggregaten van koerskwaliteit blijven negentig dagen bewaard.
+  Statische bronmetadata worden wekelijks gecontroleerd; officiële feedtitels en
+  hoogstens 120 dagen vertraagde FRED-context worden begrensd opgehaald. Volledige
+  wetenschappelijke PDFs worden niet dagelijks gedownload of opgeslagen.
 - Automatische pauze bij 300 MB totale databasegrootte, 10.000 gemeten koerspogingen
   in een UTC-kalendermaand, of een app-raming van 3 GB automatisch dataverkeer.
   De raming telt per koerspoging viermaal de statusgrootte plus vaste overhead.

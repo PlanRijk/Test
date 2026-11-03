@@ -11,9 +11,11 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
   portefeuillebediening. Geen publieke registratie.
 - `functions/paper-tick`: elke vijf minuten opvraagbare handelsronde; verse
   Yahoo-prijzen, ECB-dagkoersen en vaste handelsregels. Alleen paperorders.
-- `functions/paper-research`: dagelijks buiten US-uren controle van negentien
-  geselecteerde bron-URL's en deterministische evaluatie. Geen AI-training,
-  nieuwe inhoudsanalyse of automatische parameterwijzigingen.
+- `functions/paper-research`: tweemaal per werkdag buiten US-uren een begrensde
+  controle van 24 geselecteerde bronnen, officiële nieuwstitels, vertraagde
+  FRED-context en netto-/kostenevaluatie per fase. Geen AI-training, automatische
+  artikelinterpretatie of parameterwijzigingen. Een operator kan de alleen-lezen
+  controle ook handmatig aanvragen met het serversecret.
 - `sql/001_paperlab.sql`: privétabellen, RLS, alleen voor de server toegankelijke
   RPC's, een lease en revisiecontrole tegen dubbele uitvoering en kasboekcontrole.
 
@@ -49,8 +51,10 @@ privéactivatielink wordt niet gemaild of publiek gepubliceerd.
 - Beschermende verkopen kunnen verlies maken; stops zijn geen verliesgarantie.
 - Ruwe quotes blijven twee dagen in de beheerde database. Transacties, hun
   bewijzen, portefeuillecurve en belangrijke auditgebeurtenissen blijven behouden.
-- De bronnenroutine controleert bereikbaarheid; zij vervangt het eerdere
-  historische onderzoek of een volledige nieuws-/bedrijfsanalyse niet.
+- De bronnenroutine leest beperkte officiële feeds en macroreeksen en controleert
+  statische bronmetadata. Zij vervangt het eerdere historische onderzoek of een
+  volledige nieuws-/bedrijfsanalyse niet. Zie [RESEARCH-PLAN.md](RESEARCH-PLAN.md)
+  voor de gelezen primaire bronnen, toetsbare hypothesen en ontbrekende bewijzen.
 - Geen brokerverbinding, IBKR Gateway, zelflerend model of echte transacties.
 - Op verzoek is de bestaande einddatum met dertig dagen verlengd tot 6 december
   2026 om 21:00 UTC / 22:00 Brussel. Verdere verlenging gebeurt alleen op verzoek.
@@ -65,6 +69,7 @@ Vanuit de bestaande checkout:
 node managed/tests/engine.test.mjs
 node managed/tests/security.test.mjs
 node managed/tests/usage.test.mjs
+node managed/tests/review.test.mjs
 node managed/check-public.mjs
 ```
 

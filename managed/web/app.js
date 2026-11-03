@@ -82,7 +82,22 @@ function render(){
  $('#taxSummary').textContent=`Proefaannames: ${(t.transaction_tax_rate*100).toFixed(2)}% TOB per zijde en ${(t.capital_gains_reserve_rate*100).toFixed(0)}% reserve op positieve bruto EUR-meerwaarde. Gewone winstneming vereist minstens ${euros(t.minimum_net_profit_eur)} netto. Geen bevestigde persoonlijke belastingberekening.`;
  $('#tradeRows').innerHTML=(data.trades||[]).map(t=>`<tr><td>${esc(when(t.time))}</td><td><strong>${esc(t.symbol)}</strong><small>${esc(BY_SYMBOL[t.symbol]?.name||'')}</small></td><td><span class="${t.side==='koop'?'buy':'sell'}">${t.side==='koop'?'Aankoop':'Verkoop'}</span></td><td>${esc(num.format(t.price))} ${esc(t.currency||'USD')}</td><td class="${t.pnl<0?'negative':t.pnl>0?'positive':''}">${t.side==='verkoop'?esc(euros(t.pnl)):'—'}</td><td><button class="secondary" data-receipt="${t.id}">Bewijs</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">Nog geen transacties.</td></tr>';
  document.querySelectorAll('[data-receipt]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.receipt)));
- const research=data.research;$('#researchStatus').textContent=research?`Laatste controle: ${when(research.checked_at)}. ${research.ok_sources??0} bronnen gecontroleerd. ${research.note||''}`:'De bronnenroutine heeft op deze installatie nog geen rapport opgeslagen. Onderzoek past de handelsregels niet automatisch aan.';
+ const research=data.research;
+ if(research){
+  const d=research.diagnostics,sources=research.sources||[];
+  let html=`<p>Laatste controle: ${esc(when(research.checked_at))}. ${esc(research.ok_sources??0)} bronnen beschikbaar. ${esc(research.note||'')}</p>`;
+  if(d){
+   html+=`<p><strong>Deze beheerde fase:</strong> ${esc(d.managed_actions)} handelsacties, ${esc(d.managed_closes)} gesloten posities; ${esc(euros(d.managed_realized_eur))} gerealiseerd netto. Kosten en reserves: ${esc(euros(d.managed_costs_and_reserves_eur))}.</p><p class="muted">${esc(d.sample_note)}</p>`;
+   if(d.coverage?.recorded_days)html+=`<p>Koersdekking sinds start van de kwaliteitsmeting: ${esc(num.format(d.coverage.fresh_percent??0))}% over ${esc(d.coverage.recorded_days)} dagen; ${esc(d.coverage.failed_rounds)} mislukte rondes.</p><ul>${Object.entries(d.coverage.venues||{}).map(([k,v])=>`<li>${esc(k)}: ${esc(num.format(v.fresh_percent??0))}% verse bronmetingen</li>`).join('')}</ul>`;
+   html+='<h3>Kosten eerst terugverdienen</h3><p class="muted">Hypothetische EUR100-orders met de huidige proefkosten; geen bevestigd brokertarief.</p><ul>'+d.cost_scenarios.map(x=>`<li>${esc(x.symbol)}: ongeveer ${esc(num.format(x.required_move_percent))}% koersstijging nodig voor ${esc(euros(x.minimum_net_profit_eur))} netto; circa ${esc(euros(x.flat_round_trip_loss_eur))} verlies bij onveranderde markt.</li>`).join('')+'</ul>';
+   html+='<h3>Volgende onderzoeksvragen</h3><ul>'+(d.proposals||[]).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
+  }
+  const indicators=sources.filter(x=>x.indicator);
+  if(indicators.length)html+='<h3>Vertraagde macrocontext</h3><ul>'+indicators.map(x=>`<li>${esc(x.indicator.label)}: ${esc(num.format(x.indicator.value))} ${esc(x.indicator.unit)} · ${esc(x.indicator.date)}${x.indicator.stale?' · verouderd':''}</li>`).join('')+'</ul><p class="muted">Geen crashkans of zelfstandig handelssignaal. De observatiedatum bewijst niet wanneer het cijfer voor het eerst beschikbaar was.</p>';
+  const headlines=sources.flatMap(x=>(x.headlines||[]).map(h=>({...h,source:x.id})));
+  if(headlines.length)html+='<h3>Officiële nieuwstitels</h3><ul>'+headlines.map(h=>`<li>${esc(h.title)}<small>${esc(h.source)} · ${esc(h.published)}</small></li>`).join('')+'</ul>';
+  $('#researchStatus').innerHTML=html;
+ }else $('#researchStatus').textContent='De bronnenroutine heeft op deze installatie nog geen rapport opgeslagen. Onderzoek past de handelsregels niet automatisch aan.';
  const usage=data.free_usage,budget=usage?.automatic_budget;
  const warning=freeBudgetAlert(usage);$('#usageWarning').textContent=warning;$('#usageWarning').hidden=!warning;
  $('#freeUsage').textContent=usage?`Database: ${num.format(usage.database_bytes/1e6)} MB. Automatische pauze vanaf ${num.format((budget?.max_database_bytes||300000000)/1e6)} MB. ${budget?.tick_attempts||0} koersrondes deze maand; maandbudget ${budget?.max_tick_attempts||10000}. Geraamd automatisch dataverkeer: ${num.format((budget?.estimated_worker_egress_bytes||0)/1e9)} / ${num.format((budget?.max_worker_egress_bytes||3000000000)/1e9)} GB.`:'Verbruiksbeveiliging wordt voorbereid.';

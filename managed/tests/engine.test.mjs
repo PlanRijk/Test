@@ -60,6 +60,7 @@ test('missing held fresh quote blocks additional buys; immutable input',()=>{
  const apple=fixture.cases.find(x=>x.symbol==='AAPL').sell_quote,original=JSON.stringify(s);
  const out=tick(s,{quotes:{AAPL:apple},expected_open:['KBC.BR','AAPL'],closed_symbols:[],fx:{usd_per_eur:1.1,date:'2026-11-03'}},NOW+300000);
  assert.equal(out.state.risk.data_complete,false);assert.equal(out.trades.length,0);assert.equal(JSON.stringify(s),original);
+ assert.deepEqual(out.quality.venues.XBRU,{expected:1,fresh:0});assert.deepEqual(out.quality.venues.XNAS,{expected:1,fresh:1});
 });
 test('pause and hard trial deadline prevent fresh orders',()=>{
  const s=state('KBC.BR');s.running=false;assert.equal(tick(s,{},NOW).state.tick,s.tick);
