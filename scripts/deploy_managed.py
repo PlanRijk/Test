@@ -16,9 +16,6 @@ import sys
 from datetime import datetime, timezone
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from scripts.managed_api import ROOT,request,project,sql,keys,project_request,deploy_function,private_json
-from scripts.portfolio_backup import snapshot,check,connect
-from scripts.collector_status import inspect
-from runtime import runtime_lock
 
 
 def literal(value):
@@ -30,11 +27,14 @@ def jsql(value):
 
 
 def source_export():
+    # Only the one-time legacy import requires the old SQLite backup helpers.
+    # All managed-service operations work from the published managed checkout.
+    from scripts.portfolio_backup import snapshot,connect
+    from runtime import runtime_lock
     data=ROOT/'.data/week-2026-11-02'
-    if inspect(data)['active_process']:
-        raise RuntimeError('Source collector active. A controlled stop is required before migration.')
     folder=ROOT/'.data/managed/source-backups'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     folder.mkdir(parents=True,mode=0o700)
+    # Exclusive non-blocking lock rejects an active source collector atomically.
     with runtime_lock(data):
         info=snapshot(data/'paperlab.sqlite3',folder/'portfolio.sqlite3')
     db=connect(folder/'portfolio.sqlite3')

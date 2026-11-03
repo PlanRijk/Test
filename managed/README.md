@@ -79,11 +79,27 @@ echte project worden gecontroleerd.
 
 ## Uitrol
 
+De website staat op https://paperlab-prive.onrender.com. De productieprocessen
+draaien op Supabase en vereisen geen open browser of actief ontwikkelproces.
+`python scripts/managed_status.py` leest de actuele remote status, bronmetingen,
+opslagomvang en de geplande taken zonder de portefeuille te wijzigen.
+
+De initiële eigenaar kiest zelf een wachtwoord en koppelt TOTP via het persoonlijke
+activatiebestand buiten Git. Bij latere aanmeldingen zijn wachtwoord en
+authenticatorcode nodig. Een echt eigenaarsaccount wordt nooit gebruikt voor
+automatische tests. Tijdelijke Auth-testaccounts worden na controles verwijderd.
+
 `scripts/deploy_managed.py` heeft expliciete fasen: `database`, `functions`,
 `config`, `site` en `activate`. Bronbackup en overdrachtsrecords blijven in
 `.data/managed`, buiten Git. Supabase-functies worden achtereenvolgens uitgerold.
 De Render-aanvraag is uitsluitend `static_site`, zonder betaald computeplan.
 De standaardworkspace-ID is nodig als Cloudflare de workspace-lijst blokkeert.
+
+De eenmalige `database`-import vereist ook de oorspronkelijke lokale SQLite-
+backuphelpers en bronportefeuille. Latere beheerfasen en `managed_status.py`
+werken vanuit de gepubliceerde managed checkout zonder het oude Python-programma.
+Voer de import niet opnieuw uit om een intussen gevorderde productieportefeuille
+te herstellen; daarvoor is een afzonderlijke gecontroleerde herstelprocedure nodig.
 
 Beheerrechten zijn tijdelijk nodig voor de installatie. De website en Cron
 gebruiken geen persoonlijke Management API-token; het verlopen van zo'n
