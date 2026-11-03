@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fill,tick,equity,profitTarget,sale,possibleSession,validQuote} from '../functions/_shared/engine.js';
-import {parseEcb,parseYahoo} from '../functions/_shared/market.js';
-import {BY_SYMBOL} from '../functions/_shared/catalogue.js';
+import {parseEcb,parseYahoo,fetchMarket} from '../functions/_shared/market.js';
+import {BY_SYMBOL,COMPANIES} from '../functions/_shared/catalogue.js';
 const fixture=JSON.parse(fs.readFileSync(new URL('./python-fixtures.json',import.meta.url))),NOW=Date.parse('2026-11-03T15:00:00Z');
 const clone=x=>structuredClone(x),close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 function state(k){const s=clone(fixture.state);s.multi_market.entry_symbols=[k];s.multi_market.expected_open=[k];s.run_until='2026-11-06T21:00:00Z';return s;}
@@ -42,6 +42,18 @@ test('European sessions open before US; DST and weekends',()=>{
  const morning=Date.parse('2026-11-03T09:00:00Z');assert.equal(possibleSession(BY_SYMBOL['KBC.BR'],morning),true);assert.equal(possibleSession(BY_SYMBOL.AAPL,morning),false);
  assert.equal(possibleSession(BY_SYMBOL.AAPL,Date.parse('2026-07-06T13:30:00Z')),true);
  assert.equal(possibleSession(BY_SYMBOL['KBC.BR'],Date.parse('2026-11-07T10:00:00Z')),false);
+});
+test('every instrument has an explicit timezone and US session boundaries follow DST',()=>{
+ for(const item of COMPANIES)assert.ok(item.timezone, item.symbol+' timezone missing');
+ for(const [stamp,open] of [['2026-11-03T14:29:59Z',false],['2026-11-03T14:30:00Z',true],['2026-11-03T19:45:00Z',true],['2026-11-03T21:00:00Z',false],['2026-07-06T13:29:59Z',false],['2026-07-06T13:30:00Z',true],['2026-07-06T20:00:00Z',false]])assert.equal(possibleSession(BY_SYMBOL.AAPL,Date.parse(stamp)),open,stamp);
+ for(const [stamp,open] of [['2026-11-03T07:59:59Z',false],['2026-11-03T08:00:00Z',true],['2026-11-03T16:29:59Z',true],['2026-11-03T16:30:00Z',false]])assert.equal(possibleSession(BY_SYMBOL['KBC.BR'],Date.parse(stamp)),open,stamp);
+ assert.throws(()=>possibleSession({...BY_SYMBOL.AAPL,timezone:undefined},NOW));
+});
+test('late US session fetch covers all 53 US listings and reports provider refusal without stale coverage',async()=>{
+ const time=Date.parse('2026-11-03T19:45:00Z'),s=state('AAPL');s.universe=COMPANIES.map(x=>x.symbol);
+ const batch=await fetchMarket(s,{now:()=>time,fetcher:async url=>url.includes('ecb.europa.eu')?new Response('<Cube time="2026-11-03"><Cube currency="USD" rate="1.1"/></Cube>'):new Response('',{status:429})});
+ assert.equal(batch.expected_open.length,53);assert.ok(batch.expected_open.includes('AAPL'));assert.equal(Object.keys(batch.errors).length,53);assert.equal(batch.errors.AAPL,'Bron HTTP 429');
+ const out=tick(s,batch,time);assert.equal(out.state.data_info.fresh_symbols,0);assert.equal(out.state.data_info.checked_at,new Date(time).toISOString());assert.equal(out.trades.length,0);assert.equal(out.observations.length,0);
 });
 test('missing held fresh quote blocks additional buys; immutable input',()=>{
  const s=state('KBC.BR');fill(s,order('KBC.BR','koop'),eur.buy_quote,NOW,sink());s.multi_market.expected_open=['KBC.BR','AAPL'];

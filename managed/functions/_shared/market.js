@@ -36,7 +36,12 @@ export async function fetchMarket(state,{now=Date.now,fetcher=fetch}={}) {
     if(now()-started>55000){batch.errors[item.symbol]='Tijdbudget van de batch bereikt.';continue;}
     try{const data=await read(YAHOO+encodeURIComponent(item.symbol)+'?interval=5m&range=1d','json',fetcher);const q=parseYahoo(data,item,batch.fx,now());
       if(q)batch.quotes[item.symbol]=q;else{batch.closed_symbols.push(item.symbol);batch.expected_open=batch.expected_open.filter(k=>k!==item.symbol);}}
-    catch{batch.errors[item.symbol]='Geen verse gevalideerde koers beschikbaar.';}
+    catch(error){
+      const message=String(error?.message||'');
+      // Only our fixed parser messages or an HTTP status may reach the dashboard.
+      const known=['Onjuist instrument.','Onjuiste koers of valuta.','Beurssessie ontbreekt.','Bron meldt vertraging.','Koers ouder dan 120 seconden of ongeldig.','Geen uitvoerbare actuele paperquote.','Bronfout.','Bronantwoord te groot.'];
+      batch.errors[item.symbol]=known.includes(message)||/^Bron HTTP [0-9]{3}$/.test(message)?message:'Geen verse gevalideerde koers beschikbaar.';
+    }
   }}
   await Promise.all(Array.from({length:6},worker));const completed=now();
   for(const[k,q]of Object.entries(batch.quotes))if(!validQuote(k,q,completed)){delete batch.quotes[k];batch.errors[k]='Koers tijdens batch verlopen.';}

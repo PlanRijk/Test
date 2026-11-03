@@ -4,6 +4,7 @@ export const VERSION = 'global-paper-v1';
 const formatters = new Map();
 export const iso = ms => new Date(ms).toISOString();
 export function localParts(time, zone) {
+  if(!zone)throw Error('Expliciete beurstijdzone ontbreekt.');
   if (!formatters.has(zone)) formatters.set(zone, new Intl.DateTimeFormat('en-GB', {
     timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23',weekday:'short'
   }));
@@ -127,9 +128,11 @@ export function tick(input,batch,time=Date.now()) {
   const before=equity(s);s.multi_market.expected_open=batch.expected_open||[];s.multi_market.closed_symbols=batch.closed_symbols||[];
   const quotes={};for(const[k,q]of Object.entries(batch.quotes||{}))if(validQuote(k,q,time))quotes[k]=q;
   s.multi_market.entry_symbols=Object.keys(quotes);
+  // Also expose the current batch when no executable quotes were received.
+  s.data_info={source:'Yahoo Finance',indicative:true,assumed_spread_bps:10,checked_at:iso(time),fx:batch.fx||null,quote_errors:batch.errors||{},fresh_symbols:Object.keys(quotes).length,multi_market:true,closed_symbols:s.multi_market.closed_symbols};
   if(!Object.keys(quotes).length){s.error=batch.error||'Geen verse koersen van open markten; geen uitvoering.';event(out,'wacht',s.error,time);return out;}
   if(!Number.isFinite(batch.fx?.usd_per_eur)||batch.fx.usd_per_eur<=0)throw Error('Ongeldige ECB-koers.');
-  s.usd_per_eur=batch.fx.usd_per_eur;s.fx_time=batch.fx.date;s.data_info={source:'Yahoo Finance',indicative:true,assumed_spread_bps:10,fx:batch.fx,quote_errors:batch.errors||{},fresh_symbols:Object.keys(quotes).length,multi_market:true,closed_symbols:s.multi_market.closed_symbols};
+  s.usd_per_eur=batch.fx.usd_per_eur;s.fx_time=batch.fx.date;
   s.error=Object.keys(batch.errors||{}).length?'Onvolledige actuele koersdekking; alleen verse kandidaten en uitvoeringen.':null;s.tick++;s.last_update=iso(time);
   for(const[k,q]of Object.entries(quotes)){
     s.prices[k]=(q.bid+q.ask)/2;s.price_fx[k]=q.fx_per_eur;s.last_observation[k]={time:q.time,delay_seconds:(time-Date.parse(q.time))/1000,indicative:true};
