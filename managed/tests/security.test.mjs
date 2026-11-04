@@ -8,6 +8,7 @@ import {handler as learnHandler} from '../functions/paper-learn/index.js';
 import {handler as auditHandler} from '../functions/paper-audit/index.js';
 import {handler as dailyHandler} from '../functions/paper-daily/index.js';
 import {handler as historyHandler} from '../functions/paper-history/index.js';
+import {handler as breadthHandler} from '../functions/paper-breadth/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
 globalThis.Deno={env:{get:name=>({SUPABASE_URL:'https://testproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-test-key',PAPERLAB_CRON_TOKEN:'test-cron-secret'})[name]}};
@@ -30,6 +31,9 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
   if(String(url).endsWith('/paper_history_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_breadth_read'))return Response.json({counts:{compact:0}});
+  if(String(url).endsWith('/paper_breadth_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_breadth_action'))return Response.json(true);
   throw Error('Unexpected call: '+url);
  };
 }
@@ -75,5 +79,16 @@ test('historical models and predictions require verified owner MFA; bootstrap ac
  }
  globalThis.fetch=()=>{throw Error('Must not access sources');};
  for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await historyHandler(new Request('https://test/functions/v1/paper-history',{method:'POST',headers,body:'{}'}))).status,401);
+});
+test('breadth records, original-input exports and pause control require verified owner MFA',async()=>{
+ mock();for(const query of ['?breadth-study=1','?breadth-export=1','?breadth-traces=1']){
+  assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);
+  assert.equal((await apiHandler(req({query}))).status,200);
+ }
+ assert.equal((await apiHandler(req({method:'POST',body:{action:'breadth',command:'pause'},token:jwt(uid,'aal1')}))).status,403);
+ assert.equal((await apiHandler(req({method:'POST',body:{action:'breadth',command:'pause'}}))).status,200);
+ assert.equal((await apiHandler(req({method:'POST',body:{action:'breadth',command:'replace-model'}}))).status,400);
+ globalThis.fetch=()=>{throw Error('Must not reach database');};
+ for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await breadthHandler(new Request('https://test/functions/v1/paper-breadth',{method:'POST',headers,body:'{}'}))).status,401);
 });
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});

@@ -27,6 +27,8 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('breadth-study'))return reply(await rpc('paper_breadth_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('breadth-export')||url.searchParams.has('breadth-traces'))return reply(await rpc('paper_breadth_export',{p_owner:user.id,p_traces:url.searchParams.has('breadth-traces')}),200,origin);
       if(url.searchParams.has('history-learning'))return reply(await rpc('paper_history_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('history-export'))return reply(await rpc('paper_history_export',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('daily-study'))return reply(await rpc('paper_daily_read',{p_owner:user.id}),200,origin);
@@ -70,6 +72,10 @@ export async function handler(request){
       const ok=await rpc('paper_learning_action',{p_owner:user.id,p_action:body.command,p_model:body.model||null});
       if(!ok)return reply({error:'Model voldoet niet aan de bewijsvoorwaarden of de hoofdportefeuille is niet leeg.'},409,origin);
       return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
+    }
+    if(body.action==='breadth'){
+      if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige registratiebediening.'},400,origin);
+      await rpc('paper_breadth_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_breadth_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='opportunities'){
       if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige onderzoeksbediening.'},400,origin);

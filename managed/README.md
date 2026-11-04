@@ -19,6 +19,9 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 - `functions/paper-learn`: twee dagelijkse leercontroles; een klein statistisch
   model wordt pas na voldoende afgesloten referentietransacties getraind en
   vervolgens afzonderlijk met nieuwe gegevens getest. Zie [LEARNING.md](LEARNING.md).
+- `sql/008_breadth_study.sql`, `functions/paper-breadth` en [BREADTH-STUDY.md](BREADTH-STUDY.md):
+  alle extra geschikte modelvoorspellingen en uitkomsten compact bewaren,
+  maximaal veertig uitgebreide invoerdossiers per werkdag, automatische budgetrem.
 - `sql/007_history_learning.sql`, `functions/paper-history` en [HISTORY-LEARNING.md](HISTORY-LEARNING.md):
   afzonderlijk historisch dagmodel vanaf 2007, bevroren dataset en dagelijkse
   prospectieve controle; SEC-context en optionele aanvullende databronnen.

@@ -7,6 +7,7 @@ import {reliabilityMarkup} from './reliability.js';
 import {taxMarkup} from './tax.js';
 import {dailyMarkup} from './daily-study.js';
 import {historyMarkup} from './history-learning.js';
+import {breadthMarkup} from './breadth-study.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -75,11 +76,13 @@ async function loadOpportunities(){
 }
 $('#closeOpportunity').onclick=()=>$('#opportunityDetail').close();
 async function loadLearning(){
- try{const [result,purchases,shadows,history]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1'),api('?history-learning=1')]);
-  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history);}catch(e){$('#learningBody').textContent=e.message;}
+ try{const [result,purchases,shadows,history,breadth]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1'),api('?history-learning=1'),api('?breadth-study=1')]);
+  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history,breadth);}catch(e){$('#learningBody').textContent=e.message;}
 }
-function renderLearning(result,purchases,history){
- $('#learningBody').innerHTML=historyMarkup(history)+learningMarkup(result,purchases);
+function renderLearning(result,purchases,history,breadth){
+ $('#learningBody').innerHTML=breadthMarkup(breadth)+historyMarkup(history)+learningMarkup(result,purchases);
+ $('#breadthToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'breadth',command:e.currentTarget.dataset.command});await loadLearning();});
+ for(const [id,query,name]of [['breadthExport','?breadth-export=1','paperlab-brede-modelregistratie.csv'],['breadthTraces','?breadth-traces=1','paperlab-uitgebreide-modelinvoer.csv']])$('#'+id).onclick=e=>busy(e.currentTarget,async()=>{const rows=await api(query),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['model_id','symbol','day','origin','record_json'],...rows.map(r=>[r.model_id,r.symbol,r.day,r.origin||'exploratory_hypothetical',JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),name);});
  $('#historyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?history-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','model_id','symbol','decision_at','probability','selected','status','origin','record_json'],...rows.map(r=>[r.id,r.model_id,r.symbol,r.decision_at,r.probability,r.selected,r.status,r.origin,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-historisch-model-voorwaarts.csv');});
  document.querySelectorAll('[data-purchase]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.purchase),b.dataset.shadow==='true'));
  $('#learningExport').onclick=e=>busy(e.currentTarget,async()=>{
