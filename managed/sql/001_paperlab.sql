@@ -124,7 +124,7 @@ language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
 begin
   if p_owner is distinct from(select owner_id from paperlab.settings where singleton) then raise exception 'Not owner';end if;
   return(select coalesce(jsonb_agg(q order by q.id),'[]'::jsonb) from
-    (select id,time,symbol,side,qty,price,fee,pnl,reason,snapshot->>'currency' currency,snapshot->>'fx' fx,snapshot->'tax_detail' tax_detail,snapshot->>'strategy_version' strategy_version from paperlab.trades order by id) q);
+    (select id,time,symbol,side,qty,price,fee,pnl,reason,snapshot->>'currency' currency,snapshot->>'fx' fx,snapshot->'tax_detail' tax_detail,snapshot->>'strategy_version' strategy_version,snapshot->'purchase_rationale' purchase_rationale from paperlab.trades order by id) q);
 end$$;
 
 create or replace function public.paper_action(p_owner uuid,p_action text) returns boolean
@@ -142,8 +142,9 @@ end$$;
 
 create or replace function public.paper_claim_tick(p_manual boolean default false) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
-declare p paperlab.portfolio;t uuid;u paperlab.free_usage;m date;charge bigint;
+declare p paperlab.portfolio;t uuid;u paperlab.free_usage;m date;charge bigint;learning jsonb;
 begin
+  if to_regprocedure('public.paper_learning_budget_guard()') is not null then perform public.paper_learning_budget_guard();end if;
   select * into p from paperlab.portfolio where singleton for update;
   if not found then return null;end if;
   if (p.state->>'run_until')::timestamptz<=now() then
@@ -156,7 +157,8 @@ begin
   select * into u from paperlab.free_usage where month=m for update;
   -- Deliberately conservative application estimate, not provider billing data.
   -- Covers repeated state transfers plus a fixed per-attempt overhead.
-  charge:=4*(octet_length(p.state::text)+16384);
+  if to_regprocedure('public.paper_learning_payload()') is not null then learning:=public.paper_learning_payload();end if;
+  charge:=4*(octet_length(p.state::text)+coalesce(octet_length(learning::text),0)+16384);
   if u.tick_attempts>=u.max_tick_attempts or u.estimated_worker_egress_bytes+charge>u.max_worker_egress_bytes or pg_database_size(current_database())>=u.max_database_bytes then
     update paperlab.portfolio set state=jsonb_set(jsonb_set(state,'{running}','false'),'{error}',to_jsonb('Automatisch gepauzeerd om gratis verbruikslimieten te beschermen. Controleer opslag en providergebruik voordat je hervat.'::text)),
       revision=revision+1,lease=null,lease_until=null,last_attempt=now(),last_tick_status='free_budget_paused' where singleton;
@@ -166,7 +168,7 @@ begin
   update paperlab.free_usage set tick_attempts=tick_attempts+1,estimated_worker_egress_bytes=estimated_worker_egress_bytes+charge where month=m;
   t=gen_random_uuid();
   update paperlab.portfolio set lease=t,lease_until=now()+interval '120 seconds',last_attempt=now(),last_tick_status='measuring' where singleton;
-  return jsonb_build_object('token',t,'revision',p.revision,'state',jsonb_set(p.state,'{running}','true'),'persist_running',p.state->'running');
+  return jsonb_build_object('token',t,'revision',p.revision,'state',jsonb_set(p.state,'{running}','true'),'persist_running',p.state->'running','learning',learning);
 end$$;
 
 create or replace function public.paper_commit_tick(p_token uuid,p_revision bigint,p_output jsonb) returns boolean
@@ -177,6 +179,15 @@ begin
   if p_token is null or p_revision is null or p.lease is null or p.lease_until is null or p.lease is distinct from p_token or p.revision<>p_revision or p.lease_until<=now() then return false;end if;
   s=p_output->'state';
   if s is null or jsonb_typeof(s)<>'object' or s->>'mode' is distinct from 'yahoo' or coalesce(jsonb_array_length(s->'universe'),0)<>100 or jsonb_array_length(coalesce(p_output->'trades','[]'))>20 then raise exception 'Invalid tick';end if;
+  if jsonb_typeof(s->'cash') is distinct from 'number' or jsonb_typeof(s->'fees') is distinct from 'number' or jsonb_typeof(s->'realized') is distinct from 'number' then raise exception 'Ledger mismatch: missing numeric balances';end if;
+  if to_regprocedure('public.paper_learning_rationale_required()') is not null then
+   if public.paper_learning_rationale_required() then
+    if exists(select 1 from jsonb_array_elements(coalesce(p_output->'trades','[]')) x where x->>'side'='koop' and
+      (x->'snapshot'->'purchase_rationale'->>'schema' is distinct from 'purchase-rationale-v1' or x->'snapshot'->'purchase_rationale'->>'id' is null or
+       x->'snapshot'->'purchase_rationale'->'decision'->>'statement' is null or x->'snapshot'->'purchase_rationale'->'execution'->>'quote_time' is null or
+       coalesce(jsonb_array_length(x->'snapshot'->'purchase_rationale'->'decision'->'observations'),0)<>6)) then raise exception 'Purchase explanation required';end if;
+   end if;
+  end if;
   insert into paperlab.trades(time,symbol,side,qty,price,fee,pnl,reason,snapshot)
     select (x->>'time')::timestamptz,x->>'symbol',x->>'side',(x->>'qty')::double precision,(x->>'price')::double precision,
     (x->>'fee')::double precision,(x->>'pnl')::double precision,x->>'reason',x->'snapshot' from jsonb_array_elements(coalesce(p_output->'trades','[]')) x;
@@ -201,6 +212,13 @@ begin
   end if;
   update paperlab.portfolio set state=s,revision=revision+1,lease=null,lease_until=null,
     last_tick_status=case when s->>'error' is not null then 'partial_or_waiting' else 'collecting' end where singleton;
+  if jsonb_typeof(p_output->'learning')='object' and to_regprocedure('public.paper_learning_apply(jsonb,bigint,jsonb)') is not null then
+    begin
+      perform public.paper_learning_apply(p_output->'learning',p_revision,p.state);
+    exception when others then
+      perform public.paper_learning_error('Leerbatch afgewezen; hoofdportefeuille behouden en leerbeleid teruggezet.');
+    end;
+  end if;
   -- Raw data is bounded; trade receipts and equity/audit histories are retained.
   if (s->>'tick')::integer%12=0 then
     delete from paperlab.observations where received<now()-interval '2 days';
@@ -255,7 +273,7 @@ language sql security definer set search_path=pg_catalog,pg_temp as $$
   'trades',(select coalesce(jsonb_agg(q order by q.id),'[]'::jsonb) from
     (select id,time,symbol,side,fee,pnl,snapshot->>'strategy_version' as strategy_version,
       snapshot->>'transport_version' as transport_version,snapshot->>'decision_time' as decision_time,
-      snapshot->'quote'->>'time' as quote_time,snapshot->'tax_detail' as tax_detail from paperlab.trades) q),
+      snapshot->'quote'->>'time' as quote_time,snapshot->'learning_context'->'model_evaluation'->>'id' as model_id,snapshot->'learning_context'->>'policy' as entry_policy,snapshot->'tax_detail' as tax_detail from paperlab.trades) q),
   'quality',(select coalesce(jsonb_agg(q order by q.day),'[]'::jsonb) from
     (select * from paperlab.daily_quality where day>=(now() at time zone 'UTC')::date-30) q));
 $$;

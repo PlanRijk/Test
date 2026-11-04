@@ -16,8 +16,13 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
   FRED-context en netto-/kostenevaluatie per fase. Geen AI-training, automatische
   artikelinterpretatie of parameterwijzigingen. Een operator kan de alleen-lezen
   controle ook handmatig aanvragen met het serversecret.
+- `functions/paper-learn`: twee dagelijkse leercontroles; een klein statistisch
+  model wordt pas na voldoende afgesloten referentietransacties getraind en
+  vervolgens afzonderlijk met nieuwe gegevens getest. Zie [LEARNING.md](LEARNING.md).
 - `sql/001_paperlab.sql`: privétabellen, RLS, alleen voor de server toegankelijke
   RPC's, een lease en revisiecontrole tegen dubbele uitvoering en kasboekcontrole.
+- `sql/002_learning.sql`: afzonderlijke proefportefeuilles, opleidingsgegevens,
+  modelversies, controles, aankoopdossiers en terugschakeling.
 
 Het oude Python/SQLite-programma en zijn data blijven behouden. Import herschrijft
 geen bestaande transacties en weigert een afwijkende bestaande doelportefeuille
@@ -55,7 +60,12 @@ privéactivatielink wordt niet gemaild of publiek gepubliceerd.
   statische bronmetadata. Zij vervangt het eerdere historische onderzoek of een
   volledige nieuws-/bedrijfsanalyse niet. Zie [RESEARCH-PLAN.md](RESEARCH-PLAN.md)
   voor de gelezen primaire bronnen, toetsbare hypothesen en ontbrekende bewijzen.
-- Geen brokerverbinding, IBKR Gateway, zelflerend model of echte transacties.
+- Geen brokerverbinding, IBKR Gateway of echte transacties. De leerpijplijn
+  wacht op voldoende echte proefgegevens; installatie betekent niet dat er al
+  een getraind of winstgevend model is. Risicogrenzen blijven vast.
+- Iedere nieuwe aankoop bewaart de oorspronkelijke motivatie, bekende
+  koersmetingen, verwachte kosten en uitvoeringscontrole. De website toont
+  dossiers en exporteert ze; oudere transacties krijgen geen verzonnen analyse.
 - Op verzoek is de bestaande einddatum met dertig dagen verlengd tot 6 december
   2026 om 21:00 UTC / 22:00 Brussel. Verdere verlenging gebeurt alleen op verzoek.
 - Zie [FREE-PLAN.md](FREE-PLAN.md) voor de gecontroleerde quota, verbruiksraming,
@@ -70,6 +80,7 @@ node managed/tests/engine.test.mjs
 node managed/tests/security.test.mjs
 node managed/tests/usage.test.mjs
 node managed/tests/review.test.mjs
+node managed/tests/learning.test.mjs
 node managed/check-public.mjs
 ```
 
@@ -79,6 +90,9 @@ minimale commissies, belastingscenario en internationale reserves. De tweede
 controleert eigenaar, AAL2, CORS, sessies, onbekende opdrachten en cronbeveiliging.
 `tests/test_database.py` gebruikt uitsluitend een geïsoleerde lokale PostgreSQL-
 container zonder netwerk, nooit de echte Supabase-database.
+`tests/test_learning_database.py` controleert de gezamenlijke verwerking,
+gescheiden kasboeken, aankoopdossiers, trainingslabels en promotie/terugschakeling
+in een tijdelijke lokale testdatabase.
 
 Een geslaagde lokale test bewijst geen echte providerkoersen of live installatie.
 Voor oplevering moeten schema, import, anonieme weigering, eigenaaractivatie,
@@ -98,7 +112,9 @@ authenticatorcode nodig. Een echt eigenaarsaccount wordt nooit gebruikt voor
 automatische tests. Tijdelijke Auth-testaccounts worden na controles verwijderd.
 
 `scripts/deploy_managed.py` heeft expliciete fasen: `database`, `functions`,
-`config`, `site` en `activate`. Bronbackup en overdrachtsrecords blijven in
+`config`, `site`, `activate`, `learning-schema` en `learning-enable`. Gebruik bij
+een bestaande gevorderde portefeuille de laatste twee leerfasen; herhaal geen
+import of eigenaaractivatie. Bronbackup en overdrachtsrecords blijven in
 `.data/managed`, buiten Git. Supabase-functies worden achtereenvolgens uitgerold.
 De Render-aanvraag is uitsluitend `static_site`, zonder betaald computeplan.
 De standaardworkspace-ID is nodig als Cloudflare de workspace-lijst blokkeert.

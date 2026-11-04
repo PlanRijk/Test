@@ -1,6 +1,7 @@
 import {CONFIG} from './config.js';
 import {COMPANIES,BY_SYMBOL} from './catalogue.js';
 import {freeBudgetAlert} from './usage.js';
+import {learningMarkup} from './learning.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -55,8 +56,23 @@ $('#savedCodes').onchange=e=>$('#finishSetup').disabled=!e.target.checked;
 $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceChildren();await enter();});
 $('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
-const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels'};
-document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==button.dataset.page+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b===button));$('#pageTitle').textContent=titles[button.dataset.page];});
+const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse'};
+async function loadLearning(){
+ try{const [result,purchases,shadows]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1')]);
+  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows]);}catch(e){$('#learningBody').textContent=e.message;}
+}
+function renderLearning(result,purchases){
+ $('#learningBody').innerHTML=learningMarkup(result,purchases);
+ document.querySelectorAll('[data-purchase]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.purchase),b.dataset.shadow==='true'));
+ $('#learningExport').onclick=e=>busy(e.currentTarget,async()=>{
+  const rows=await api('?learning-export=1'),headers=['id','schema','fingerprint','symbol','venue','decision_time','entry_time','available_at','net_eur','features_json'];
+  const quote=x=>'"'+String(x??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[headers,...rows.map(r=>[r.id,r.schema,r.fingerprint,r.symbol,r.venue,r.decision_time,r.entry_time,r.available_at,r.net_eur,JSON.stringify(r.features)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-leerdata.csv');
+ });
+ document.querySelectorAll('[data-learning]').forEach(b=>b.onclick=()=>busy(b,async()=>{
+  await api('',{action:'learning',command:b.dataset.learning,model:b.dataset.model||null});await loadLearning();
+ }));
+}
+document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==button.dataset.page+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b===button));$('#pageTitle').textContent=titles[button.dataset.page];if(button.dataset.page==='learning')loadLearning();});
 function plot(points){
  if(!points.length)return '<p class="muted">Nog geen koersmetingen.</p>';
  const values=points.map(p=>Number(p.value)),lo=Math.min(...values)*.999,hi=Math.max(...values)*1.001,range=hi-lo||1;
@@ -112,14 +128,35 @@ for(const sector of [...new Set(COMPANIES.map(x=>x.sector))].sort()){const o=doc
 for(const id of ['search','sector','region'])$('#'+id).addEventListener('input',renderCatalogue);
 $('#toggle').onclick=e=>busy(e.currentTarget,async()=>{data=await api('',{action:data.state.running?'pause':'start'});render();});
 $('#step').onclick=e=>busy(e.currentTarget,async()=>{toast('Koersen ophalen en controleren…');data=await api('',{action:'step'});render();});
-async function openReceipt(id){try{receipt=await api('?receipt='+id);const s=receipt.snapshot,t=s.tax_detail||{};
- const rows=[['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
+async function openReceipt(id,shadow=false){try{receipt=await api((shadow?'?shadow-receipt=':'?receipt=')+id);const s=receipt.snapshot,t=s.tax_detail||{};
+ const rows=[['Portefeuille',({reference:'Schaduwreferentie',low_turnover:'Schaduw · minder transacties',learned:'Schaduw · model'})[receipt.account]||'Hoofdproef'],['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
  $('#receiptBody').innerHTML=rows.map(([k,v])=>`<div class="receipt-row"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')+`<p>${esc(receipt.reason)}</p><p class="small muted">Indicatieve paperuitvoering met proefkosten. Geen brokerbevestiging.</p>`;$('#receipt').showModal();
+ const r=s.purchase_rationale;
+ if(r){
+  $('#receiptBody').innerHTML+=`<h3>Oorspronkelijke aankoopmotivatie</h3><p>${esc(r.decision?.statement||'')}</p><p>${esc(r.execution?.statement||'')}</p>`;
+  if(r.decision?.note)$('#receiptBody').innerHTML+=`<p class="muted">${esc(r.decision.note)}</p>`;
+  if(r.decision?.model)$('#receiptBody').innerHTML+=`<p>Model ${esc(r.decision.model.id)}: ${esc((r.decision.model.probability_net_positive*100).toFixed(1))}% geschatte kans; drempel ${esc((r.decision.model.threshold*100).toFixed(0))}%. Geen winstgarantie.</p>`;
+  if(r.decision?.observations)$('#receiptBody').innerHTML+='<h3>Koersmetingen bekend bij het besluit</h3><ul>'+r.decision.observations.map(x=>`<li>${esc(when(x.time))}: ${esc(num.format(x.price))} ${esc(r.decision.currency)}</li>`).join('')+'</ul>';
+  if(r.cost_estimate)$('#receiptBody').innerHTML+=`<p>Verwacht verlies bij onveranderde markt: ${esc(euros(r.cost_estimate.flat_round_trip_loss_eur))}. Beoogd bruto koersdoel: ${esc(euros(r.cost_estimate.gross_target_price_eur))}. Gewone verkoop vereist ${esc(euros(r.cost_estimate.minimum_net_profit_eur))} netto na de proefkosten.</p>`;
+  if(r.risk_at_decision)$('#receiptBody').innerHTML+=`<p>Bij besluit: ${esc(euros(r.risk_at_decision.cash_eur))} kas, ${esc(r.risk_at_decision.open_positions)} open posities, ${esc(r.risk_at_decision.buys_today)} aankopen die dag. Sectorcontrole ${r.risk_at_decision.sector_available?'geslaagd':'geblokkeerd'}.</p>`;
+  $('#receiptBody').innerHTML+='<ul>'+(r.limitations||[]).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
+ }
  }catch(e){toast(e.message);}}
 $('#closeReceipt').onclick=()=>$('#receipt').close();
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-$('#png').onclick=()=>{if(!receipt)return;const c=document.createElement('canvas');c.width=900;c.height=1050;const x=c.getContext('2d');x.fillStyle='#131c29';x.fillRect(0,0,c.width,c.height);x.fillStyle='#65dcb1';x.font='bold 32px sans-serif';x.fillText('PaperLab · Transactiebewijs',45,65);x.fillStyle='#e7edf7';x.font='18px sans-serif';let y=125;for(const row of $('#receiptBody').querySelectorAll('.receipt-row')){const k=row.querySelector('span').textContent,v=row.querySelector('strong').textContent;x.fillStyle='#94a3b8';x.fillText(k,45,y);x.fillStyle='#e7edf7';x.fillText(v.slice(0,70),45,y+27);y+=63;}x.fillStyle='#94a3b8';x.font='14px sans-serif';x.fillText('Virtuele transactie · Geen brokerbevestiging',45,1015);c.toBlob(blob=>blob&&download(blob,'paperlab-transactie-'+receipt.id+'.png'),'image/png');};
-$('#export').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?export=1'),headers=['id','time_utc','symbol','side','quantity','price_local','currency','fee_eur','pnl_eur','fx_units_per_eur','transaction_tax_eur','capital_gains_reserve_eur','foreign_tax_reserve_eur','adr_reserve_eur','strategy_version','reason'];const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[headers,...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.currency||'USD',t.fee,t.pnl,t.fx,t.tax_detail?.transaction_tax_eur||0,t.tax_detail?.capital_gains_reserve_eur||0,t.tax_detail?.foreign_tax_reserve_eur||0,t.tax_detail?.adr_reserve_eur||0,t.strategy_version||'momentum-v1',t.reason])];download(new Blob(['\uFEFF'+lines.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-transacties.csv');});
+$('#png').onclick=()=>{
+ if(!receipt)return;const c=document.createElement('canvas');c.width=900;const x=c.getContext('2d'),lines=[];let y=65;
+ const add=(text,color='#e7edf7',font='18px sans-serif')=>{x.font=font;const words=String(text||'').split(/\s+/);let line='';for(const word of words){const next=line?line+' '+word:word;if(x.measureText(next).width>810&&line){lines.push({text:line,color,font,y});y+=27;line=word;}else line=next;}if(line){lines.push({text:line,color,font,y});y+=29;}};
+ add('PaperLab · Transactiebewijs','#65dcb1','bold 32px sans-serif');y+=25;
+ for(const row of $('#receiptBody').querySelectorAll('.receipt-row')){add(row.querySelector('span').textContent,'#94a3b8');add(row.querySelector('strong').textContent);y+=10;}
+ const r=receipt.snapshot.purchase_rationale;add('Motivatie','#65dcb1','bold 22px sans-serif');add(r?.decision?.statement||receipt.reason);if(r?.execution?.statement)add(r.execution.statement);
+ if(r?.decision?.model)add('Model '+r.decision.model.id+' · geschatte kans '+(r.decision.model.probability_net_positive*100).toFixed(1)+'% · geen winstgarantie');
+ if(r?.cost_estimate)add('Verwacht verlies bij onveranderde markt: '+euros(r.cost_estimate.flat_round_trip_loss_eur)+'. Minimale nettowinst gewone verkoop: '+euros(r.cost_estimate.minimum_net_profit_eur)+'.');
+ for(const o of r?.decision?.observations||[])add(when(o.time)+' · '+num.format(o.price)+' '+r.decision.currency,'#94a3b8','15px sans-serif');
+ y+=15;add('Virtuele transactie · Europe/Brussels · Geen brokerbevestiging','#94a3b8','14px sans-serif');c.height=y+25;x.fillStyle='#131c29';x.fillRect(0,0,c.width,c.height);
+ for(const line of lines){x.font=line.font;x.fillStyle=line.color;x.fillText(line.text,45,line.y);}c.toBlob(blob=>blob&&download(blob,'paperlab-transactie-'+receipt.id+'.png'),'image/png');
+};
+$('#export').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?export=1'),headers=['id','time_utc','symbol','side','quantity','price_local','currency','fee_eur','pnl_eur','fx_units_per_eur','transaction_tax_eur','capital_gains_reserve_eur','foreign_tax_reserve_eur','adr_reserve_eur','strategy_version','reason','purchase_rationale_json'];const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[headers,...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.currency||'USD',t.fee,t.pnl,t.fx,t.tax_detail?.transaction_tax_eur||0,t.tax_detail?.capital_gains_reserve_eur||0,t.tax_detail?.foreign_tax_reserve_eur||0,t.tax_detail?.adr_reserve_eur||0,t.strategy_version||'momentum-v1',t.reason,t.purchase_rationale?JSON.stringify(t.purchase_rationale):''])];download(new Blob(['\uFEFF'+lines.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-transacties.csv');});
 setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now()-lastActivity>1800000){await logout();return;}polling=true;try{const next=await api('?revision='+data.revision);if(next.unchanged){data.collector_status=next.collector_status;renderCatalogue();}else{data=next;render();}}catch(e){$('#globalError').textContent=e.message;$('#globalError').hidden=false;}finally{polling=false;}},60000);
 async function boot(){
  if(!CONFIG.url||!CONFIG.key){authError('De beveiligde installatie wordt voorbereid.');$('#loginForm').hidden=true;return;}
@@ -131,3 +168,5 @@ async function boot(){
 }
 window.addEventListener('hashchange',()=>boot().catch(()=>authError('De activatielink kon niet worden geopend.')));
 boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));
+
+setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);

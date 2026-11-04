@@ -3,6 +3,8 @@ import { COMPANIES, BY_SYMBOL } from './catalogue.js';
 export const VERSION = 'global-paper-v1';
 // Six samples drive the strategy; twelve retain an hour of decision context.
 export const HISTORY_LIMIT = 12;
+export const FEATURE_SCHEMA='decision-net-v1';
+export const FEATURE_NAMES=['return_1','return_5','volatility_5','signal','cost_drag','quote_age','session_remaining'];
 const formatters = new Map();
 export const iso = ms => new Date(ms).toISOString();
 export function localParts(time, zone) {
@@ -94,19 +96,60 @@ export function validQuote(k,q,time) {
     (q.currency!=='EUR'||Math.abs(q.fx_per_eur-1)<1e-12)&&age>=0&&age<=120000&&
     Date.parse(q.session_start)<=time&&time<Date.parse(q.session_end)&&possibleSession(BY_SYMBOL[k],time);
 }
+export function decisionContext(s,k,q,time){
+  const h=s.history[k]?.slice(-6);if(!validQuote(k,q,time)||!h||h.length!==6)return null;
+  const stamps=h.map(x=>Date.parse(x.time));if(stamps.some((x,i)=>!Number.isFinite(x)||x>time||(i&&x<=stamps[i-1]))||time-stamps[0]>1800000)return null;
+  const prices=h.map(x=>x.price);if(prices.some(x=>!Number.isFinite(x)||x<=0))return null;
+  const returns=prices.slice(1).map((v,i)=>v/prices[i]-1),avg=returns.reduce((a,b)=>a+b,0)/5;
+  const volatility=Math.sqrt(returns.reduce((a,b)=>a+(b-avg)**2,0)/5),signal=prices[5]/(prices.slice(0,5).reduce((a,b)=>a+b,0)/5)-1;
+  const entry=q.ask*1.0005/q.fx_per_eur,buy=purchase(s,k,entry,100),p={qty:buy.qty,cost:100,entry,entry_gross_eur:buy.qty*entry};
+  const cost=-sale(s,k,p,q.bid*.9995/q.fx_per_eur).net_pnl_eur/100;
+  const features=[returns[4],prices[5]/prices[0]-1,volatility,signal,cost,(time-Date.parse(q.time))/120000,(Date.parse(q.session_end)-time)/23400000];
+  if(features.some(x=>!Number.isFinite(x)))return null;
+  return {schema:FEATURE_SCHEMA,features,symbol:k,venue:BY_SYMBOL[k].exchange,decision_time:iso(time),quote_time:q.time};
+}
+export function purchaseRationale(s,k,q,time,signal,context){
+ const h=s.history[k].slice(-6),average=h.slice(0,5).reduce((n,x)=>n+x.price,0)/5;
+ const entry=q.ask*1.0005/q.fx_per_eur,buy=purchase(s,k,entry,100),position={qty:buy.qty,cost:100,entry,entry_gross_eur:buy.qty*entry};
+ const flat=sale(s,k,position,q.bid*.9995/q.fx_per_eur),target=profitTarget(s,k,position);
+ return {schema:'purchase-rationale-v1',id:k+'|'+iso(time),recorded_at:iso(time),profile:profile(s),
+  decision:{time:iso(time),symbol:k,company:BY_SYMBOL[k].name,sector:BY_SYMBOL[k].sector,exchange:BY_SYMBOL[k].exchange,
+   statement:`De laatste koers ligt ${(signal*100).toFixed(3)}% boven het gemiddelde van de vijf voorgaande metingen. Dit overschrijdt de vaste drempel van 0,2%. De aankoop wordt alleen op een latere verse koers uitgevoerd als saldo, kosten en risico dat nog toelaten.`,
+   signal_fraction:signal,threshold_fraction:.002,previous_five_average:average,latest_mid:(q.bid+q.ask)/2,currency:q.currency,
+   observations:h.map(x=>({time:x.time,quote_time:x.quote_time||null,price:x.price})),quote_time:q.time,quote_age_seconds:(time-Date.parse(q.time))/1000,
+   features:context?.features||null,feature_schema:context?.schema||null,model:context?.model_evaluation||null,policy:context?.policy||'baseline',
+   additional_rule:context?.policy==='low_turnover'?'Minstens 0,4% signaal en maximaal één nieuw koopbesluit per uur.':context?.model_evaluation?'Modelkans moet minstens 60% zijn binnen de getoetste beurzen.':'Vaste referentieregels.'},
+  cost_estimate:{budget_eur:100,commission_eur:buy.fee,buy_taxes_and_reserves:buy.tax,flat_round_trip_loss_eur:-flat.net_pnl_eur,
+   gross_target_price_eur:target,minimum_net_profit_eur:s.belgian_tax.config.minimum_net_profit_eur,assumed_spread_bps:10,slippage_bps_each_side:5,
+   note:'Proefkosten en voorlopige belastingreserves; geen bevestigde persoonlijke belasting of brokerfee.'},
+  risk_at_decision:{cash_eur:s.cash,equity_eur:equity(s),open_positions:Object.keys(s.positions).length,pending_buys:s.pending.filter(x=>x.side==='koop').length,
+   buys_today:s.risk.buys_today,config:structuredClone(s.risk.config),sector_available:sectorAllowed(s,k),data_complete:s.risk.data_complete,daily_halted:s.risk.daily_halted,global_halted:s.risk.global_halted},
+  limitations:['Dit is een regelgestuurde paperbeslissing, geen voorspelling van zekere winst.','Er is geen volledige bedrijfswaardering of causale nieuwsinterpretatie voor deze aankoop uitgevoerd.','Stop- en verliesdrempels garanderen geen uitvoeringsprijs of maximaal verlies.']};
+}
 export function fill(s,order,q,time,out) {
   const k=order.symbol;if(!validQuote(k,q,time)||Date.parse(q.time)<=Date.parse(order.time))return false;
   const buy=order.side==='koop',price=(buy?q.ask*1.0005:q.bid*.9995),eur=price/q.fx_per_eur;
   s.price_fx[k]=q.fx_per_eur;s.prices[k]=(q.bid+q.ask)/2;s.last_observation[k]={time:q.time,indicative:true};
-  let qty,fee,tax,pnl=0;
+  let qty,fee,tax,pnl=0,learningContext=order.learning_context||null,rationale=order.purchase_rationale||null;
   if(buy){
     if(s.positions[k])return true;const budget=entryBudget(s,k,time);
     if(budget<10||!affordable(s,k,eur,budget)){event(out,'kostenrem','Aankoop past niet binnen het risico-/kostenbudget.',time,k);return true;}
     ({qty,fee,tax}=purchase(s,k,eur,budget));const cost=qty*eur+fee+Object.values(tax).reduce((a,b)=>a+b,0);s.cash-=cost;if(s.cash<0&&s.cash>-1e-8)s.cash=0;
+    if(learningContext)learningContext={...learningContext,entry_time:iso(time)};
+    if(!rationale)rationale={schema:'purchase-rationale-v1',id:k+'|'+order.time,recorded_at:iso(time),profile:profile(s),
+      decision:{time:order.time,symbol:k,statement:order.reason,detail_unavailable:true,note:'Deze order bestond al voor de uitgebreide motivatie; ontbrekende beslisgegevens zijn niet achteraf verzonnen.'}};
+    rationale=structuredClone(rationale);rationale.execution={time:iso(time),decision_time:order.time,quote_time:q.time,quote_age_seconds:(time-Date.parse(q.time))/1000,
+     statement:'Virtuele aankoop op een latere verse bronkoers; saldo-, sector-, kosten- en risicocontroles bij uitvoering geslaagd.',
+     price_local:price,currency:q.currency,fx_per_eur:q.fx_per_eur,quantity:qty,commission_eur:fee,taxes_and_reserves:tax,cost_eur:cost,cash_after_eur:s.cash};
     const p={qty,cost,entry_gross_eur:qty*eur,entry:eur,time:iso(time),stop:eur*.985,target:eur*1.025,currency:currency(k)};
+    if(learningContext)p.learning_context=learningContext;
+    // The immutable full explanation lives in the buy receipt; carry its ID to exit.
+    p.purchase_rationale={schema:rationale.schema,id:rationale.id,decision:{time:rationale.decision.time,symbol:k,statement:rationale.decision.statement}};
     p.target=profitTarget(s,k,p);s.positions[k]=p;s.risk.buys_today++;
   }else{
     const p=s.positions[k];if(!p)return true;
+    learningContext=p.learning_context||null;
+    rationale=p.purchase_rationale||null;
     tax=sale(s,k,p,eur);
     const protective=order.risk_exit||eur<=p.stop||s.risk.daily_halted||s.risk.global_halted;
     if(!protective&&tax.net_pnl_eur<s.belgian_tax.config.minimum_net_profit_eur){event(out,'belastingfilter','Gewone verkoop onvoldoende netto positief.',time,k);return true;}
@@ -116,14 +159,16 @@ export function fill(s,order,q,time,out) {
   s.fees+=fee;s.belgian_tax.transaction_tax_eur+=tax.transaction_tax_eur;s.belgian_tax.capital_gains_reserve_eur+=tax.capital_gains_reserve_eur;
   for(const key of ['foreign_tax_reserve_eur','adr_reserve_eur'])s.multi_market[key]+=tax[key]||0;
   const snapshot={strategy_version:profile(s),transport_version:'supabase-v1',tax_scenario:true,tax_config:s.belgian_tax.config,tax_detail:tax,risk_config:s.risk.config,multi_market_config:s.multi_market.cost_assumptions,
-    cash:s.cash,equity:equity(s),fx:q.fx_per_eur,currency:currency(k),price_local:price,price_usd:currency(k)==='USD'?price:null,history:s.history[k].slice(-40),quote:q,mode:'yahoo',reason:order.reason,decision_time:order.time,qty,side:order.side,symbol:k,time:iso(time)};
+    cash:s.cash,equity:equity(s),fx:q.fx_per_eur,currency:currency(k),price_local:price,price_usd:currency(k)==='USD'?price:null,history:s.history[k].slice(-40),quote:q,mode:'yahoo',reason:order.reason,decision_time:order.time,qty,side:order.side,symbol:k,time:iso(time),learning_context:learningContext,purchase_rationale:rationale};
   out.trades.push({time:iso(time),symbol:k,side:order.side,qty,price,fee,pnl,reason:order.reason,snapshot});event(out,'uitvoering','Virtuele uitvoering op latere verse koers.',time,k);return true;
 }
-function queue(s,out,k,side,time,reason,risk_exit=false){
+function queue(s,out,k,side,time,reason,risk_exit=false,learningContext=null,rationale=null){
   const existing=s.pending.find(x=>x.symbol===k);if(existing){if(risk_exit&&existing.side==='verkoop')Object.assign(existing,{risk_exit,reason});return;}
   const o={symbol:k,side,tick:s.tick,time:iso(time),reason,risk_exit};s.pending.push(o);event(out,'besluit',reason,time,k,o);
+  if(learningContext)o.learning_context=learningContext;
+  if(rationale)o.purchase_rationale=rationale;
 }
-export function tick(input,batch,time=Date.now()) {
+export function tick(input,batch,time=Date.now(),options={}) {
   const s=structuredClone(input),out={state:s,trades:[],events:[],observations:[],equity:null};
   if(!s.running)return out;
   if(!s.run_until||time>=Date.parse(s.run_until)){s.running=false;s.error='Proefeindtijd bereikt.';return out;}
@@ -151,6 +196,8 @@ export function tick(input,batch,time=Date.now()) {
   let guard=assess(s,time,quotes,before);const remaining=[];
   for(const order of s.pending){
     guard=assess(s,time,quotes,before);
+    if(order.side==='koop'&&options.entryGate){let allowed=false;try{allowed=options.entryGate({symbol:order.symbol,context:order.learning_context,state:s,time,pending:true})===true;}catch{}
+      if(!allowed){event(out,'leerfilter','Kooporder door het actieve leerfilter tegengehouden.',time,order.symbol);continue;}}
     if(order.side==='koop'&&((time-Date.parse(order.time))/60000>s.risk.config.order_ttl_minutes||guard.block||entryBudget(s,order.symbol,time)<10)){event(out,'geannuleerd','Kooporder verlopen of door risico geblokkeerd.',time,order.symbol);continue;}
     if(day(order.time,BY_SYMBOL[order.symbol].timezone)!==day(time,BY_SYMBOL[order.symbol].timezone)){event(out,'vervallen','Order van een eerdere lokale handelsdag.',time,order.symbol);continue;}
     if(!quotes[order.symbol]||!fill(s,order,quotes[order.symbol],time,out))remaining.push(order);
@@ -172,7 +219,13 @@ export function tick(input,batch,time=Date.now()) {
     let available=s.cash-s.risk.config.min_cash_eur-100*s.pending.filter(o=>o.side==='koop').length,count=0;
     candidates.sort((a,b)=>b[0]-a[0]||b[1].localeCompare(a[1]));
     for(const[signal,k]of candidates){if(count>=slots||available<100)break;if(!sectorAllowed(s,k)||entryBudget(s,k,time)<100-1e-8)continue;
-      queue(s,out,k,'koop',time,`Koers ${(signal*100).toFixed(2)}% boven het gemiddelde van de vorige 5 metingen. Budget EUR100; stop -1,5%; kostenbewust doel.`);available-=100;count++;}
+      let context=decisionContext(s,k,quotes[k],time);if(context&&options.contextTag)context={...context,...options.contextTag};
+      if(options.entryGate){let allowed=false;try{allowed=options.entryGate({symbol:k,context,state:s,time,signal,pending:false})===true;}catch{}
+        if(!allowed){event(out,'leerfilter','Koopkandidaat door het leerfilter tegengehouden.',time,k);continue;}}
+      const rationale=purchaseRationale(s,k,quotes[k],time,signal,context);
+      rationale.decision.rank_among_candidates=candidates.findIndex(x=>x[1]===k)+1;rationale.decision.candidate_count=candidates.length;
+      rationale.decision.leading_candidates=candidates.slice(0,5).map(([value,symbol])=>({symbol,signal_fraction:value}));
+      queue(s,out,k,'koop',time,`Koers ${(signal*100).toFixed(2)}% boven het gemiddelde van de vorige 5 metingen. Budget EUR100; stop -1,5%; kostenbewust doel.`,false,context,rationale);available-=100;count++;}
     if(!count)event(out,'wacht','Geen koopsignaal binnen saldo-, kosten- en risicoregels.',time);
   }
   if(!s.benchmark_units&&quotes.AAPL){s.benchmark_started_at=iso(time);s.benchmark_units=500/(quotes.AAPL.ask*1.0005/s.usd_per_eur*1.001);s.benchmark_cash=0;}

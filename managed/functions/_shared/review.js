@@ -77,7 +77,7 @@ export function costScenario(s,symbol,budget=100){
 export function diagnose(portfolio,input){
  const s=portfolio.state,trades=input.trades||[],quality=input.quality||[],versions={};
  for(const t of trades){
-  const key=(t.strategy_version||'momentum-v1')+' / '+(t.transport_version||'legacy');
+  const key=(t.strategy_version||'momentum-v1')+' / '+(t.transport_version||'legacy')+' / '+(t.model_id||'baseline');
   const v=versions[key]||={actions:0,closed_positions:0,realized_eur:0};v.actions++;
   if(t.side==='verkoop'){v.closed_positions++;v.realized_eur+=t.pnl;}
  }

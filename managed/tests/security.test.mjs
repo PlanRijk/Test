@@ -4,17 +4,20 @@ import {verifyOwner} from '../functions/_shared/platform.js';
 import {handler as apiHandler} from '../functions/paper-api/index.js';
 import {handler as tickHandler} from '../functions/paper-tick/index.js';
 import {handler as researchHandler} from '../functions/paper-research/index.js';
+import {handler as learnHandler} from '../functions/paper-learn/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
 globalThis.Deno={env:{get:name=>({SUPABASE_URL:'https://testproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-test-key',PAPERLAB_CRON_TOKEN:'test-cron-secret'})[name]}};
 const jwt=(sub=uid,aal='aal2')=>'header.'+Buffer.from(JSON.stringify({sub,aal,session_id:sid})).toString('base64url')+'.signature';
-function req({token=jwt(),method='GET',body,site=origin}={}){return new Request('https://testproject.supabase.co/functions/v1/paper-api',{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),Origin:site,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});}
+function req({token=jwt(),method='GET',body,site=origin,query=''}={}){return new Request('https://testproject.supabase.co/functions/v1/paper-api'+query,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),Origin:site,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});}
 function mock({user={id:uid},session=true}={}){
  globalThis.fetch=async(url,opts={})=>{
   if(String(url).endsWith('/paper_context'))return Response.json(settings);
   if(String(url).endsWith('/auth/v1/user'))return Response.json(user);
   if(String(url).endsWith('/paper_session'))return Response.json(session);
   if(String(url).endsWith('/paper_read'))return Response.json({private_data:'owner only'});
+  if(String(url).endsWith('/paper_learning_read'))return Response.json({samples:0,enabled:true});
+  if(String(url).endsWith('/paper_purchase_analysis'))return Response.json([]);
   throw Error('Unexpected call: '+url);
  };
 }
@@ -31,4 +34,9 @@ test('browser cannot choose arbitrary database commands',async()=>{mock();const 
 test('cron is not executable without the independent cron secret',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await tickHandler(new Request('https://test/functions/v1/paper-tick',{method:'POST',body:'{}'}));assert.equal(r.status,401);});
 test('manual research cannot bypass its cron-secret gate using an owner JWT',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{Authorization:'Bearer '+jwt()},body:'{"manual":true}'}));assert.equal(r.status,401);});
 test('malformed operator research request rejected before source or database access',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'bad json'}));assert.equal(r.status,400);});
+test('learning and purchase explanations require the owner second factor',async()=>{mock();for(const query of ['?learning=1','?purchase-analysis=1','?learning-export=1']){const r=await apiHandler(req({token:jwt(uid,'aal1'),query}));assert.equal(r.status,403);}});
+test('authenticated owner can read the learner without access to arbitrary model parameters',async()=>{mock();const r=await apiHandler(req({query:'?learning=1'}));assert.equal(r.status,200);assert.equal((await r.json()).samples,0);
+ const forbidden=await apiHandler(req({method:'POST',body:{action:'learning',command:'upload-model',weights:[999]}}));assert.equal(forbidden.status,400);});
+test('training endpoint rejects both anonymous requests and owner-JWT requests without cron secret',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};for(const headers of [{},{Authorization:'Bearer '+jwt()}]){const r=await learnHandler(new Request('https://test/functions/v1/paper-learn',{method:'POST',headers,body:'{"manual":true}'}));assert.equal(r.status,401);}});
+test('purchase analysis identifiers are validated before database access',async()=>{mock();const r=await apiHandler(req({query:'?shadow-receipt=drop-table'}));assert.equal(r.status,400);});
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});

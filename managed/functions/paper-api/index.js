@@ -26,6 +26,14 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('learning'))return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('learning-trades'))return reply(await rpc('paper_learning_trades',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('learning-export'))return reply(await rpc('paper_learning_export',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('shadow-receipt')){
+        const id=Number(url.searchParams.get('shadow-receipt'));if(!Number.isSafeInteger(id)||id<1)return reply({error:'Ongeldig bewijs-ID.'},400,origin);
+        const result=await rpc('paper_learning_trades',{p_owner:user.id,p_id:id});return reply(result||{error:'Niet gevonden.'},result?200:404,origin);
+      }
+      if(url.searchParams.has('purchase-analysis'))return reply(await rpc('paper_purchase_analysis',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('receipt')){
         const id=Number(url.searchParams.get('receipt'));if(!Number.isSafeInteger(id)||id<1)return reply({error:'Ongeldig transactie-ID.'},400,origin);
         const result=await rpc('paper_receipt',{p_owner:user.id,p_id:id});return reply(result||{error:'Niet gevonden.'},result?200:404,origin);
@@ -36,6 +44,12 @@ export async function handler(request){
     if(['start','pause'].includes(body.action)){
       await rpc('paper_action',{p_owner:user.id,p_action:body.action});
       return reply(await rpc('paper_read',{p_owner:user.id,p_revision:-1}),200,origin);
+    }
+    if(body.action==='learning'){
+      const actions=['promote','rollback','pause','resume','restart','auto-on','auto-off'];if(!actions.includes(body.command)||body.model&&!/^lr-[a-f0-9]{24}$/.test(body.model))return reply({error:'Ongeldige leerbediening.'},400,origin);
+      const ok=await rpc('paper_learning_action',{p_owner:user.id,p_action:body.command,p_model:body.model||null});
+      if(!ok)return reply({error:'Model voldoet niet aan de bewijsvoorwaarden of de hoofdportefeuille is niet leeg.'},409,origin);
+      return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='step'){
       const response=await fetch(base()+'/functions/v1/paper-tick',{method:'POST',headers:{'Content-Type':'application/json','X-PaperLab-Cron':env('PAPERLAB_CRON_TOKEN')},body:JSON.stringify({manual:true}),signal:AbortSignal.timeout(80000)});

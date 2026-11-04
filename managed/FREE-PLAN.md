@@ -1,6 +1,6 @@
 # Gratis proef: verbruik en grenzen
 
-Gecontroleerd op 3 november 2026. De bestaande einddatum is op verzoek met dertig
+Bijgewerkt op 4 november 2026. De bestaande einddatum is op verzoek met dertig
 dagen verlengd tot **6 december 2026, 21:00 UTC / 22:00 Belgische tijd**.
 Er is geen betaald plan, betaalde server, disk, domein, SMS of AI-model geactiveerd.
 
@@ -21,8 +21,10 @@ in hetzelfde account. De dashboardmeters van de providers blijven leidend.
   Bronbevestiging van de eigen beurssessie blijft vereist; gesloten markten worden
   niet gebruikt. Dit tijdvak omvat de geselecteerde markten bij zomer- en wintertijd.
 - Maximaal 3.864 geplande koersrondes in een maand met 23 werkdagen, plus hoogstens
-  46 bronnencontroles. Eén continu open dashboard voegt hoogstens circa
-  44.640 API-aanroepen per 31 dagen toe, afgezien van handmatige bediening.
+  46 bronnencontroles en 46 leercontroles. Eén continu open dashboard voegt circa
+  44.640 basisstatusaanroepen per 31 dagen toe, afgezien van handmatige bediening.
+  Een geopende leerpagina vraagt bovendien enkele compacte deeloverzichten op;
+  deze schatting is geen totaal voor alle dashboardroutes.
 - Twaalf koerspunten per bedrijf in de actieve status. De strategie gebruikt
   zes punten; de signaalregels blijven gelijk. Bestaande transactiebewijzen blijven
   behouden. Ruwe geaccepteerde quotes blijven twee dagen beschikbaar.
@@ -34,8 +36,14 @@ in hetzelfde account. De dashboardmeters van de providers blijven leidend.
   wetenschappelijke PDFs worden niet dagelijks gedownload of opgeslagen.
 - Automatische pauze bij 300 MB totale databasegrootte, 10.000 gemeten koerspogingen
   in een UTC-kalendermaand, of een app-raming van 3 GB automatisch dataverkeer.
-  De raming telt per koerspoging viermaal de statusgrootte plus vaste overhead.
+  De raming telt per koerspoging viermaal de hoofd- en leerstatus plus vaste overhead.
   Deze grenzen zijn lokaal ook met geforceerd lage budgetten getest.
+- De afzonderlijke referentie en varianten delen dezelfde opgehaalde koersen;
+  zij doen geen extra marktdata- of AI-aanroepen. Leerverwerking pauzeert eerder,
+  bij 250 MB database of 2,4 GB geraamd workerverkeer. Modellen worden maximaal
+  driemaal per negentig dagen getraind. De laatste 2.000 opleidingsvoorbeelden
+  blijven maximaal 180 dagen; dagelijkse leeraggregaten 120 dagen. Aankoopdossiers
+  blijven behouden, ook als hun opleidingsvoorbeeld later wordt opgeruimd.
 - In de website verschijnt een waarschuwing vanaf 70% van een app-budget.
   Een pauze doet geen abonnementupgrade en plaatst geen echte brokerorders.
 - Automatische Render-deployments staan uit. Builds zijn kort en starten alleen

@@ -57,7 +57,7 @@ De bestaande AAPL-lijn is onvoldoende gelijkwaardig: één aandeel en afwijkende
 belasting-/kostenaannames. Een echte vergelijkbare ETF-benchmark is nog niet
 geïmplementeerd; gegevens en toepasselijke Belgische heffingen moeten eerst kloppen.
 
-Twee volgende onderzoekshypothesen zijn vooraf vastgelegd, nog niet geactiveerd:
+Twee verdere onderzoekshypothesen zijn vooraf vastgelegd:
 
 - **Minder omzet:** toets of een dagelijkse/langzamere trendvariant na alle kosten
   beter presteert dan de intradaybaseline en een eenvoudige marktbenchmark.
@@ -73,6 +73,12 @@ testperioden en een vergelijkbare benchmark. Dagprijzen of vertraagde koersen
 mogen voor historisch onderzoek bruikbaar zijn, maar worden daardoor geen
 toegestane actuele uitvoeringskoersen. De dertig dagen dienen eerst voor
 operationele validatie en hypothesevorming, niet als bewijs van blijvende winst.
+
+Sinds 4 november is daarnaast een begrensde leerpijplijn geïnstalleerd. Zij
+vergelijkt de vaste referentie, een afzonderlijke variant met minder omzet en,
+zodra genoeg gegevens bestaan, een statistisch koopfilter. Dit vervangt de
+bovenstaande ontbrekende historische en marktbenchmarktoetsen niet. De exacte
+gegevensvoorwaarden en promotiegrenzen staan in [LEARNING.md](LEARNING.md).
 
 ## Automatische, begrensde bron- en portefeuille-evaluatie
 
@@ -93,9 +99,10 @@ De portefeuillecollector blijft afzonderlijk draaien.
 - Geen betaalde data, AI-aanroepen, managementtokens in de functies of echte orders.
   De grenzen in [FREE-PLAN.md](FREE-PLAN.md) blijven gelden.
 
-Een automatisch rapport formuleert onderzoeksvragen. Het traint geen model en
-gaat niet zelfstandig nieuwe websites ontdekken of bewezen winstgevende regels
-promoveren. In deze chat interpreteer ik de opgeslagen resultaten verder wanneer
+Een automatisch bronnenrapport formuleert onderzoeksvragen. Deze bronnenroutine
+traint geen model en ontdekt niet zelfstandig nieuwe websites. De afzonderlijke
+leerroutine kan uitsluitend een getoetst koopfilter binnen de paperproef activeren;
+dat bewijst geen toekomstige winst. In deze chat interpreteer ik resultaten wanneer
 we eraan werken; er draait geen permanente denkende chatsessie.
 
 ## Bronnen

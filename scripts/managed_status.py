@@ -26,7 +26,7 @@ def status():
     jobs=sql(REF,"""select j.jobname,j.schedule,j.active,
       (select max(start_time) from cron.job_run_details d where d.jobid=j.jobid) as latest_run,
       (select d.status from cron.job_run_details d where d.jobid=j.jobid order by start_time desc limit 1) as latest_run_status
-      from cron.job j where j.jobname in ('paperlab-tick','paperlab-research') order by j.jobname""",True)
+      from cron.job j where j.jobname in ('paperlab-tick','paperlab-research','paperlab-learn') order by j.jobname""",True)
     budget=sql(REF,"select * from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date",True)
     return {'site':'https://paperlab-prive.onrender.com','portfolio':portfolio,'jobs':jobs,
             'automatic_processing_budget':budget,
