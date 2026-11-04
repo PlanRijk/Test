@@ -1,4 +1,5 @@
 import {allowedOrigin,base,claims,context,digest,env,reply,requestBody,rpc,serviceKey,verifyOwner} from '../_shared/platform.js';
+import {annualTaxReport} from '../_shared/tax-report.js';
 
 export async function handler(request){
   let settings,origin='';
@@ -26,6 +27,15 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('tax-report')){
+        const year=Number(url.searchParams.get('year')||new Date().getUTCFullYear());if(!Number.isInteger(year)||year<2026||year>new Date().getUTCFullYear())return reply({error:'Ongeldig belastingjaar.'},400,origin);
+        return reply(annualTaxReport(await rpc('paper_tax_input',{p_owner:user.id}),year),200,origin);
+      }
+      if(url.searchParams.has('reliability'))return reply(await rpc('paper_reliability_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('archive-export')){
+        const before=url.searchParams.get('before');if(before&&!/^op-[a-f0-9]{24}$/.test(before))return reply({error:'Ongeldige archiefcursor.'},400,origin);
+        return reply(await rpc('paper_archive_export',{p_owner:user.id,p_before:before}),200,origin);
+      }
       if(url.searchParams.has('opportunities'))return reply(await rpc('paper_opportunity_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('opportunity-export'))return reply(await rpc('paper_opportunity_records',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('opportunity')){

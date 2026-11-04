@@ -47,6 +47,7 @@ export async function stepOpportunities(payload,market,batch,time=Date.now()){
  if(s.fingerprint!==fingerprint)return {revision:payload.revision,state:{...s,status:'profile_changed',message:'Kosten- of onderzoeksprotocol gewijzigd; geen gemengde uitkomsten.'},records,updates};
  const quotes=Object.fromEntries(Object.entries(batch.quotes||{}).filter(([k,q])=>validQuote(k,q,time)));
  const today=stamp(time).slice(0,10);s.seen=Object.fromEntries(Object.entries(s.seen).filter(([k])=>k.includes('|'+today+'|')));
+ s.storage_paused=(payload.max_new_records??200)===0;
  const patch=(r,p)=>updates.push({id:r.id,...p});
  for(const [id,r]of Object.entries(s.active)){
   const q=quotes[r.symbol],same=q&&q.session_start===r.session_start&&q.session_end===r.session_end;
@@ -79,6 +80,7 @@ export async function stepOpportunities(payload,market,batch,time=Date.now()){
   for(const cohort of STUDY.cohorts){
    if(cohort==='momentum'&&signal<=.002||cohort==='control'&&time<Date.parse(q.session_start)+1800000)continue;
    const key=k+'|'+localDay+'|'+cohort;if(s.seen[key])continue;
+   if(records.length>=(payload.max_new_records??200)){s.storage_paused=true;continue;}
    if(Object.keys(s.active).length>=200){s.skipped_capacity++;continue;}
    const id='op-'+(await sha(s.started_at+'|'+fingerprint+'|'+key)).slice(0,24),reasons=mainReasons(market,k);
    const statement=cohort==='momentum'?`Eerste verse momentumkans van deze beursdag: ${(signal*100).toFixed(3)}% boven het gemiddelde van vijf eerdere metingen. Onafhankelijke waarneming, ook bij ontbrekende ruimte in de hoofdproef.`:'Eerste bruikbare controlemoment vanaf dertig minuten na beursopening, gekozen zonder eis aan de richting van het koopsignaal.';
@@ -92,6 +94,6 @@ export async function stepOpportunities(payload,market,batch,time=Date.now()){
  s.basket=basketStep(s.basket,market,quotes,time);
  if(s.last_bucket!==epoch(time)){s.rounds++;s.last_bucket=epoch(time);}
  s.last_check=stamp(time);s.last_fresh=Object.keys(quotes).length;s.last_expected=batch.expected_open?.length||0;s.status='collecting';
- s.message='Losse kansen en vaste controlewaarnemingen verzamelen gegevens; hoofdorders en trainingslabels blijven afzonderlijk.';
+ s.message=s.storage_paused?'Archiefgrens bereikt: bestaande observaties worden gevolgd, nieuwe observaties wachten op opslagruimte.':'Losse kansen en vaste controlewaarnemingen verzamelen gegevens; hoofdorders en trainingslabels blijven afzonderlijk.';
  return {revision:payload.revision,state:s,records,updates};
 }

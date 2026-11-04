@@ -1,7 +1,8 @@
 import {constantEqual,env,reply,requestBody,rpc} from '../_shared/platform.js';
 import {possibleSession} from '../_shared/engine.js';
 import {BY_SYMBOL} from '../_shared/catalogue.js';
-import {trainCandidate,forwardVerdict,verifyArtifact} from '../_shared/learner.js';
+import {forwardVerdict,verifyArtifact} from '../_shared/learner.js';
+import {reliableTrain} from '../_shared/reliability.js';
 import {pairedDays} from '../_shared/learning-runtime.js';
 
 export async function handler(request){
@@ -16,8 +17,9 @@ export async function handler(request){
    const days=pairedDays(input.days_data||[],m.artifact.id),verdict=forwardVerdict(m.artifact,days,input.closes?.[m.artifact.id]||0);
    await rpc('paper_learning_review',{p_model:m.artifact.id,p_verdict:verdict});
   }
-  const result=input.model_limit_reached?{status:'trial_budget',blocked:['Maximaal drie nieuwe modellen per negentig dagen; geen onbeperkte parameterzoektocht.'],samples:input.sample_count,days:input.days}:
-   await trainCandidate(input.samples||[],{fingerprint:input.fingerprint,previousCutoff:input.previous_cutoff});
+  const result=input.forward_trial_pending?{status:'forward_trial_pending',blocked:['Eerst de bestaande bevroren proef/modellevensduur afronden of opslag voor datasets vrijmaken.'],samples:input.sample_count,days:input.days}:
+   input.model_limit_reached?{status:'trial_budget',blocked:['Maximaal drie nieuwe modellen per negentig dagen; geen onbeperkte parameterzoektocht.'],samples:input.sample_count,days:input.days}:
+   await reliableTrain(input.samples||[],{fingerprint:input.fingerprint,previousCutoff:input.previous_cutoff});
   if(result.status==='waiting_data'){result.samples=input.sample_count;result.days=input.days;}
   const stored=await rpc('paper_learning_store',{p_token:input.token,p_result:result});
   return reply({status:stored?result.status:'superseded',samples:result.samples,days:result.days,model_created:stored&&result.status==='trained',real_trading:false});

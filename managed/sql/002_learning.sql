@@ -21,7 +21,7 @@ create table if not exists paperlab.learning_samples (
 );
 create index if not exists learning_samples_available on paperlab.learning_samples(available_at);
 create or replace view paperlab.learning_eligible_samples with(security_barrier=true) as
- select * from paperlab.learning_samples where available_at>=now()-interval '180 days' and (decision_time at time zone 'UTC')::date=(available_at at time zone 'UTC')::date;
+ select * from paperlab.learning_samples where available_at>=now()-interval '730 days' and (decision_time at time zone 'UTC')::date=(available_at at time zone 'UTC')::date;
 revoke all on paperlab.learning_eligible_samples from public,anon,authenticated,service_role;
 create table if not exists paperlab.learning_trades (
  id bigint generated always as identity primary key,time timestamptz not null,account text not null,phase text not null,trade jsonb not null
@@ -176,13 +176,24 @@ begin
   update paperlab.portfolio set state=jsonb_set(state,'{pending}',coalesce((select jsonb_agg(e.value) from jsonb_array_elements(state->'pending') as e(value) where e.value->>'side'<>'koop'),'[]'::jsonb)) where singleton;
   insert into paperlab.learning_events(kind,message) values('automatic_rollback',left(p_output->>'rollback',240));
  end if;
- delete from paperlab.learning_samples where available_at<now()-interval '180 days' or id in(select id from paperlab.learning_samples order by available_at desc offset 2000);
+ delete from paperlab.learning_samples where available_at<now()-interval '730 days' or id in(select id from paperlab.learning_samples order by available_at desc offset 5000);
  -- Every purchase explanation and its linked outcome remain available for audit.
- delete from paperlab.learning_trades where trade->>'side'='verkoop' and (time<now()-interval '180 days' or id in(select id from paperlab.learning_trades where trade->>'side'='verkoop' order by id desc offset 5000));
- delete from paperlab.learning_days where day<(now() at time zone 'UTC')::date-120;
+ delete from paperlab.learning_trades where trade->>'side'='verkoop' and (time<now()-interval '730 days' or id in(select id from paperlab.learning_trades where trade->>'side'='verkoop' order by id desc offset 10000));
+ delete from paperlab.learning_days where day<(now() at time zone 'UTC')::date-365;
  delete from paperlab.learning_events where id in(select id from paperlab.learning_events order by id desc offset 500);
  return true;
 end$$;
+
+create or replace function public.paper_learning_requirements() returns jsonb
+language sql stable security definer set search_path=pg_catalog,pg_temp as $$select '{"samples":100,"days":20,"forward_days":20,"forward_closes":30}'::jsonb;$$;
+create or replace function public.paper_learning_can_train() returns boolean
+language sql stable security definer set search_path=pg_catalog,pg_temp as $$select true;$$;
+create or replace function public.paper_learning_capture_input(p_token uuid,p_fingerprint text,p_data jsonb) returns void
+language plpgsql security definer set search_path=pg_catalog,pg_temp as $$begin return;end$$;
+create or replace function public.paper_learning_record_dataset(p_token uuid,p_artifact jsonb) returns void
+language plpgsql security definer set search_path=pg_catalog,pg_temp as $$begin return;end$$;
+create or replace function public.paper_learning_artifact_allowed(p_artifact jsonb) returns boolean
+language sql stable security definer set search_path=pg_catalog,pg_temp as $$select true;$$;
 
 create or replace function public.paper_learning_read(p_owner uuid) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
@@ -197,12 +208,12 @@ begin
   'models',(select coalesce(jsonb_agg(q order by q.created_at desc),'[]'::jsonb) from
     (select id,created_at,status,artifact->'metrics' as metrics,artifact->'windows' as windows,artifact->'offline_blockers' as offline_blockers,artifact->>'training_cutoff' as training_cutoff,verdict,reviewed_at from paperlab.learning_models order by created_at desc limit 5) q),
   'events',(select coalesce(jsonb_agg(q order by q.id desc),'[]'::jsonb) from(select * from paperlab.learning_events order by id desc limit 25) q),
-  'requirements',jsonb_build_object('samples',100,'days',20,'forward_days',20,'forward_closes',30),'real_trading',false);
+  'requirements',public.paper_learning_requirements(),'real_trading',false);
 end$$;
 
 create or replace function public.paper_learning_train_input() returns jsonb
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
-declare r paperlab.learning_runtime;t uuid;n integer;d integer;data jsonb;recent integer;charge bigint;m date;
+declare r paperlab.learning_runtime;t uuid;n integer;d integer;data jsonb;recent integer;charge bigint;m date;req jsonb;can_train boolean;
 begin
  select * into r from paperlab.learning_runtime where singleton for update;
  if not r.enabled or r.train_until>now() or r.last_train_check>now()-interval '30 minutes' or
@@ -210,8 +221,9 @@ begin
  select count(*),count(distinct (available_at at time zone 'UTC')::date) into n,d from paperlab.learning_eligible_samples
   where fingerprint=r.state->>'fingerprint' and available_at<date_trunc('day',now() at time zone 'UTC') at time zone 'UTC';
  select count(*) into recent from paperlab.learning_models where created_at>now()-interval '90 days';
+ req:=public.paper_learning_requirements();can_train:=public.paper_learning_can_train();
  data:='[]';
- if n>=100 and d>=20 and recent<3 then
+ if n>=(req->>'samples')::integer and d>=(req->>'days')::integer and recent<3 and can_train then
   select coalesce(jsonb_agg(q order by q.available_at),'[]'::jsonb) into data from
    (select * from paperlab.learning_eligible_samples where fingerprint=r.state->>'fingerprint' and available_at<date_trunc('day',now() at time zone 'UTC') at time zone 'UTC' order by available_at desc limit 2000) q;
  end if;
@@ -220,7 +232,8 @@ begin
  if pg_database_size(current_database())>=300000000 or (select estimated_worker_egress_bytes+charge>max_worker_egress_bytes from paperlab.free_usage where month=m) then return null;end if;
  update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+charge where month=m;
  t:=gen_random_uuid();update paperlab.learning_runtime set train_lease=t,train_until=now()+interval '120 seconds',last_train_check=now() where singleton;
- return jsonb_build_object('token',t,'fingerprint',r.state->>'fingerprint','samples',data,'sample_count',n,'days',d,'model_limit_reached',recent>=3,
+ if jsonb_array_length(data)>0 then perform public.paper_learning_capture_input(t,r.state->>'fingerprint',data);end if;
+ return jsonb_build_object('token',t,'fingerprint',r.state->>'fingerprint','samples',data,'sample_count',n,'days',d,'model_limit_reached',recent>=3,'forward_trial_pending',not can_train,
   'previous_cutoff',(select max(artifact->>'training_cutoff') from paperlab.learning_models where artifact->>'fingerprint'=r.state->>'fingerprint'),
   'models',(select coalesce(jsonb_agg(jsonb_build_object('artifact',artifact,'status',status)),'[]'::jsonb) from paperlab.learning_models where status in('shadow','eligible','active')),
   'days_data',(select coalesce(jsonb_agg(record),'[]'::jsonb) from paperlab.learning_days where day<(now() at time zone 'UTC')::date),
@@ -229,17 +242,20 @@ end$$;
 
 create or replace function public.paper_learning_store(p_token uuid,p_result jsonb) returns boolean
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
-declare r paperlab.learning_runtime;a jsonb;
+declare r paperlab.learning_runtime;a jsonb;req jsonb;
 begin
  select * into r from paperlab.learning_runtime where singleton for update;
  if p_token is null or r.train_lease is distinct from p_token or r.train_until<=now() then return false;end if;
  a:=p_result->'artifact';
+ req:=public.paper_learning_requirements();
  if a is not null and a<>'null'::jsonb then
-  if (select count(*)<100 or count(distinct (available_at at time zone 'UTC')::date)<20 from paperlab.learning_eligible_samples where fingerprint=r.state->>'fingerprint' and available_at<date_trunc('day',now() at time zone 'UTC') at time zone 'UTC') then raise exception 'Insufficient reference data';end if;
+  if (select count(*)<(req->>'samples')::integer or count(distinct (available_at at time zone 'UTC')::date)<(req->>'days')::integer from paperlab.learning_eligible_samples where fingerprint=r.state->>'fingerprint' and available_at<date_trunc('day',now() at time zone 'UTC') at time zone 'UTC') then raise exception 'Insufficient reference data';end if;
+  if not public.paper_learning_artifact_allowed(a) then raise exception 'Independent reliability policy not met';end if;
   if a->>'algorithm'<>'net-logit-v1' or a->>'feature_schema'<>'decision-net-v1' or a->>'fingerprint'<>r.state->>'fingerprint' or octet_length(a::text)>16000
    or jsonb_array_length(a->'weights')<>7 or jsonb_array_length(a->'mean')<>7 or jsonb_array_length(a->'scale')<>7 or (a->>'threshold')::numeric<>.6 then raise exception 'Invalid model';end if;
   if (select count(*) from paperlab.learning_models where created_at>now()-interval '90 days')>=3 then raise exception 'Training trial budget exceeded';end if;
   insert into paperlab.learning_models(id,artifact,dataset_hash) values(a->>'id',a,a->>'dataset_hash') on conflict(dataset_hash) do nothing;
+  perform public.paper_learning_record_dataset(p_token,a);
   insert into paperlab.learning_events(kind,message) values('trained','Nieuw beperkt model getraind; alleen schaduwgebruik, afzonderlijke toetsing blijft vereist.');
  end if;
  update paperlab.learning_runtime set training_status=p_result-'artifact',train_lease=null,train_until=null where singleton;

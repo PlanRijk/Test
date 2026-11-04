@@ -79,6 +79,7 @@ def database(ref):
     sql(ref,(ROOT/'managed/sql/002_learning.sql').read_text())
     sql(ref,(ROOT/'managed/sql/003_continuous.sql').read_text())
     sql(ref,(ROOT/'managed/sql/004_opportunities.sql').read_text())
+    sql(ref,(ROOT/'managed/sql/005_reliability.sql').read_text())
     sql(ref,import_sql(state,records))
     result=sql(ref,"select (state->>'cash')::float8 as cash_eur,(select count(*) from paperlab.trades) as trades,revision from paperlab.portfolio where singleton",True)
     if not result or abs(result[0]['cash_eur']-manifest['cash_eur'])>1e-6 or result[0]['trades']!=manifest['trades']:
@@ -90,7 +91,7 @@ def database(ref):
 def functions(ref):
     implementation_fingerprint()
     # Sequential: simultaneous first-time creations were observed to lose list entries.
-    for slug in ['paper-api','paper-tick','paper-research','paper-learn']:
+    for slug in ['paper-api','paper-tick','paper-research','paper-learn','paper-audit']:
         result=deploy_function(ref,slug);verified=request('supabase','/v1/projects/'+ref+'/functions/'+slug)
         if verified.get('status')!='ACTIVE':raise RuntimeError('Function not active: '+slug)
         private_json(slug+'-deployment.json',result)
@@ -112,9 +113,12 @@ def learning_schema(ref):
       'trades',(select coalesce(jsonb_agg(t order by t.id),'[]'::jsonb) from paperlab.trades t),
       'equity',(select coalesce(jsonb_agg(e order by e.id),'[]'::jsonb) from paperlab.equity e),
       'events',(select coalesce(jsonb_agg(e order by e.id),'[]'::jsonb) from paperlab.events e),
-      'observations',(select coalesce(jsonb_agg(o order by o.id),'[]'::jsonb) from paperlab.observations o)) as backup""",True)[0]['backup']
+      'observations',(select coalesce(jsonb_agg(o order by o.id),'[]'::jsonb) from paperlab.observations o),
+      'learning_runtime',(select to_jsonb(l) from paperlab.learning_runtime l),
+      'opportunity_runtime',(select to_jsonb(o) from paperlab.opportunity_runtime o),
+      'opportunities',(select coalesce(jsonb_agg(o),'[]') from paperlab.opportunity_records o)) as backup""",True)[0]['backup']
     private_json('learning-backup-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.json',backup)
-    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql','004_opportunities.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
+    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql','004_opportunities.sql','005_reliability.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
     print(json.dumps({'stage':'learning-schema','status':'upgraded_without_reset','preserved_trade_actions':len(backup['trades'])}))
 
 
@@ -131,7 +135,7 @@ def learning_enable(ref):
 
 def schedule_jobs(ref):
     base='https://'+ref+'.supabase.co/functions/v1/'
-    for job,schedule,slug in [('paperlab-tick','*/5 7-20 * * 1-5','paper-tick'),('paperlab-research','30 6,22 * * 1-5','paper-research'),('paperlab-learn','45 6,22 * * 1-5','paper-learn')]:
+    for job,schedule,slug in [('paperlab-tick','*/5 7-20 * * 1-5','paper-tick'),('paperlab-research','30 6,22 * * 1-5','paper-research'),('paperlab-learn','45 6,22 * * 1-5','paper-learn'),('paperlab-audit','0 23 * * 1-5','paper-audit')]:
         command="select net.http_post(url := "+literal(base+slug)+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state)"+(" and (state->>'running')::boolean" if slug=='paper-tick' else '')+");"
         sql(ref,'select cron.schedule('+literal(job)+','+literal(schedule)+','+literal(command)+');')
     sql(ref,"select cron.schedule('paperlab-maintenance','15 3 * * *','select public.paper_maintenance();');")
@@ -164,6 +168,27 @@ def public_config(ref):
         payload=json.loads(base64.urlsafe_b64decode(public.split('.')[1]+'=='))
         if payload.get('role')!='anon':raise RuntimeError('Refusing to publish a privileged JWT.')
     (ROOT/'managed/web/config.js').write_text('export const CONFIG = '+json.dumps({'url':'https://'+ref+'.supabase.co','key':public})+';\n')
+
+
+def reliability_enable(ref):
+    row=sql(ref,'select state,revision from paperlab.portfolio where singleton',True)[0]
+    # The upgrade strengthens validation only; account and execution rules stay intact.
+    subprocess.run(['git','diff','--exit-code','--','managed/functions/_shared/engine.js','managed/functions/_shared/market.js'],cwd=ROOT,check=True,capture_output=True)
+    code="import fs from 'node:fs';import {learningFingerprint} from './managed/functions/_shared/learning-runtime.js';process.stdout.write(await learningFingerprint(JSON.parse(fs.readFileSync(0,'utf8'))));"
+    fp=subprocess.run(['node','--input-type=module','-e',code],input=json.dumps(row['state']),text=True,capture_output=True,cwd=ROOT,check=True).stdout
+    if len(fp)!=64:raise RuntimeError('Missing implementation fingerprint')
+    catcode="import {COMPANIES} from './managed/functions/_shared/catalogue.js';process.stdout.write(JSON.stringify(COMPANIES.map(x=>({symbol:x.symbol,sector:x.sector,venue:x.exchange}))));"
+    catalogue=json.loads(subprocess.check_output(['node','--input-type=module','-e',catcode],cwd=ROOT,text=True))
+    sql(ref,'insert into paperlab.reliability_catalogue select * from jsonb_to_recordset('+jsql(catalogue)+')x(symbol text,sector text,venue text) on conflict(symbol) do update set sector=excluded.sector,venue=excluded.venue;')
+    sql(ref,"""begin;select 1 from paperlab.portfolio where singleton for update;
+      do $$begin if (select revision from paperlab.portfolio where singleton)<>"""+str(row['revision'])+""" then raise exception 'Portfolio advanced; reread before migration';end if;
+      if exists(select 1 from paperlab.learning_models) or exists(select 1 from paperlab.learning_samples) then raise exception 'Existing trained evidence requires separate reviewed migration';end if;end$$;
+      insert into paperlab.learning_epochs(reason,old_runtime) select 'reliability-v1: validation upgrade; positions, cash and risk retained',to_jsonb(r) from paperlab.learning_runtime r where state->>'validation_policy' is distinct from 'reliability-v1';
+      update paperlab.learning_runtime set state=state||jsonb_build_object('fingerprint',"""+literal(fp)+""",'validation_policy','reliability-v1','run_id','reliable-'||now()::text,'started_at',now(),'day_accumulators','{}'::jsonb),revision=revision+1 where state->>'validation_policy' is distinct from 'reliability-v1';
+      update paperlab.portfolio set revision=revision+1,lease=null,lease_until=null where singleton;
+      insert into paperlab.learning_events(kind,message) values('validation_upgrade','Strengere onafhankelijke toetsing en reproduceerbare datasets; bestaande rekeningen en posities behouden. Overgenomen oude kenmerken blijven uitgesloten.');commit;""")
+    schedule_jobs(ref)
+    print(json.dumps({'stage':'reliability-enable','status':'accounts_preserved_and_audit_scheduled','paid_resources':False}))
 
 
 def site(ref,owner):
@@ -227,7 +252,7 @@ def activate(ref,origin,email):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable','continuous-enable'])
+    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable','continuous-enable','reliability-enable'])
     parser.add_argument('--owner');parser.add_argument('--origin');parser.add_argument('--email')
     args=parser.parse_args();selected=project();ref=selected['id']
     if args.stage=='inspect':print(json.dumps({k:selected.get(k) for k in ['id','name','region','status']}))
@@ -238,6 +263,7 @@ def main():
     elif args.stage=='learning-schema':learning_schema(ref)
     elif args.stage=='learning-enable':learning_enable(ref)
     elif args.stage=='continuous-enable':continuous_enable(ref)
+    elif args.stage=='reliability-enable':reliability_enable(ref)
     elif args.stage=='activate':
         if not args.email:raise ValueError('Owner email required; no account inferred automatically.')
         activate(ref,args.origin,args.email)

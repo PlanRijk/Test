@@ -107,3 +107,14 @@ groeien, is een toekomstige opslagpauze mogelijk, ook bij doorlopende planning.
 - [Supabase Spend Cap en Free](https://supabase.com/docs/guides/platform/manage-your-usage/spend-cap)
 - [Supabase-dataverkeer](https://supabase.com/docs/guides/platform/manage-your-usage/egress)
 - [Supabase Edge-aanroepen](https://supabase.com/docs/guides/platform/manage-your-usage/edge-function-invocations)
+
+## Betrouwbaarheidsuitbreiding, 4 november
+
+Naast de 5.000 uitgebreide dossiers blijven maximaal 50.000 compacte records tot
+twee jaar bewaard, met beschermde toetsvakken en aanvullende omvangsbegrenzing.
+Een representatieve lokale 50k-test gebruikte circa 71 MB inclusief indexen.
+Genuine referentievoorbeelden: maximaal 5.000/twee jaar; leerdagen en kwaliteit:
+één jaar. Verkoopevents van afzonderlijke proefrekeningen: maximaal 10.000/twee
+jaar. Trainingssnapshots: maximaal twaalf, samen 24 MB ongecomprimeerd.
+Een aanvullende nachtelijke audit heeft een lease en eigen verbruikscontrole;
+er zijn geen extra koersdownloads of betaalde diensten nodig. Zie RELIABILITY.md.

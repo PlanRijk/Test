@@ -120,6 +120,9 @@ begin
   insert into paperlab.opportunity_days values(d,paperlab.opportunity_day_summary(d)) on conflict(day) do update set record=excluded.record;
  end loop;
  update paperlab.opportunity_runtime set state=s,revision=revision+1 where singleton;
+ if to_regprocedure('public.paper_opportunity_archive_sync(jsonb)') is not null then
+  perform public.paper_opportunity_archive_sync(coalesce(p_output->'records','[]')||coalesce(p_output->'updates','[]'));
+ end if;
  if s->'basket'->>'stage'='holding' and (s->'basket'->>'current')::boolean and (s->'basket'->>'main_current')::boolean then
   insert into paperlab.opportunity_benchmark_days values(((s->>'last_check')::timestamptz at time zone 'UTC')::date,
    jsonb_build_object('time',s->>'last_check','fingerprint',s->>'fingerprint','started_at',s->'basket'->>'started_at','basket_eur',s->'basket'->'liquidation_estimate_eur','basket_return_percent',s->'basket'->'return_percent','main_return_percent',s->'basket'->'main_return_since_anchor_percent')) on conflict(day) do update set record=excluded.record;
@@ -128,11 +131,13 @@ begin
 end$$;
 
 create or replace function public.paper_opportunity_maintenance() returns void
-language sql security definer set search_path=pg_catalog,pg_temp as $$
+language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
+begin
+ if to_regprocedure('public.paper_opportunity_archive_sync(jsonb)') is not null then perform public.paper_opportunity_archive_sync(null);end if;
  delete from paperlab.opportunity_records where record->>'status'<>'watching' and(time<now()-interval '90 days' or id in(select id from paperlab.opportunity_records where record->>'status'<>'watching' order by time desc,id desc offset 5000));
  delete from paperlab.opportunity_days where day<(now() at time zone 'UTC')::date-365;
  delete from paperlab.opportunity_benchmark_days where day<(now() at time zone 'UTC')::date-365;
-$$;
+end$$;
 
 create or replace function public.paper_opportunity_read(p_owner uuid) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$

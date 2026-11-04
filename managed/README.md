@@ -28,6 +28,10 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 - `sql/004_opportunities.sql`: afzonderlijk kansenregister, vaste meetperioden,
   gespreide indicatieve sectormand en begrensde onderzoeksopslag.
   Zie [OPPORTUNITY-STUDY.md](OPPORTUNITY-STUDY.md).
+- `sql/005_reliability.sql` en `functions/paper-audit`: compact archief,
+  afgeschermde toetsperiodes, bevroren trainingsinvoer, eenmalige onafhankelijke
+  modelbeoordeling en een afzonderlijk fiscaal proefjaaroverzicht.
+  Zie [RELIABILITY.md](RELIABILITY.md) voor voorwaarden en beperkingen.
 
 Het oude Python/SQLite-programma en zijn data blijven behouden. Import herschrijft
 geen bestaande transacties en weigert een afwijkende bestaande doelportefeuille
@@ -88,6 +92,8 @@ node managed/tests/usage.test.mjs
 node managed/tests/review.test.mjs
 node managed/tests/learning.test.mjs
 node managed/tests/opportunities.test.mjs
+node managed/tests/reliability.test.mjs
+node managed/tests/tax-report.test.mjs
 node managed/check-public.mjs
 ```
 
@@ -104,6 +110,8 @@ in een tijdelijke lokale testdatabase.
 budgetpauze en onderhoud zonder aankoopdossiers te verwijderen.
 `tests/test_opportunities_database.py` controleert tijdsvolgorde, afzondering
 van transacties/trainingslabels, beveiliging, budget en foutisolatie.
+`tests/test_reliability_database.py` toetst 50.000 compacte records, opslagrotatie,
+afgeschermde uitkomsten, beoordeling en toelating met verplichte datasetsnapshot.
 
 Een geslaagde lokale test bewijst geen echte providerkoersen of live installatie.
 Voor oplevering moeten schema, import, anonieme weigering, eigenaaractivatie,

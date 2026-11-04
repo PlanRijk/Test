@@ -46,15 +46,16 @@ begin
  delete from paperlab.observations where received<now()-interval '2 days';
  delete from paperlab.events where kind in('wacht','fout') and time<now()-interval '7 days';
  delete from paperlab.research where time<now()-interval '14 days' or id in(select id from paperlab.research order by id desc offset 40);
- delete from paperlab.daily_quality where day<(now() at time zone 'UTC')::date-90;
- delete from paperlab.learning_samples where available_at<now()-interval '180 days' or id in(select id from paperlab.learning_samples order by available_at desc offset 2000);
- delete from paperlab.learning_days where day<(now() at time zone 'UTC')::date-120;
+ delete from paperlab.daily_quality where day<(now() at time zone 'UTC')::date-365;
+ delete from paperlab.learning_samples where available_at<now()-interval '730 days' or id in(select id from paperlab.learning_samples order by available_at desc offset 5000);
+ delete from paperlab.learning_days where day<(now() at time zone 'UTC')::date-365;
  delete from paperlab.learning_events where id in(select id from paperlab.learning_events order by id desc offset 500);
- delete from paperlab.learning_trades where trade->>'side'='verkoop' and (time<now()-interval '180 days' or id in(select id from paperlab.learning_trades where trade->>'side'='verkoop' order by id desc offset 5000));
+ delete from paperlab.learning_trades where trade->>'side'='verkoop' and (time<now()-interval '730 days' or id in(select id from paperlab.learning_trades where trade->>'side'='verkoop' order by id desc offset 10000));
  delete from paperlab.free_usage where month<(date_trunc('month',now() at time zone 'UTC')-interval '24 months')::date;
+ if to_regprocedure('public.paper_reliability_maintenance()') is not null then perform public.paper_reliability_maintenance();end if;
  if to_regprocedure('public.paper_opportunity_maintenance()') is not null then perform public.paper_opportunity_maintenance();end if;
  if to_regclass('cron.job_run_details') is not null then
-  execute $clean$delete from cron.job_run_details where end_time<now()-interval '7 days' and jobid in(select jobid from cron.job where jobname in('paperlab-tick','paperlab-research','paperlab-learn','paperlab-maintenance'))$clean$;
+  execute $clean$delete from cron.job_run_details where end_time<now()-interval '7 days' and jobid in(select jobid from cron.job where jobname in('paperlab-tick','paperlab-research','paperlab-learn','paperlab-maintenance','paperlab-audit'))$clean$;
  end if;
  -- Keep four real observations per old day: first, last, low and high.
  delete from paperlab.equity where time<now()-interval '90 days' and id not in(

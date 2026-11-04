@@ -237,7 +237,7 @@ begin
   if (s->>'tick')::integer%12=0 then
     delete from paperlab.observations where received<now()-interval '2 days';
     delete from paperlab.events where kind in('wacht','fout') and time<now()-interval '7 days';
-    delete from paperlab.daily_quality where day<(now() at time zone 'UTC')::date-90;
+    delete from paperlab.daily_quality where day<(now() at time zone 'UTC')::date-365;
   end if;
   return true;
 end$$;

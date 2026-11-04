@@ -50,6 +50,7 @@ def main():
         q("insert into paperlab.research(report) select '{}'::jsonb from generate_series(1,50);")
         q("insert into paperlab.equity(time,value,benchmark) select date_trunc('day',now()-interval '200 days')+i*interval '1 hour',case when i=2 then 300 when i=10 then 700 else 500+i end,500 from generate_series(0,15) i;")
         q("insert into paperlab.learning_trades(time,account,phase,trade) values(now()-interval '200 days','reference','test','{\"side\":\"koop\"}'),(now()-interval '200 days','reference','test','{\"side\":\"verkoop\"}');")
+        q("insert into paperlab.learning_trades(time,account,phase,trade) values(now()-interval '800 days','reference','old','{\"side\":\"verkoop\"}');")
         before=q('select count(*) from paperlab.trades')
         result=get('select public.paper_maintenance()');assert result['purchase_audits_retained'] is True
         assert int(q('select count(*) from paperlab.research'))==40
@@ -57,7 +58,8 @@ def main():
         assert get("select jsonb_agg(value order by value) from paperlab.equity where time::date=(now()-interval '200 days')::date")==[300,500,515,700]
         assert q('select count(*) from paperlab.trades')==before
         assert int(q("select count(*) from paperlab.learning_trades where trade->>'side'='koop'"))==1
-        assert int(q("select count(*) from paperlab.learning_trades where trade->>'side'='verkoop'"))==0
+        assert int(q("select count(*) from paperlab.learning_trades where trade->>'side'='verkoop'"))==1
+        assert int(q("select count(*) from paperlab.learning_trades where phase='old'"))==0
         checks.append('maintenance_caps_reports_and_compacts_old_curves_without_deleting_purchase_audits')
         assert get('select public.paper_maintenance()')['status']=='maintained'
         for role in ['anon','authenticated']:
