@@ -35,7 +35,9 @@ belasting in 2007. Prijsnadeel 10 bp per zijde; extra stress verdubbelt beide
 commissies en voegt nog 10 bp per zijde toe. Dividendontvangsten krijgen nul netto
 krediet, een conservatieve prijsstudie. Geen totaalrendement of persoonlijke
 belastingaangifte. Splitsingsvensters, sprongen boven 30%, ontbrekende FX en
-oncontroleerbare per-share ADR-kosten van TSM/TM worden uitgesloten met reden.
+oncontroleerbare per-share ADR-kosten van TSM/TM worden uitgesloten met reden. Een herstel vóór modelvorming mag afgeleide
+voorbeelden opnieuw berekenen; oorspronkelijke bronnen, hashes en datagrens blijven
+intact. Zodra een model bestaat, blokkeert een profielwijziging automatisch.
 
 ## Model en controles
 
@@ -96,8 +98,8 @@ Europese transactietapes en individuele beleggersresultaten worden niet beloofd.
 
 Ophalen in batches van maximaal vijftien instrumenten/vier parallelle aanvragen.
 Eén bevroren bronimport; geen herhaalde download van twintig jaar per dag. Afgeleide
-voorbeelden worden per batch berekend, zodat de gratis Edge-worker niet alle
-historie opnieuw hoeft te verwerken. Maximaal veertien claims per UTC-datum;
+voorbeelden worden pas na volledige bronimport in aparte batches berekend, zodat de gratis Edge-worker niet alle
+historie opnieuw hoeft te verwerken. Maximaal veertien bronclaims en veertien rekenclaims per UTC-datum;
 maximaal één prospectieve ronde per datum. Bootstrapcron stopt met HTTP-aanvragen
 zodra het model bestaat of de daggrens is bereikt. Normale cron blijft dagelijks.
 Geen betaalde planwijziging, volumes, domeinen, SMS of AI-aanroepen.

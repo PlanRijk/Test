@@ -39,13 +39,24 @@ def main():
         lease=get('select public.paper_history_claim()');assert lease['stage']=='base';assert get('select public.paper_history_claim()') is None
         base={'symbol':'__base__','status':'available','data':{'fx':{'rows':[],'columns':[]},'mapping':{}},'hash':'a'*64,'source_bytes':1}
         assert commit(lease,{'snapshots':[base]})=='t';assert commit(lease,{'snapshots':[base]})=='f'
+        before_repair=q("select hash,(select cutoff from paperlab.history_runtime) from paperlab.history_snapshots where symbol='__base__'")
+        repaired_protocol={**conf['protocol'],'implementation_sha256':'f'*64}
+        profile=q('select public.paper_history_configure('+jsql(repaired_protocol)+','+jsql(conf['symbols'])+')')
+        assert q("select hash,(select cutoff from paperlab.history_runtime) from paperlab.history_snapshots where symbol='__base__'")==before_repair
+        checks.append('pre_model_repair_preserves_original_sources_and_cutoff')
         rounds=0
         while True:
             lease=get('select public.paper_history_claim()')
+            if lease['stage']=='derive':
+                assert rounds==11, 'Derivation started before every raw source was imported'
+                assert len(lease['snapshots'])==5
+                commit(lease,{'derived':[{'symbol':'AAPL','examples':[],'counts':{'source_candidates':0,'sampled_candidates':0,'excluded':{}}}]})
+                continue
             if lease['stage']=='train':break
             assert lease['stage']=='collect';rounds+=1
-            assert len(lease['symbols'])<=15 and lease['derivation_snapshots'][0]['symbol']=='__base__'
-            commit(lease,{'snapshots':[{'symbol':s,'status':'unavailable','data':{'reason':'local fixture only'},'hash':None,'source_bytes':0} for s in lease['symbols']]})
+            assert len(lease['symbols'])<=15
+            if rounds==1:assert lease['symbols'][:3]==['^GSPC','^STOXX50E','^BFX']
+            commit(lease,{'snapshots':[{'symbol':s,'status':'available' if s in ['AAPL','^GSPC','^STOXX50E','^BFX'] else 'unavailable','data':{'reason':'local fixture only'},'hash':None,'source_bytes':0} for s in lease['symbols']]})
         assert rounds==11
         checks.append('single_use_leases_and_bounded_bootstrap_progress_to_training')
         # Local algorithm-generated fixture. No synthetic observations ever enter production.
@@ -53,6 +64,7 @@ def main():
         result=node(code,{'profile':profile,'cutoff':lease['cutoff'],'snapshots':lease['snapshots']})
         assert result['status']=='historical_model_frozen';assert commit(lease,result)=='t'
         assert q('select count(*) from paperlab.history_models')=='1'
+        q('select public.paper_history_configure('+jsql(conf['protocol'])+','+jsql(conf['symbols'])+')','Frozen history profile differs')
         forward=get('select public.paper_history_claim()');assert forward['stage']=='forward'
         assert forward['artifact']['id']==result['artifact']['id']
         checks.append('actual_fixed_optimizer_artifact_and_frozen_dataset_are_stored_once')
@@ -60,7 +72,8 @@ def main():
         record={'id':rid,'model_id':result['artifact']['id'],'symbol':'AAPL','venue':'XNAS','sector':'IT','decision_at':now.isoformat(),'decision_day':str(today),'known_day':str(today-timedelta(days=1)),'probability':.6,'selected':True,'features':[0]*8,'status':'pending','entry':None,'outcome':None,'reason':None,'origin':'prospective_hypothetical'}
         out={'records':[record],'updates':[],'report':{'status':'collecting_forward','days':0,'automatic_trading_approval':False},'context':[],'checks':[],'connections':[]}
         assert commit(forward,out)=='t';assert get('select public.paper_history_claim()') is None
-        assert q('select calls from paperlab.history_runtime')=='14'
+        assert q('select source_calls from paperlab.history_runtime')=='12'
+        assert q('select compute_calls from paperlab.history_runtime')=='2'
         visible=get('select public.paper_history_read(null)');assert 'dataset' not in visible['model'] and 'token' not in visible['runtime'];assert visible['counts']['predictions']==1
         assert get('select public.paper_history_export(null)')[0]['origin']=='prospective_hypothetical'
         checks.append('daily_forward_limit_private_bounded_export_and_explicit_origin')

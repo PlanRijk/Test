@@ -4,7 +4,7 @@ import {env} from './platform.js';
 import {DAILY_COMPANIES,DAILY_INDICES} from './daily-catalogue.js';
 import {HISTORY_IMPLEMENTATION_SHA} from './history-implementation.js';
 export const HISTORY_PROTOCOL={version:'historical-day-v1',start:'2007-01-01',horizon:20,features:['return_1d','return_5d','return_20d','volatility_20d','log_relative_volume','sp500_5d','eurostoxx50_5d','bel20_5d'],
- implementation_sha256:HISTORY_IMPLEMENTATION_SHA,max_samples:8000,max_company_samples:48,threshold:.6,epochs:100,step:.08,l2:.01,max_models:1,max_snapshot_bytes:64000000,
+ implementation_sha256:HISTORY_IMPLEMENTATION_SHA,max_source_claims_per_day:14,max_compute_claims_per_day:14,max_samples:8000,max_company_samples:48,threshold:.6,epochs:100,step:.08,l2:.01,max_models:1,max_snapshot_bytes:64000000,
  forward_per_day:20,max_forward_active:500,max_forward_records:10000,forward_days:60,forward_closes:300,
  limitations:['Historische simulaties zijn geen gesloten referentietrades.','De huidige bedrijfslijst bevat overlevings- en selectiebias.','Bronhistorie kan achteraf herzien of voor splitsingen aangepast zijn; geen volledig point-in-time archief.',
   'Huidige kosten en Belgische belastingreserves worden als vast scenario op oude prijzen toegepast.','Prijsrendement; dividendontvangsten krijgen conservatief nul netto krediet. Geen totaalrendement.','Geen automatische activatie in de hoofdportefeuille.']};

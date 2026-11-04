@@ -166,7 +166,7 @@ def history_enable(ref):
     result=sql(ref,'select public.paper_history_configure('+jsql(config['protocol'])+','+jsql(config['symbols'])+') as profile')
     command="select net.http_post(url := "+literal('https://'+ref+'.supabase.co/functions/v1/paper-history')+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 140000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state))"
     sql(ref,"select cron.schedule('paperlab-history','20 6 * * *',"+literal(command+';')+');')
-    bootstrap=command+" and not exists(select 1 from paperlab.history_models) and exists(select 1 from paperlab.history_runtime where singleton and enabled and status<>'insufficient_history' and (calls_day is distinct from current_date or calls<14));"
+    bootstrap=command+" and not exists(select 1 from paperlab.history_models) and exists(select 1 from paperlab.history_runtime where singleton and enabled and status<>'insufficient_history' and (calls_day is distinct from current_date or source_calls<14 or compute_calls<14));"
     sql(ref,"select cron.schedule('paperlab-history-bootstrap','*/10 * * * *',"+literal(bootstrap)+');')
     print(json.dumps({'stage':'history-enable','profile':result[0]['profile'],'paid_resources':False,'main_trading_rules':'unchanged'}))
 

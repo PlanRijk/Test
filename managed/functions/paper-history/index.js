@@ -12,13 +12,10 @@ export async function handler(request){
   if(input.protocol?.implementation_sha256!==HISTORY_IMPLEMENTATION_SHA)throw Error('Frozen historical implementation differs');
   let output;
   if(input.stage==='base')output={snapshots:[await historyBase(input.cutoff)]};
-  else if(input.stage==='collect'){
-   const snapshots=await historyBatch(input.symbols,input.cutoff),combined=new Map((input.derivation_snapshots||[]).map(x=>[x.symbol,x]));
-   for(const s of snapshots)combined.set(s.symbol,s);
-   const derived=buildHistorical({...input,snapshots:[...combined.values()]}),anchor=snapshots.find(s=>s.status==='available'&&!s.symbol.startsWith('^'));
-   for(const s of snapshots)if(s.status==='available'&&!s.symbol.startsWith('^'))s.examples=derived.rows.filter(r=>r.symbol===s.symbol);
-   if(anchor)anchor.counts={source_candidates:derived.source_candidates,sampled_candidates:derived.sampled_candidates,excluded:derived.excluded};
-   output={snapshots};
+  else if(input.stage==='collect')output={snapshots:await historyBatch(input.symbols,input.cutoff)};
+  else if(input.stage==='derive'){
+   const derived=buildHistorical(input),stocks=input.snapshots.filter(s=>s.status==='available'&&s.symbol!=='__base__'&&!s.symbol.startsWith('^'));
+   output={derived:stocks.map((s,i)=>({symbol:s.symbol,examples:derived.rows.filter(r=>r.symbol===s.symbol),counts:i===0?{source_candidates:derived.source_candidates,sampled_candidates:derived.sampled_candidates,excluded:derived.excluded}:null}))};
   }
   else if(input.stage==='train'){
    const rows=(input.snapshots||[]).flatMap(s=>s.examples||[]),excluded={};let source_candidates=0,sampled_candidates=0;

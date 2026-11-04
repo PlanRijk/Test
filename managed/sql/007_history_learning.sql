@@ -1,9 +1,11 @@
 begin;
 create table if not exists paperlab.history_runtime(
  singleton boolean primary key default true check(singleton),enabled boolean not null default true,profile text,protocol jsonb,config jsonb,symbols jsonb,cutoff date,
- token uuid,lease_until timestamptz,stage text,status text not null default 'waiting',calls_day date,calls integer not null default 0,last_forward date,
+ token uuid,lease_until timestamptz,stage text,status text not null default 'waiting',calls_day date,calls integer not null default 0,source_calls integer not null default 0,compute_calls integer not null default 0,last_forward date,
  last_success timestamptz,connections jsonb not null default '[]',context jsonb not null default '[]',checks jsonb not null default '[]',report jsonb not null default '{}'
 );
+alter table paperlab.history_runtime add column if not exists source_calls integer not null default 0;
+alter table paperlab.history_runtime add column if not exists compute_calls integer not null default 0;
 insert into paperlab.history_runtime(singleton) values(true) on conflict do nothing;
 create table if not exists paperlab.history_snapshots(
  symbol text primary key,status text not null check(status in('available','unavailable')),created_at timestamptz not null default now(),hash text,raw_hash text,
@@ -30,7 +32,12 @@ begin
  select config into c from paperlab.daily_study_runtime where singleton;if c is null then raise exception 'Daily study required';end if;
  fp:=encode(sha256(convert_to(jsonb_build_object('protocol',p_protocol,'symbols',p_symbols,'config',c)::text,'UTF8')),'hex');
  select profile into prior from paperlab.history_runtime where singleton for update;
- if prior is not null and prior<>fp then raise exception 'Frozen history profile differs';end if;
+ if prior is not null and prior<>fp then
+  if exists(select 1 from paperlab.history_models) or exists(select 1 from paperlab.history_forecasts) or exists(select 1 from paperlab.history_runtime where lease_until>now()) then raise exception 'Frozen history profile differs';end if;
+  -- Pre-model repair only: retain every original source/hash and its cutoff.
+  update paperlab.history_snapshots set examples=null,counts=null where symbol<>'__base__' and symbol not like '^%';
+  update paperlab.history_runtime set profile=fp,protocol=p_protocol,status='bootstrapping',source_calls=case when calls_day=current_date then greatest(source_calls,least(calls,14)) else 0 end where singleton;
+ end if;
  if prior is null then update paperlab.history_runtime set profile=fp,protocol=p_protocol,config=c,symbols=p_symbols,cutoff=(now() at time zone 'UTC')::date,status='bootstrapping' where singleton;end if;
  return fp;
 end$$;
@@ -40,7 +47,7 @@ language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
 declare r paperlab.history_runtime;payload jsonb;t uuid;current_day date;m date;pending jsonb;charge bigint;model jsonb;base jsonb;stage_name text;
 begin
  select * into r from paperlab.history_runtime where singleton for update;current_day:=(now() at time zone 'UTC')::date;
- if not r.enabled or r.profile is null or r.lease_until>now() or (r.calls_day=current_day and r.calls>=14) or r.status='insufficient_history' then return null;end if;
+ if not r.enabled or r.profile is null or r.lease_until>now() or r.status='insufficient_history' then return null;end if;
  if not exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state)) then return null;end if;
  delete from paperlab.history_forecasts f where f.day<current_day-730 and f.status in('complete','missing') and exists(select 1 from paperlab.history_models m where m.id=f.model_id and m.final_at is not null);
  m:=date_trunc('month',now() at time zone 'UTC')::date;insert into paperlab.free_usage(month) values(m) on conflict do nothing;
@@ -48,10 +55,12 @@ begin
  if pg_database_size(current_database())>=180000000 or (select sum(pg_total_relation_size(x::regclass)) from unnest(array['paperlab.history_snapshots','paperlab.history_models','paperlab.history_forecasts'])x)>=64000000 or
   exists(select 1 from paperlab.free_usage where month=m and estimated_worker_egress_bytes>=least(max_worker_egress_bytes,2000000000)) then update paperlab.history_runtime set status='budget_paused' where singleton;return null;end if;
  select s.data into base from paperlab.history_snapshots s where symbol='__base__' and status='available';
- select coalesce(jsonb_agg(value),'[]'::jsonb) into pending from(select value from jsonb_array_elements_text(r.symbols) where not exists(select 1 from paperlab.history_snapshots s where s.symbol=value) limit 15)p;
+ select coalesce(jsonb_agg(value),'[]'::jsonb) into pending from(select value from jsonb_array_elements_text(r.symbols) with ordinality a(value,n) where not exists(select 1 from paperlab.history_snapshots s where s.symbol=a.value) order by n limit 15)p;
  select artifact into model from paperlab.history_models order by created_at limit 1;
  if base is null then stage_name:='base';payload:='{}';
  elsif jsonb_array_length(pending)>0 then stage_name:='collect';payload:=jsonb_build_object('symbols',pending,'derivation_snapshots',(select jsonb_agg(jsonb_build_object('symbol',s.symbol,'status',s.status,'data',s.data,'hash',s.hash)) from paperlab.history_snapshots s where s.symbol='__base__' or s.symbol like '^%'));
+ elsif model is null and exists(select 1 from paperlab.history_snapshots where status='available' and symbol<>'__base__' and symbol not like '^%' and examples is null) then
+  stage_name:='derive';payload:=jsonb_build_object('snapshots',(select jsonb_agg(jsonb_build_object('symbol',s.symbol,'status',s.status,'data',s.data,'hash',s.hash)) from paperlab.history_snapshots s where s.symbol='__base__' or s.symbol like '^%' or s.symbol in(select symbol from paperlab.history_snapshots where status='available' and symbol<>'__base__' and symbol not like '^%' and examples is null order by symbol limit 15)));
  elsif model is null then stage_name:='train';payload:=jsonb_build_object('snapshots',(select jsonb_agg(jsonb_build_object('symbol',s.symbol,'status',s.status,'examples',s.examples,'counts',s.counts,'hash',s.hash)) from paperlab.history_snapshots s));
  else
   if r.last_forward=current_day then return null;end if;
@@ -64,11 +73,12 @@ begin
    'revised_symbols',coalesce((select record->'revised_symbols' from paperlab.daily_study_quality where day=current_day),'[]'::jsonb),
    'max_new_records',greatest(0,least(20,10000-(select count(*)::integer from paperlab.history_forecasts))));
  end if;
+ if r.calls_day=current_day and (stage_name in('base','collect') and r.source_calls>=14 or stage_name in('derive','train') and r.compute_calls>=14) then return null;end if;
  payload:=payload||jsonb_build_object('stage',stage_name,'profile',r.profile,'protocol',r.protocol,'config',r.config,'cutoff',r.cutoff);
  charge:=4*octet_length(payload::text)+262144;
  if exists(select 1 from paperlab.free_usage where month=m and estimated_worker_egress_bytes+charge>=least(max_worker_egress_bytes,2000000000)) then update paperlab.history_runtime set status='budget_paused' where singleton;return null;end if;
  update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+charge where month=m;
- t:=gen_random_uuid();update paperlab.history_runtime set token=t,lease_until=now()+interval '150 seconds',stage=stage_name,status='processing',calls_day=current_day,calls=case when calls_day=current_day then calls+1 else 1 end where singleton;
+ t:=gen_random_uuid();update paperlab.history_runtime set token=t,lease_until=now()+interval '150 seconds',stage=stage_name,status='processing',calls_day=current_day,calls=case when calls_day=current_day then calls+1 else 1 end,source_calls=(case when calls_day=current_day then source_calls else 0 end)+case when stage_name in('base','collect') then 1 else 0 end,compute_calls=(case when calls_day=current_day then compute_calls else 0 end)+case when stage_name in('derive','train') then 1 else 0 end where singleton;
  return payload||jsonb_build_object('token',t);
 end$$;
 
@@ -83,6 +93,12 @@ begin
   for x in select value from jsonb_array_elements(p_output->'snapshots') loop
    if not(x->>'symbol'='__base__' or r.symbols ? (x->>'symbol')) or exists(select 1 from paperlab.history_models) then raise exception 'Unknown or frozen historical source';end if;
    insert into paperlab.history_snapshots(symbol,status,hash,raw_hash,data,tail,examples,counts,source_bytes) values(x->>'symbol',x->>'status',x->>'hash',x->>'raw_hash',x->'data',x->'tail',x->'examples',x->'counts',coalesce((x->>'source_bytes')::bigint,0)) on conflict do nothing;
+  end loop;
+ elsif r.stage='derive' then
+  if exists(select 1 from paperlab.history_models) or jsonb_typeof(p_output->'derived') is distinct from 'array' or jsonb_array_length(p_output->'derived')>15 then raise exception 'Invalid derived batch';end if;
+  for x in select value from jsonb_array_elements(p_output->'derived') loop
+   if not exists(select 1 from paperlab.history_snapshots where symbol=x->>'symbol' and status='available' and examples is null) or jsonb_array_length(x->'examples')>48 then raise exception 'Unknown or frozen derived source';end if;
+   update paperlab.history_snapshots set examples=x->'examples',counts=x->'counts' where symbol=x->>'symbol';
   end loop;
  elsif r.stage='train' then
   if p_output->>'status'='historical_model_frozen' then
