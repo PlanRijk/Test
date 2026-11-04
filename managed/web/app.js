@@ -5,6 +5,7 @@ import {learningMarkup} from './learning.js';
 import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
 import {taxMarkup} from './tax.js';
+import {dailyMarkup} from './daily-study.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -62,7 +63,8 @@ for(const type of ['pointerdown','keydown','touchstart'])document.addEventListen
 const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
 async function loadTaxReport(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
- try{const [result,reliability]=await Promise.all([api('?opportunities=1'),api('?reliability=1')]);$('#opportunitiesBody').innerHTML=reliabilityMarkup(reliability)+opportunityMarkup(result);
+ try{const [result,reliability,daily]=await Promise.all([api('?opportunities=1'),api('?reliability=1'),api('?daily-study=1')]);$('#opportunitiesBody').innerHTML=dailyMarkup(daily)+reliabilityMarkup(reliability)+opportunityMarkup(result);
+  $('#dailyStudyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?daily-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','symbol','decision_day','week','profile','sealed','record_json'],...rows.map(r=>[r.id,r.symbol,r.decision_day,r.week,r.profile,r.sealed,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-dagonderzoek.csv');});
   $('#studyArchiveExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?archive-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','day','symbol','cohort','sealed','codec_version','profile','compact_record_json'],...rows.map(r=>[r.id,r.day,r.symbol,r.cohort,r.sealed,r.codec_version,r.profile,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-compact-archief.csv');});
   $('#studyToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'opportunities',command:e.currentTarget.dataset.command});await loadOpportunities();});
   document.querySelectorAll('[data-opportunity]').forEach(b=>b.onclick=()=>busy(b,async()=>{const r=await api('?opportunity='+encodeURIComponent(b.dataset.opportunity));$('#opportunityDetailBody').innerHTML=opportunityDetailMarkup(r);$('#opportunityDetail').showModal();}));

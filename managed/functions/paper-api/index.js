@@ -27,6 +27,8 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('daily-study'))return reply(await rpc('paper_daily_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('daily-export'))return reply(await rpc('paper_daily_export',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('tax-report')){
         const year=Number(url.searchParams.get('year')||new Date().getUTCFullYear());if(!Number.isInteger(year)||year<2026||year>new Date().getUTCFullYear())return reply({error:'Ongeldig belastingjaar.'},400,origin);
         return reply(annualTaxReport(await rpc('paper_tax_input',{p_owner:user.id}),year),200,origin);

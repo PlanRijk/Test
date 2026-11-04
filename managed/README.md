@@ -19,6 +19,9 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 - `functions/paper-learn`: twee dagelijkse leercontroles; een klein statistisch
   model wordt pas na voldoende afgesloten referentietransacties getraind en
   vervolgens afzonderlijk met nieuwe gegevens getest. Zie [LEARNING.md](LEARNING.md).
+- `sql/006_daily_study.sql`, `functions/paper-daily` en [DAILY-STUDY.md](DAILY-STUDY.md):
+  prospectief dagonderzoek naar 150 bedrijven, 1/5/20 beursdagen, gedateerde
+  marktcontext en afzonderlijke opslag- en toetsgrenzen; geen orders of labels.
 - `sql/001_paperlab.sql`: privétabellen, RLS, alleen voor de server toegankelijke
   RPC's, een lease en revisiecontrole tegen dubbele uitvoering en kasboekcontrole.
 - `sql/002_learning.sql`: afzonderlijke proefportefeuilles, opleidingsgegevens,

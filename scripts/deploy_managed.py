@@ -80,6 +80,7 @@ def database(ref):
     sql(ref,(ROOT/'managed/sql/003_continuous.sql').read_text())
     sql(ref,(ROOT/'managed/sql/004_opportunities.sql').read_text())
     sql(ref,(ROOT/'managed/sql/005_reliability.sql').read_text())
+    sql(ref,(ROOT/'managed/sql/006_daily_study.sql').read_text())
     sql(ref,import_sql(state,records))
     result=sql(ref,"select (state->>'cash')::float8 as cash_eur,(select count(*) from paperlab.trades) as trades,revision from paperlab.portfolio where singleton",True)
     if not result or abs(result[0]['cash_eur']-manifest['cash_eur'])>1e-6 or result[0]['trades']!=manifest['trades']:
@@ -91,7 +92,7 @@ def database(ref):
 def functions(ref):
     implementation_fingerprint()
     # Sequential: simultaneous first-time creations were observed to lose list entries.
-    for slug in ['paper-api','paper-tick','paper-research','paper-learn','paper-audit']:
+    for slug in ['paper-api','paper-tick','paper-research','paper-learn','paper-audit','paper-daily']:
         result=deploy_function(ref,slug);verified=request('supabase','/v1/projects/'+ref+'/functions/'+slug)
         if verified.get('status')!='ACTIVE':raise RuntimeError('Function not active: '+slug)
         private_json(slug+'-deployment.json',result)
@@ -118,7 +119,7 @@ def learning_schema(ref):
       'opportunity_runtime',(select to_jsonb(o) from paperlab.opportunity_runtime o),
       'opportunities',(select coalesce(jsonb_agg(o),'[]') from paperlab.opportunity_records o)) as backup""",True)[0]['backup']
     private_json('learning-backup-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.json',backup)
-    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql','004_opportunities.sql','005_reliability.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
+    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql','004_opportunities.sql','005_reliability.sql','006_daily_study.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
     print(json.dumps({'stage':'learning-schema','status':'upgraded_without_reset','preserved_trade_actions':len(backup['trades'])}))
 
 
@@ -131,6 +132,17 @@ def learning_enable(ref):
     command="select net.http_post(url := "+literal(base)+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state));"
     sql(ref,'select cron.schedule(\'paperlab-learn\',\'45 6,22 * * 1-5\','+literal(command)+');')
     print(json.dumps({'stage':'learning-enable','status':'purchase_reasoning_required_and_learning_scheduled','paid_resources':False}))
+
+
+def daily_enable(ref):
+    marker=sql(ref,"select obj_description('paperlab'::regnamespace) as marker",True)
+    if not marker or marker[0].get('marker')!='PaperLab managed-v1':raise RuntimeError('Managed portfolio required; no import or reset performed.')
+    sql(ref,(ROOT/'managed/sql/006_daily_study.sql').read_text())
+    config=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {DAILY_COMPANIES,DAILY_PROTOCOL} from './managed/functions/_shared/daily-catalogue.js';console.log(JSON.stringify({catalogue:DAILY_COMPANIES,protocol:DAILY_PROTOCOL}));"],cwd=ROOT))
+    result=sql(ref,'select public.paper_daily_configure('+jsql(config['catalogue'])+','+jsql(config['protocol'])+') as profile')
+    command="select net.http_post(url := "+literal('https://'+ref+'.supabase.co/functions/v1/paper-daily')+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 110000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state));"
+    sql(ref,"select cron.schedule('paperlab-daily','10 6 * * *',"+literal(command)+');')
+    print(json.dumps({'stage':'daily-enable','profile':result[0]['profile'],'research_companies':150,'execution_companies':100,'paid_resources':False}))
 
 
 def schedule_jobs(ref):
@@ -252,7 +264,7 @@ def activate(ref,origin,email):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable','continuous-enable','reliability-enable'])
+    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable','continuous-enable','reliability-enable','daily-enable'])
     parser.add_argument('--owner');parser.add_argument('--origin');parser.add_argument('--email')
     args=parser.parse_args();selected=project();ref=selected['id']
     if args.stage=='inspect':print(json.dumps({k:selected.get(k) for k in ['id','name','region','status']}))
@@ -264,6 +276,7 @@ def main():
     elif args.stage=='learning-enable':learning_enable(ref)
     elif args.stage=='continuous-enable':continuous_enable(ref)
     elif args.stage=='reliability-enable':reliability_enable(ref)
+    elif args.stage=='daily-enable':daily_enable(ref)
     elif args.stage=='activate':
         if not args.email:raise ValueError('Owner email required; no account inferred automatically.')
         activate(ref,args.origin,args.email)

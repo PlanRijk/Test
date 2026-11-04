@@ -6,6 +6,7 @@ import {handler as tickHandler} from '../functions/paper-tick/index.js';
 import {handler as researchHandler} from '../functions/paper-research/index.js';
 import {handler as learnHandler} from '../functions/paper-learn/index.js';
 import {handler as auditHandler} from '../functions/paper-audit/index.js';
+import {handler as dailyHandler} from '../functions/paper-daily/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
 globalThis.Deno={env:{get:name=>({SUPABASE_URL:'https://testproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-test-key',PAPERLAB_CRON_TOKEN:'test-cron-secret'})[name]}};
@@ -24,6 +25,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_reliability_read'))return Response.json({policy:'reliability-v1'});
   if(String(url).endsWith('/paper_archive_export'))return Response.json([]);
   if(String(url).endsWith('/paper_tax_input'))return Response.json([]);
+  if(String(url).endsWith('/paper_daily_read'))return Response.json({counts:{records:0}});
+  if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   throw Error('Unexpected call: '+url);
  };
 }
@@ -53,4 +56,13 @@ test('owner can read observations but cannot inject results or arbitrary study c
 test('archive, independent assessments and tax reports require verified owner MFA',async()=>{mock();for(const query of ['?reliability=1','?archive-export=1','?tax-report=1'])assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);});
 test('owner reads bounded archive and tax report; malformed cursor and tax years are rejected',async()=>{mock();assert.equal((await apiHandler(req({query:'?archive-export=1'}))).status,200);assert.equal((await apiHandler(req({query:'?tax-report=1&year=2026'}))).status,200);assert.equal((await apiHandler(req({query:'?archive-export=1&before=invalid'}))).status,400);assert.equal((await apiHandler(req({query:'?tax-report=1&year=2020'}))).status,400);});
 test('independent audit cannot be triggered by owner JWT or anonymous caller',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await auditHandler(new Request('https://test/functions/v1/paper-audit',{method:'POST',headers,body:'{}'}))).status,401);});
+test('daily study and export require owner MFA; daily collection requires its separate cron secret',async()=>{
+ mock();for(const query of ['?daily-study=1','?daily-export=1']){
+  assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);
+  assert.equal((await apiHandler(req({query}))).status,200);
+ }
+ globalThis.fetch=()=>{throw Error('Must not reach database');};
+ for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await dailyHandler(new Request('https://test/functions/v1/paper-daily',{method:'POST',headers,body:'{}'}))).status,401);
+ assert.equal((await dailyHandler(new Request('https://test/functions/v1/paper-daily',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'bad json'}))).status,503);
+});
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});
