@@ -13,6 +13,7 @@ from pathlib import Path
 import secrets
 import sqlite3
 import sys
+import subprocess
 from datetime import datetime, timezone
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from scripts.managed_api import ROOT,request,project,sql,keys,project_request,deploy_function,private_json
@@ -76,6 +77,7 @@ def database(ref):
     state,records,manifest=source_export()
     sql(ref,(ROOT/'managed/sql/001_paperlab.sql').read_text())
     sql(ref,(ROOT/'managed/sql/002_learning.sql').read_text())
+    sql(ref,(ROOT/'managed/sql/003_continuous.sql').read_text())
     sql(ref,import_sql(state,records))
     result=sql(ref,"select (state->>'cash')::float8 as cash_eur,(select count(*) from paperlab.trades) as trades,revision from paperlab.portfolio where singleton",True)
     if not result or abs(result[0]['cash_eur']-manifest['cash_eur'])>1e-6 or result[0]['trades']!=manifest['trades']:
@@ -111,7 +113,7 @@ def learning_schema(ref):
       'events',(select coalesce(jsonb_agg(e order by e.id),'[]'::jsonb) from paperlab.events e),
       'observations',(select coalesce(jsonb_agg(o order by o.id),'[]'::jsonb) from paperlab.observations o)) as backup""",True)[0]['backup']
     private_json('learning-backup-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.json',backup)
-    for name in ['001_paperlab.sql','002_learning.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
+    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
     print(json.dumps({'stage':'learning-schema','status':'upgraded_without_reset','preserved_trade_actions':len(backup['trades'])}))
 
 
@@ -121,9 +123,37 @@ def learning_enable(ref):
       state=jsonb_set(state,'{pending}',coalesce((select jsonb_agg(o) from jsonb_array_elements(state->'pending') o where o->>'side'<>'koop' or o->'purchase_rationale'->>'schema'='purchase-rationale-v1'),'[]'::jsonb)) where singleton;
       insert into paperlab.events(time,kind,reason) values(now(),'bediening','Uitgebreide aankoopmotivatie verplicht; eventuele oude onuitgevoerde kooporders zonder dossier vervallen, posities en verkooporders behouden.');commit;""")
     base='https://'+ref+'.supabase.co/functions/v1/paper-learn'
-    command="select net.http_post(url := "+literal(base)+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and (state->>'run_until')::timestamptz>now());"
+    command="select net.http_post(url := "+literal(base)+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state));"
     sql(ref,'select cron.schedule(\'paperlab-learn\',\'45 6,22 * * 1-5\','+literal(command)+');')
     print(json.dumps({'stage':'learning-enable','status':'purchase_reasoning_required_and_learning_scheduled','paid_resources':False}))
+
+
+def schedule_jobs(ref):
+    base='https://'+ref+'.supabase.co/functions/v1/'
+    for job,schedule,slug in [('paperlab-tick','*/5 7-20 * * 1-5','paper-tick'),('paperlab-research','30 6,22 * * 1-5','paper-research'),('paperlab-learn','45 6,22 * * 1-5','paper-learn')]:
+        command="select net.http_post(url := "+literal(base+slug)+",headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and paperlab.run_open(state)"+(" and (state->>'running')::boolean" if slug=='paper-tick' else '')+");"
+        sql(ref,'select cron.schedule('+literal(job)+','+literal(schedule)+','+literal(command)+');')
+    sql(ref,"select cron.schedule('paperlab-maintenance','15 3 * * *','select public.paper_maintenance();');")
+
+
+def continuous_enable(ref):
+    row=sql(ref,'select state,revision from paperlab.portfolio where singleton',True)[0]
+    # No secrets enter Node. Preserve positions, cash, accumulated risks and all evidence.
+    code="import fs from 'node:fs';import {learningFingerprint} from './managed/functions/_shared/learning-runtime.js';process.stdout.write(await learningFingerprint(JSON.parse(fs.readFileSync(0,'utf8'))));"
+    result=subprocess.run(['node','--input-type=module','-e',code],input=json.dumps(row['state']),text=True,capture_output=True,cwd=ROOT,check=True)
+    fingerprint=result.stdout
+    if len(fingerprint)!=64:raise RuntimeError('Missing learning fingerprint')
+    sql(ref,"""begin;
+      select 1 from paperlab.portfolio where singleton for update;
+      do $$begin if (select revision from paperlab.portfolio where singleton)<>"""+str(row['revision'])+""" then raise exception 'Portfolio advanced; reread before enabling';end if;
+      if exists(select 1 from paperlab.learning_models) or exists(select 1 from paperlab.learning_samples) then raise exception 'Existing trained evidence requires a separate comparison migration';end if;end$$;
+      update paperlab.portfolio set state=jsonb_set(state,'{operation_mode}','\"continuous\"'),revision=revision+1,lease=null,lease_until=null where singleton;
+      update paperlab.learning_runtime set state=case when state ? 'fingerprint' then jsonb_set(state,'{fingerprint}',"""+jsql(fingerprint)+""" ) else state end,revision=revision+1 where singleton;
+      insert into paperlab.events(time,kind,reason) values(now(),'bediening','Op verzoek doorlopende paperproef zonder vaste einddatum; oorspronkelijke run_until blijft auditinformatie. Risico- en kostenlimieten behouden.');
+      insert into paperlab.learning_events(kind,message) values('continuous_mode','Doorlopende werking geactiveerd. Alleen looptijdcontrole gewijzigd; beginrekeningen en transacties behouden. Geen bestaand model of trainingslabel hergebruikt.');
+      commit;""")
+    schedule_jobs(ref)
+    print(json.dumps({'stage':'continuous-enable','operation_mode':'continuous','portfolio_reset':False,'paid_resources':False}))
 
 
 def public_config(ref):
@@ -189,17 +219,14 @@ def activate(ref,origin,email):
     cron=rows[0]['decrypted_secret'] if rows else secrets.token_hex(32)
     if not rows:sql(ref,'select vault.create_secret('+literal(cron)+",'paperlab_cron_token');")
     request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_CRON_TOKEN','value':cron}])
-    base='https://'+ref+'.supabase.co/functions/v1/'
-    for job,schedule,slug in [('paperlab-tick','*/5 7-20 * * 1-5','paper-tick'),('paperlab-research','30 6,22 * * 1-5','paper-research'),('paperlab-learn','45 6,22 * * 1-5','paper-learn')]:
-        command="select net.http_post(url := "+literal(base+slug)+", headers := jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body := '{}'::jsonb,timeout_milliseconds := 80000) where exists(select 1 from paperlab.portfolio where singleton and (state->>'run_until')::timestamptz>now()"+(" and (state->>'running')::boolean" if slug=='paper-tick' else '')+");"
-        sql(ref,'select cron.schedule('+literal(job)+','+literal(schedule)+','+literal(command)+');')
+    schedule_jobs(ref)
     private_json('activation-status.json',{'owner_id':owner,'origin':origin,'activation_file':str(ROOT/'.data/managed/PRIVE-ACTIVATIE.html'),'jobs_installed':True,'email_sent':False})
     print(json.dumps({'stage':'activate','status':'owner_invitation_and_jobs_prepared','origin':origin,'email_sent':False,'running':'unchanged'}))
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable'])
+    parser.add_argument('stage',choices=['inspect','database','functions','config','site','activate','learning-schema','learning-enable','continuous-enable'])
     parser.add_argument('--owner');parser.add_argument('--origin');parser.add_argument('--email')
     args=parser.parse_args();selected=project();ref=selected['id']
     if args.stage=='inspect':print(json.dumps({k:selected.get(k) for k in ['id','name','region','status']}))
@@ -209,6 +236,7 @@ def main():
     elif args.stage=='site':site(ref,args.owner)
     elif args.stage=='learning-schema':learning_schema(ref)
     elif args.stage=='learning-enable':learning_enable(ref)
+    elif args.stage=='continuous-enable':continuous_enable(ref)
     elif args.stage=='activate':
         if not args.email:raise ValueError('Owner email required; no account inferred automatically.')
         activate(ref,args.origin,args.email)

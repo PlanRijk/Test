@@ -5,6 +5,7 @@ export const VERSION = 'global-paper-v1';
 export const HISTORY_LIMIT = 12;
 export const FEATURE_SCHEMA='decision-net-v1';
 export const FEATURE_NAMES=['return_1','return_5','volatility_5','signal','cost_drag','quote_age','session_remaining'];
+export function runOpen(s,time=Date.now()) { return s.operation_mode==='continuous'||Number.isFinite(Date.parse(s.run_until))&&time<Date.parse(s.run_until); }
 const formatters = new Map();
 export const iso = ms => new Date(ms).toISOString();
 export function localParts(time, zone) {
@@ -171,7 +172,7 @@ function queue(s,out,k,side,time,reason,risk_exit=false,learningContext=null,rat
 export function tick(input,batch,time=Date.now(),options={}) {
   const s=structuredClone(input),out={state:s,trades:[],events:[],observations:[],equity:null};
   if(!s.running)return out;
-  if(!s.run_until||time>=Date.parse(s.run_until)){s.running=false;s.error='Proefeindtijd bereikt.';return out;}
+  if(!runOpen(s,time)){s.running=false;s.error='Proefeindtijd bereikt.';return out;}
   for(const k of Object.keys(s.history))s.history[k]=s.history[k].slice(-HISTORY_LIMIT);
   const before=equity(s);s.multi_market.expected_open=batch.expected_open||[];s.multi_market.closed_symbols=batch.closed_symbols||[];
   const quotes={};for(const[k,q]of Object.entries(batch.quotes||{}))if(validQuote(k,q,time))quotes[k]=q;

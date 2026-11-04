@@ -127,6 +127,11 @@ begin
     (select id,time,symbol,side,qty,price,fee,pnl,reason,snapshot->>'currency' currency,snapshot->>'fx' fx,snapshot->'tax_detail' tax_detail,snapshot->>'strategy_version' strategy_version,snapshot->'purchase_rationale' purchase_rationale from paperlab.trades order by id) q);
 end$$;
 
+create or replace function paperlab.run_open(p_state jsonb,p_at timestamptz default now()) returns boolean
+language sql stable set search_path=pg_catalog,pg_temp as $$
+ select case when p_state->>'operation_mode'='continuous' then true else coalesce((p_state->>'run_until')::timestamptz>p_at,false) end;
+$$;
+
 create or replace function public.paper_action(p_owner uuid,p_action text) returns boolean
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
 declare s jsonb;
@@ -134,7 +139,7 @@ begin
   if p_owner is distinct from(select owner_id from paperlab.settings where singleton) then raise exception 'Not owner';end if;
   if p_action not in('start','pause') then raise exception 'Unsupported action';end if;
   select state into s from paperlab.portfolio where singleton for update;
-  if p_action='start' and ((s->>'run_until')::timestamptz<=now() or s->>'mode'<>'yahoo' or s->'risk'->>'enabled'<>'true' or s->'belgian_tax'->>'enabled'<>'true') then raise exception 'Trial ended or profile invalid';end if;
+  if p_action='start' and (not paperlab.run_open(s) or s->>'mode'<>'yahoo' or s->'risk'->>'enabled'<>'true' or s->'belgian_tax'->>'enabled'<>'true') then raise exception 'Trial ended or profile invalid';end if;
   update paperlab.portfolio set state=jsonb_set(state,'{running}',to_jsonb(p_action='start')),revision=revision+1,lease=null,lease_until=null where singleton;
   insert into paperlab.events(time,kind,reason) values(now(),'bediening',case when p_action='start' then 'Eigenaar hervat de paperproef.' else 'Eigenaar pauzeert de paperproef.' end);
   return true;
@@ -147,7 +152,7 @@ begin
   if to_regprocedure('public.paper_learning_budget_guard()') is not null then perform public.paper_learning_budget_guard();end if;
   select * into p from paperlab.portfolio where singleton for update;
   if not found then return null;end if;
-  if (p.state->>'run_until')::timestamptz<=now() then
+  if not paperlab.run_open(p.state) then
     update paperlab.portfolio set state=jsonb_set(state,'{running}','false'),last_tick_status='trial_ended',revision=revision+1 where singleton;return null;
   end if;
   if coalesce((p.state->>'running')::boolean,false)=false and not p_manual then return null;end if;

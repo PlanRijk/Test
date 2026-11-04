@@ -10,7 +10,8 @@ REF='kdyzlbknygeqinqduuic'
 
 def status():
     portfolio=sql(REF,"""select now() as server_time,
-      (state->>'running')::boolean as running,state->>'run_until' as end_utc,
+      (state->>'running')::boolean as running,state->>'operation_mode' as operation_mode,
+      case when state->>'operation_mode'='continuous' then null else state->>'run_until' end as end_utc,
       (state->>'cash')::float8 as cash_eur,state->>'last_update' as last_measurement,
       state->'data_info'->>'checked_at' as latest_source_check,
       (state->'data_info'->>'fresh_symbols')::integer as fresh_symbols_at_check,
@@ -26,7 +27,7 @@ def status():
     jobs=sql(REF,"""select j.jobname,j.schedule,j.active,
       (select max(start_time) from cron.job_run_details d where d.jobid=j.jobid) as latest_run,
       (select d.status from cron.job_run_details d where d.jobid=j.jobid order by start_time desc limit 1) as latest_run_status
-      from cron.job j where j.jobname in ('paperlab-tick','paperlab-research','paperlab-learn') order by j.jobname""",True)
+      from cron.job j where j.jobname in ('paperlab-tick','paperlab-research','paperlab-learn','paperlab-maintenance') order by j.jobname""",True)
     budget=sql(REF,"select * from paperlab.free_usage where month=date_trunc('month',now() at time zone 'UTC')::date",True)
     return {'site':'https://paperlab-prive.onrender.com','portfolio':portfolio,'jobs':jobs,
             'automatic_processing_budget':budget,

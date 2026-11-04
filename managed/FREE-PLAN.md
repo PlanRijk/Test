@@ -1,7 +1,7 @@
 # Gratis proef: verbruik en grenzen
 
-Bijgewerkt op 4 november 2026. De bestaande einddatum is op verzoek met dertig
-dagen verlengd tot **6 december 2026, 21:00 UTC / 22:00 Belgische tijd**.
+Bijgewerkt op 4 november 2026. Op aanvullend verzoek loopt de paperproef
+**door zonder vaste einddatum**, zolang risico- en gratis verbruiksbudgetten dit toelaten.
 Er is geen betaald plan, betaalde server, disk, domein, SMS of AI-model geactiveerd.
 
 ## Actuele inbegrepen quota
@@ -44,6 +44,15 @@ in hetzelfde account. De dashboardmeters van de providers blijven leidend.
   driemaal per negentig dagen getraind. De laatste 2.000 opleidingsvoorbeelden
   blijven maximaal 180 dagen; dagelijkse leeraggregaten 120 dagen. Aankoopdossiers
   blijven behouden, ook als hun opleidingsvoorbeeld later wordt opgeruimd.
+- Ook de bronnenroutine reserveert vooraf een conservatief budget voor begrensde
+  downloads en statusoverdracht, met een lease en maximaal één claim per dertig
+  minuten. Zij stopt bij 250 MB database of 2,4 GB geraamd workerverkeer.
+- Een dagelijkse SQL-onderhoudstaak ruimt tijdelijke gegevens op zonder Edge-
+  downloads, ook bij gepauzeerde handel. Bronrapporten: maximaal veertien dagen
+  en veertig rapporten. Technische Cron-uitvoeringen van onze eigen vier taken:
+  zeven dagen; app-verbruiksmaanden: vierentwintig maanden. Na negentig dagen
+  blijven van de portefeuillecurve vier echte punten per UTC-dag over
+  (eerste/laatste/laagste/hoogste). Aankoopdossiers en hoofdtransacties blijven behouden.
 - In de website verschijnt een waarschuwing vanaf 70% van een app-budget.
   Een pauze doet geen abonnementupgrade en plaatst geen echte brokerorders.
 - Automatische Render-deployments staan uit. Builds zijn kort en starten alleen
@@ -77,6 +86,10 @@ zonder expliciete toestemming van de eigenaar.
 Supabase documenteert dat Free-gebruik niet wordt gefactureerd. Bij quota-
 overschrijding of structureel overmatig gebruik kan de dienst worden beperkt;
 gratis hosting levert geen gegarandeerde ononderbroken werking.
+
+Opschonen maakt databasepagina's herbruikbaar maar laat de gemelde fysieke
+databasegrootte niet noodzakelijk meteen dalen. Omdat aankoopbewijzen blijven
+groeien, is een toekomstige opslagpauze mogelijk, ook bij doorlopende planning.
 
 ## Bronnen
 

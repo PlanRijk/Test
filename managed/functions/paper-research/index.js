@@ -9,7 +9,9 @@ export async function handler(request){
  if(request.method!=='POST')return reply({error:'POST vereist.'},405);
  let manual=false;try{manual=(await requestBody(request)).manual===true;}catch{return reply({error:'Ongeldig onderzoeksverzoek.'},400);}
  if(!manual&&possibleSession(BY_SYMBOL.AAPL,Date.now()))return reply({status:'deferred_market_open'});
+ let lease;
  try{
+  lease=await rpc('paper_claim_research');if(!lease)return reply({status:'paused_budget_busy_or_ended'});
   const settings=await context(),portfolio=await rpc('paper_read',{p_owner:settings.owner_id,p_revision:-1});
   const input=await rpc('paper_research_input');
   const reports=await inspectSources(SOURCES,{previous:portfolio.research?.sources||[]});
@@ -19,9 +21,9 @@ export async function handler(request){
   const report={checked_at:new Date().toISOString(),protocol:'paper-study-v1',trigger:manual?'manual_operator':'scheduled',parameter_fingerprint:fingerprint,
    ok_sources:reports.filter(x=>x.status==='reachable').length,sources:reports,diagnostics,
    closed_positions:diagnostics.managed_closes,trade_count:portfolio.trade_count,equity_eur:portfolio.equity,
-   note:'Bronmetadata, officiële nieuwstitels, vertraagde macroreeksen en deterministische portefeuille-evaluatie. Geen AI-training, voorspelling of automatische handelswijziging.',
+   note:'Begrensde bronfragmenten, vastgelegde kennisnotities, officiële nieuwstitels, vertraagde macroreeksen en portefeuille-evaluatie. Modeltraining gebruikt afzonderlijk afgesloten proeftransacties; broninhoud wijzigt geen handelsregels.',
    automatic_learning:false,trading_changes:false,proposals:diagnostics.proposals};
-  await rpc('paper_research',{p_report:report});return reply({status:'reviewed',ok_sources:report.ok_sources,trading_changes:false});
+  const stored=await rpc('paper_commit_research',{p_token:lease,p_report:report});return reply({status:stored?'reviewed':'superseded',ok_sources:report.ok_sources,trading_changes:false});
  }catch{return reply({error:'Onderzoeksrapport niet voltooid. Handelsregels blijven behouden.'},503);}
 }
 if(globalThis.Deno?.serve)Deno.serve(handler);

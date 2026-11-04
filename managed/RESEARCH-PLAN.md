@@ -1,7 +1,8 @@
 # Hoe PaperLab van de markt kan leren
 
 Onderzoeksprotocol `paper-study-v1`, vastgesteld op 3 november 2026.
-De lopende paperproef eindigt op 6 december 2026 om 22:00 Belgische tijd.
+Op aanvullend verzoek van 4 november loopt de proef door zonder vaste einddatum,
+binnen de bestaande risico- en gratis verbruiksgrenzen.
 Het doel is vaststellen of een herhaalbaar voordeel **na kosten en risico**
 aannemelijk wordt. Meer transacties of een mooie korte grafiek zijn geen succesmaat.
 
@@ -86,8 +87,13 @@ De Supabase-routine draait op werkdagen om **06:30 en 22:30 UTC**: tijdens deze
 proef om **07:30 en 23:30 Belgische tijd**. Zij blijft buiten reguliere VS-uren.
 De portefeuillecollector blijft afzonderlijk draaien.
 
-- Vaste inventaris van 24 beoordeelde bronnen. Statische bronnen krijgen maximaal
+- Vaste inventaris van 28 beoordeelde bronnen. Statische bronnen krijgen maximaal
   wekelijks een bereikbaarheids-/metadatacontrole; fouten worden eerder herprobeerd.
+- Vier pagina's van SEC, FINRA, ECB en NBB krijgen een begrensde inhoudscontrole:
+  maximaal 128 KB HTML, een kort fragment van maximaal 480 tekens en een SHA256-
+  inhoudshash. De bibliotheek van Kenneth French krijgt alleen een metadatacontrole.
+  Vastgelegde kennisnotities onderscheiden de gelezen pagina van niet-gelezen
+  vervolgpublicaties/datasets. Zie [MARKET-KNOWLEDGE.md](MARKET-KNOWLEDGE.md).
 - Officiële Fed-/ECB-feedtitels en vier FRED-contextreeksen worden in begrensde
   omvang ingelezen. Geen berichteninstructies worden uitgevoerd en er is geen
   automatische analyse van volledige nieuwsartikelen of zelfstandige AI-training.

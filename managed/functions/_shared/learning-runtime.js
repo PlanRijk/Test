@@ -2,7 +2,7 @@ import {tick,equity,fx,sale,FEATURE_SCHEMA} from './engine.js';
 import {BY_SYMBOL} from './catalogue.js';
 import {canonical,sha,predict,verifyArtifact} from './learner.js';
 import {IMPLEMENTATION} from './implementation.js';
-const MARKET=['history','prices','price_fx','last_observation','data_info','universe','catalogue','mode','run_until','usd_per_eur','fx_time','benchmark_units','benchmark_cash','benchmark_last_value','benchmark_started_at','benchmark_stale','managed_transport'];
+const MARKET=['history','prices','price_fx','last_observation','data_info','universe','catalogue','mode','run_until','operation_mode','usd_per_eur','fx_time','benchmark_units','benchmark_cash','benchmark_last_value','benchmark_started_at','benchmark_stale','managed_transport'];
 const clone=structuredClone;
 export async function learningFingerprint(s){return sha({version:'paper-learning-v1',implementation:IMPLEMENTATION,features:FEATURE_SCHEMA,signal:.002,stop:.015,profit:.025,quote_age:120,
  risk:s.risk.config,tax:s.belgian_tax.config,costs:s.multi_market.cost_assumptions,universe:s.universe});}

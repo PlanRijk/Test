@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {parseIndicator,parseHeadlines,inspectSources,costScenario,diagnose} from '../functions/_shared/review.js';
+import {parseIndicator,parseHeadlines,inspectSources,costScenario,diagnose,articleSummary} from '../functions/_shared/review.js';
 const TIME=Date.parse('2026-11-03T22:30:00Z');
 const fixture=JSON.parse(fs.readFileSync(new URL('./python-fixtures.json',import.meta.url)));
 test('FRED uses latest finite non-future observation and allows negative index values',()=>{
@@ -24,6 +24,15 @@ test('metadata is cached weekly but macro CSV is refreshed using a bounded date 
 });
 test('oversized source data is marked unavailable',async()=>{
  const [row]=await inspectSources([{id:'vix',url:'https://example.invalid/data',kind:'fred_csv'}],{time:TIME,fetcher:async()=>new Response('x'.repeat(131073))});assert.equal(row.status,'unavailable');
+});
+test('article checks retain a bounded fragment and hash, discard active markup and cache for a week',async()=>{
+ const html='<html><title>Official market mechanics</title><main><script>bad()</script><nav>navigation</nav><p>'+('Execution price can differ from the last trade. '.repeat(30))+'</p></main></html>';
+ const text=articleSummary(html);assert.ok(text.excerpt.length<=480);assert.ok(!text.excerpt.includes('bad()'));assert.ok(!text.excerpt.includes('navigation'));
+ const source={id:'mechanics',kind:'article',url:'https://example.invalid/mechanics',takeaway:'Prices are uncertain.'};
+ const [first]=await inspectSources([source],{time:TIME,fetcher:async()=>new Response(html)});
+ assert.equal(first.status,'reachable');assert.match(first.content_sha256,/^[a-f0-9]{64}$/);assert.equal(first.content_changed,null);
+ const [cached]=await inspectSources([source],{time:TIME+86400000,previous:[first],fetcher:async()=>{throw Error('Should use cache');}});assert.equal(cached.cached,true);
+ const [changed]=await inspectSources([source],{time:TIME+8*86400000,previous:[first],fetcher:async()=>new Response(html.replace('price','value'))});assert.equal(changed.content_changed,true);
 });
 test('redirects remain unavailable without fetching an article-supplied URL',async()=>{
  let count=0;const [row]=await inspectSources([{id:'test',url:'https://example.invalid',kind:'html'}],{time:TIME,fetcher:async(_url,opts)=>{assert.equal(opts.redirect,'manual');count++;return new Response('',{status:302,headers:{Location:'http://internal.invalid'}});}});

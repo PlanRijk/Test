@@ -86,11 +86,11 @@ function render(){
  $('#return').textContent=`${euros(eq-500)} (${((eq/500-1)*100).toFixed(2)}%) sinds de start`;sign($('#return'),eq-500);
  $('#fees').textContent=euros(s.fees)+' gesimuleerde commissie';$('#positionsCount').textContent=Object.keys(s.positions).length+' / 4';
  $('#cycleCount').textContent=s.tick+' metingen · '+data.trade_count+' handelsacties';$('#chart').innerHTML=plot(data.curve||[]);$('#firstTime').textContent=when(data.curve?.[0]?.time);$('#lastTime').textContent=when(s.last_update);
- const end=Date.parse(s.run_until)<=Date.now(),halt=s.risk.daily_halted||s.risk.global_halted;
+ const end=s.operation_mode!=='continuous'&&Date.parse(s.run_until)<=Date.now(),halt=s.risk.daily_halted||s.risk.global_halted;
  $('#agentStatus').textContent=end?'Proef afgelopen':!s.running?'Gepauzeerd':halt?'Actief · risicostop':data.collector_status==='error'?'Actief · controle nodig':'Actief';
  $('#lastMeasurement').textContent='Laatste opgeslagen meting: '+when(s.last_update)+' (Brussel)';$('#coverage').textContent=(s.data_info?.fresh_symbols??0)+' verse koersen in de laatste batch. Oude koersen worden niet uitgevoerd.';
  $('#toggle').textContent=s.running?'Experiment pauzeren':'Experiment hervatten';$('#toggle').disabled=end;$('#step').disabled=end;
- $('#deadline').textContent='Deze proef eindigt '+when(s.run_until)+' Belgische tijd. Geplande controles lopen zonder geopende website.';
+ $('#deadline').textContent=s.operation_mode==='continuous'?'Doorlopende paperproef zonder vaste einddatum. Geplande koers-, bron- en leercontroles lopen zonder geopende website, binnen risico- en verbruiksgrenzen.':'Deze proef eindigt '+when(s.run_until)+' Belgische tijd. Geplande controles lopen zonder geopende website.';
  $('#globalError').textContent=s.error||'';$('#globalError').hidden=!s.error;
  const positions=Object.entries(s.positions);$('#positions').innerHTML=positions.length?positions.map(([k,p])=>{const c=BY_SYMBOL[k]?.currency||'USD',rate=s.price_fx?.[k]||(c==='EUR'?1:s.usd_per_eur),value=p.qty*s.prices[k]/rate;return `<div class="position"><div><strong>${esc(k)}</strong><p>${esc(BY_SYMBOL[k]?.name||k)}</p><small>${esc(num.format(p.qty))} aandelen · stop ${esc(euros(p.stop))} · doel ${esc(euros(p.target))}</small></div><div><strong>${esc(euros(value))}</strong><p class="${value-p.cost<0?'negative':'positive'}">${esc(euros(value-p.cost))}</p><small>Voor toekomstige verkoopkosten</small></div></div>`;}).join(''):'<p class="muted">Geen open posities. Wachten op een geldig signaal is ook een beslissing.</p>';
  $('#events').innerHTML=(data.events||[]).slice(0,8).map(x=>`<div class="event"><p>${esc(x.reason)}</p><small>${esc(when(x.time))}${x.symbol?' · '+esc(x.symbol):''}</small></div>`).join('')||'<p class="muted">Nog geen nieuwe besluiten.</p>';
@@ -109,6 +109,8 @@ function render(){
    html+='<h3>Volgende onderzoeksvragen</h3><ul>'+(d.proposals||[]).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
   }
   const indicators=sources.filter(x=>x.indicator);
+  const knowledge=sources.filter(x=>x.takeaway||x.article);
+  if(knowledge.length)html+='<h3>Marktkennis uit primaire bronnen</h3><p class="muted">Vastgelegde kennisnotities en korte bronfragmenten. Een inhoudswijziging is een signaal voor herbeoordeling; zij traint het handelsmodel niet automatisch.</p>'+knowledge.map(x=>`<article><h4>${esc(x.article?.title||x.id)}</h4><p>${esc(x.takeaway||'')}</p><p>${esc(x.implication||'')}</p>${x.article?`<blockquote>${esc(x.article.excerpt)}</blockquote>`:''}<small>${esc(x.url)} · ${esc(when(x.checked_at))}${x.cached?' · uit weekcache':''}${x.content_changed?' · broninhoud gewijzigd':''} · ${esc(x.status)}</small></article>`).join('');
   if(indicators.length)html+='<h3>Vertraagde macrocontext</h3><ul>'+indicators.map(x=>`<li>${esc(x.indicator.label)}: ${esc(num.format(x.indicator.value))} ${esc(x.indicator.unit)} · ${esc(x.indicator.date)}${x.indicator.stale?' · verouderd':''}</li>`).join('')+'</ul><p class="muted">Geen crashkans of zelfstandig handelssignaal. De observatiedatum bewijst niet wanneer het cijfer voor het eerst beschikbaar was.</p>';
   const headlines=sources.flatMap(x=>(x.headlines||[]).map(h=>({...h,source:x.id})));
   if(headlines.length)html+='<h3>Officiële nieuwstitels</h3><ul>'+headlines.map(h=>`<li>${esc(h.title)}<small>${esc(h.source)} · ${esc(h.published)}</small></li>`).join('')+'</ul>';

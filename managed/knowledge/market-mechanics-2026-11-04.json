@@ -1,0 +1,46 @@
+{
+  "reviewed_at": "2026-11-04",
+  "scope": "Bounded official HTML pages and research-library overview read; no linked datasets or papers analysed.",
+  "sources": [
+    {
+      "id": "finraorders",
+      "url": "https://www.finra.org/investors/investing/investment-products/stocks/order-types",
+      "bytes": 93025,
+      "sha256": "bf34dbd891501e5d0cf8c8c599e93c0fa7b9f23a0cb49d7b030fa913eeeeed06",
+      "status": 200
+    },
+    {
+      "id": "secstops",
+      "url": "https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders",
+      "bytes": 59024,
+      "sha256": "2d3343cf7b49f989297e17185fb99c33fb7e66c706e96d58679a8309aad24a5b",
+      "status": 200
+    },
+    {
+      "id": "ecbtransmission",
+      "url": "https://www.ecb.europa.eu/mopo/intro/transmission/html/index.en.html",
+      "bytes": 103825,
+      "sha256": "df443b45f18c941eaeb09418ce2fd5d42f9bc1b42fd3657b55d8a140527b360c",
+      "status": 200
+    },
+    {
+      "id": "nbbstability",
+      "url": "https://www.nbb.be/en/financial-supervision/financial-stability",
+      "bytes": 118712,
+      "sha256": "03008c998bc6b4b0f07fa9d67389411130c1f22341f38bc317c9ccb5ebe6db9e",
+      "status": 200
+    },
+    {
+      "id": "frenchdata",
+      "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html",
+      "bytes": 245761,
+      "sha256": "dd48316327898aea2e3ad3dd070b34c3325ce3b25ced7f719245efd5ad36146a",
+      "status": 200
+    }
+  ],
+  "failed_or_rejected": [
+    "FINRA /investors/insights/understanding-order-types returned404; corrected URL used.",
+    "Guessed Wikifin diversification URL returned404; not added.",
+    "BIS r_qt1503g and r_qt1503f redirected to investment/oil articles, not liquidity studies; not added under a misleading title."
+  ]
+}

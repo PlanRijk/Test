@@ -3,6 +3,13 @@ import {currency,purchase,sale,fx} from './engine.js';
 const MACRO={vix:['VIX','indexpunten',5],creditspread:['High-yield kredietopslag','procentpunten',5],yieldcurve:['10 jaar min 3 maanden','procentpunten',5],conditions:['Chicago Fed financiële condities','indexeenheden',14]};
 const clean=s=>String(s||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
 function xmlText(value){return clean(value).replace(/&(?:amp|lt|gt|quot|apos);/g,m=>({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'"}[m])).slice(0,240);}
+export function articleSummary(html){
+ const title=xmlText(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||'');
+ const body=html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]||html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]||html;
+ const text=clean(body.replace(/<!--[\s\S]*?-->/g,' ').replace(/<(script|style|noscript|nav|header|footer)\b[^>]*>[\s\S]*?<\/\1>/gi,' ')).replace(/&nbsp;/g,' ').replace(/&amp;/g,'&');
+ if(text.length<120||!title)throw Error('No bounded article content');
+ return {title,excerpt:text.slice(0,480),text_chars:text.length,note:'Kort bronfragment, geen volledige artikelanalyse of koopadvies.'};
+}
 
 export function parseIndicator(text,id,time){
  const descriptor=MACRO[id];if(!descriptor)throw Error('Unknown indicator');
@@ -39,8 +46,8 @@ export async function inspectSources(sources,{previous=[],time=Date.now(),fetche
  const rows=[],old=new Map(previous.map(x=>[x.id,x]));let index=0;
  async function worker(){while(index<sources.length){
   const source=sources[index++],cached=old.get(source.id),dynamic=['rss','fred_csv'].includes(source.kind);
-  if(!dynamic&&cached?.status==='reachable'&&time-Date.parse(cached.checked_at)>=0&&time-Date.parse(cached.checked_at)<604800000){rows.push({...cached,cached:true});continue;}
-  const row={id:source.id,url:source.url,checked_at:new Date(time).toISOString(),status:'unavailable',read_mode:dynamic?'bounded_content':'metadata_only'};
+  if(!dynamic&&cached?.status==='reachable'&&(source.kind!=='article'||cached.article)&&time-Date.parse(cached.checked_at)>=0&&time-Date.parse(cached.checked_at)<604800000){rows.push({...cached,cached:true,takeaway:source.takeaway||cached.takeaway||null,implication:source.implication||cached.implication||null});continue;}
+  const row={id:source.id,url:source.url,checked_at:new Date(time).toISOString(),status:'unavailable',read_mode:source.kind==='article'?'bounded_excerpt':dynamic?'bounded_content':'metadata_only',takeaway:source.takeaway||null,implication:source.implication||null};
   try{
    const url=new URL(source.url);
    if(source.kind==='fred_csv')url.searchParams.set('cosd',new Date(time-120*86400000).toISOString().slice(0,10));
@@ -48,10 +55,15 @@ export async function inspectSources(sources,{previous=[],time=Date.now(),fetche
    row.http=response.status;row.content_type=response.headers.get('Content-Type');
    if(response.ok){
     row.status='reachable';row.last_modified=response.headers.get('Last-Modified');
-    if(dynamic){
+    if(dynamic||source.kind==='article'){
      const text=await limitedText(response);
      if(source.kind==='fred_csv')row.indicator=parseIndicator(text,source.id,time);
-     else row.headlines=parseHeadlines(text);
+     else if(source.kind==='rss')row.headlines=parseHeadlines(text);
+     else {
+      row.article=articleSummary(text);
+      row.content_sha256=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(x=>x.toString(16).padStart(2,'0')).join('');
+      row.content_changed=cached?.content_sha256?cached.content_sha256!==row.content_sha256:null;
+     }
     }else if(response.body)await response.body.cancel();
    }else if(response.body)await response.body.cancel();
   }catch{row.status='unavailable';row.failure='Bron niet bereikbaar of inhoud niet geldig binnen het begrensde formaat.';}

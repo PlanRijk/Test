@@ -206,7 +206,7 @@ declare r paperlab.learning_runtime;t uuid;n integer;d integer;data jsonb;recent
 begin
  select * into r from paperlab.learning_runtime where singleton for update;
  if not r.enabled or r.train_until>now() or r.last_train_check>now()-interval '30 minutes' or
-    (select (state->>'run_until')::timestamptz<=now() from paperlab.portfolio where singleton) then return null;end if;
+    (select not paperlab.run_open(state) from paperlab.portfolio where singleton) then return null;end if;
  select count(*),count(distinct (available_at at time zone 'UTC')::date) into n,d from paperlab.learning_eligible_samples
   where fingerprint=r.state->>'fingerprint' and available_at<date_trunc('day',now() at time zone 'UTC') at time zone 'UTC';
  select count(*) into recent from paperlab.learning_models where created_at>now()-interval '90 days';
@@ -255,7 +255,7 @@ begin
  select * into m from paperlab.learning_models where id=p_model;
  if not found or not r.enabled or m.status<>'eligible' or (m.artifact->>'offline_pass')::boolean is not true or (m.verdict->>'eligible')::boolean is not true
   or m.reviewed_at<now()-interval '36 hours' or m.artifact->>'fingerprint'<>r.state->>'fingerprint'
-  or (p.state->>'run_until')::timestamptz<=now() or p.state->>'mode'<>'yahoo' then return false;end if;
+  or not paperlab.run_open(p.state) or p.state->>'mode'<>'yahoo' then return false;end if;
  if (select count(*) from jsonb_object_keys(p.state->'positions'))<>0 or jsonb_array_length(p.state->'pending')<>0 then return false;end if;
  select count(*),max(a.day),coalesce(bool_or((b.record->>'max_drawdown_eur')::double precision>(a.record->>'max_drawdown_eur')::double precision+5),false) into count_days,last_day,bad_risk from paperlab.learning_days a join paperlab.learning_days b on a.day=b.day and a.phase=b.phase
   where a.account='reference' and b.account='learned' and a.model_id=p_model and b.model_id=p_model and a.day<(now() at time zone 'UTC')::date

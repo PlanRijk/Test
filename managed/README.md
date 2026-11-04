@@ -12,7 +12,7 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 - `functions/paper-tick`: elke vijf minuten opvraagbare handelsronde; verse
   Yahoo-prijzen, ECB-dagkoersen en vaste handelsregels. Alleen paperorders.
 - `functions/paper-research`: tweemaal per werkdag buiten US-uren een begrensde
-  controle van 24 geselecteerde bronnen, officiële nieuwstitels, vertraagde
+  controle van 28 geselecteerde bronnen, korte primaire bronfragmenten, officiële nieuwstitels, vertraagde
   FRED-context en netto-/kostenevaluatie per fase. Geen AI-training, automatische
   artikelinterpretatie of parameterwijzigingen. Een operator kan de alleen-lezen
   controle ook handmatig aanvragen met het serversecret.
@@ -23,6 +23,8 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
   RPC's, een lease en revisiecontrole tegen dubbele uitvoering en kasboekcontrole.
 - `sql/002_learning.sql`: afzonderlijke proefportefeuilles, opleidingsgegevens,
   modelversies, controles, aankoopdossiers en terugschakeling.
+- `sql/003_continuous.sql`: begrensde onderzoeksclaims en dagelijks onderhoud,
+  ook wanneer paperhandel of leerverwerking gepauzeerd is.
 
 Het oude Python/SQLite-programma en zijn data blijven behouden. Import herschrijft
 geen bestaande transacties en weigert een afwijkende bestaande doelportefeuille
@@ -66,8 +68,9 @@ privéactivatielink wordt niet gemaild of publiek gepubliceerd.
 - Iedere nieuwe aankoop bewaart de oorspronkelijke motivatie, bekende
   koersmetingen, verwachte kosten en uitvoeringscontrole. De website toont
   dossiers en exporteert ze; oudere transacties krijgen geen verzonnen analyse.
-- Op verzoek is de bestaande einddatum met dertig dagen verlengd tot 6 december
-  2026 om 21:00 UTC / 22:00 Brussel. Verdere verlenging gebeurt alleen op verzoek.
+- Sinds het aanvullende verzoek van 4 november werkt de proef doorlopend zonder
+  vaste einddatum (`operation_mode=continuous`). De oorspronkelijke `run_until`
+  blijft auditinformatie. Risico-, opslag- en gratis verbruiksgrenzen blijven gelden.
 - Zie [FREE-PLAN.md](FREE-PLAN.md) voor de gecontroleerde quota, verbruiksraming,
   automatische pauzes en beperkingen van de Render-kostenbewaking.
 
@@ -93,6 +96,8 @@ container zonder netwerk, nooit de echte Supabase-database.
 `tests/test_learning_database.py` controleert de gezamenlijke verwerking,
 gescheiden kasboeken, aankoopdossiers, trainingslabels en promotie/terugschakeling
 in een tijdelijke lokale testdatabase.
+`tests/test_continuous_database.py` toetst de oude einddatum, onderzoeksleases,
+budgetpauze en onderhoud zonder aankoopdossiers te verwijderen.
 
 Een geslaagde lokale test bewijst geen echte providerkoersen of live installatie.
 Voor oplevering moeten schema, import, anonieme weigering, eigenaaractivatie,
@@ -112,7 +117,7 @@ authenticatorcode nodig. Een echt eigenaarsaccount wordt nooit gebruikt voor
 automatische tests. Tijdelijke Auth-testaccounts worden na controles verwijderd.
 
 `scripts/deploy_managed.py` heeft expliciete fasen: `database`, `functions`,
-`config`, `site`, `activate`, `learning-schema` en `learning-enable`. Gebruik bij
+`config`, `site`, `activate`, `learning-schema`, `learning-enable` en `continuous-enable`. Gebruik bij
 een bestaande gevorderde portefeuille de laatste twee leerfasen; herhaal geen
 import of eigenaaractivatie. Bronbackup en overdrachtsrecords blijven in
 `.data/managed`, buiten Git. Supabase-functies worden achtereenvolgens uitgerold.
@@ -128,3 +133,8 @@ te herstellen; daarvoor is een afzonderlijke gecontroleerde herstelprocedure nod
 Beheerrechten zijn tijdelijk nodig voor de installatie. De website en Cron
 gebruiken geen persoonlijke Management API-token; het verlopen van zo'n
 beheertoken stopt de geïnstalleerde toepassing niet.
+
+De eenmalige fase `continuous-enable` is specifiek voor de goedgekeurde overgang
+zonder bestaande modellen/opleidingslabels. Zij behoudt de rekeningen en vernieuwt
+uitsluitend de vergelijkingsfingerprint voor de gewijzigde looptijdcode. Herhaal
+haar niet wanneer later echte opleidingsgegevens of modellen bestaan.

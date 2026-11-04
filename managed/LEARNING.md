@@ -1,8 +1,9 @@
 # Gecontroleerd leren en aankoopdossiers
 
 Geïnstalleerd op 4 november 2026. Uitsluitend paperhandel; geen brokerverbinding,
-betaalde AI of zelfstandig herschrijven van code. De proef eindigt op 6 december
-2026 om 21:00 UTC / 22:00 Brussel. Deze einddatum wordt niet automatisch verlengd.
+betaalde AI of zelfstandig herschrijven van code. Op aanvullend verzoek van
+4 november loopt de proef door zonder vaste einddatum. De oude einddatum blijft
+uitsluitend auditinformatie; risico- en verbruiksgrenzen kunnen de proef pauzeren.
 
 ## Wat er wordt geleerd
 
@@ -53,7 +54,8 @@ Het model mag risicolimieten, kostenregels, bronleeftijd en beschermende exits
 niet versoepelen. Een lagere voorspelkans verhindert aankopen; zij verhindert
 geen noodzakelijke beschermende verkoop. Opleiding start niet zolang er te
 weinig gegevens zijn. Risicopauzes kunnen die opbouw stoppen. De benodigde
-opleidingsperiode plus twintig nieuwe toetsdagen kan langer duren dan deze proef.
+opleidingsperiode plus twintig nieuwe toetsdagen kan maanden duren, en levert
+bij onvoldoende bewijs geen toegelaten model op.
 
 ## Iedere nieuwe aankoop krijgt een dossier
 
@@ -81,6 +83,13 @@ De varianten hergebruiken dezelfde marktdata. Vroege leerpauzes bij 250 MB datab
 of 2,4 GB geraamd workerverkeer beschermen het resterende proefbudget; de bestaande
 hoofdgrenzen blijven gelden. Zie [FREE-PLAN.md](FREE-PLAN.md) voor providerquota en
 de nog handmatig te controleren Render-betaalinstellingen.
+
+Dagelijks onderhoud om 03:15 UTC ruimt tijdelijke gegevens op, ook als handel of
+leren gepauzeerd is. Na negentig dagen bewaart de portefeuillecurve per UTC-dag
+de eerste, laatste, laagste en hoogste echte meting. Aankoopdossiers en originele
+hoofdtransacties worden behouden. Deze auditinformatie groeit wel: onbeperkt
+gegevens bewaren én gegarandeerd eeuwig gratis blijven is niet mogelijk. Bij de
+opslaggrens pauzeert verwerking; er volgt geen automatische betaalde upgrade.
 
 Er is pas een lerend model zodra echte voorbeelden een opleiding mogelijk maken.
 Een geïnstalleerde routine met status `waiting_data` betekent dat de gegevensopbouw

@@ -79,6 +79,15 @@ test('day loss / peak loss latch and block fresh buys',()=>{
  const out=tick(s,{quotes:{'KBC.BR':eur.buy_quote},expected_open:['KBC.BR'],closed_symbols:[],fx:{usd_per_eur:1.1,date:'2026-11-03'}},NOW);
  assert.equal(out.state.risk.daily_halted,true);assert.equal(out.state.risk.global_halted,true);assert.equal(out.trades.length,0);
 });
+test('continuous mode crosses the original deadline but respects pause and risk guards',()=>{
+ const s=state('KBC.BR');s.run_until='2000-01-01T00:00:00Z';
+ assert.equal(tick(s,{quotes:{}},NOW).state.running,false);
+ s.operation_mode='continuous';s.risk.global_halted=true;
+ const out=tick(s,{quotes:{},expected_open:[],closed_symbols:[]},NOW);
+ assert.equal(out.state.running,true);assert.equal(out.state.risk.global_halted,true);assert.equal(out.trades.length,0);
+ s.running=false;assert.equal(tick(s,{quotes:{}},NOW).state.running,false);
+ s.running=true;delete s.operation_mode;s.run_until='invalid';assert.equal(tick(s,{quotes:{}},NOW).state.running,false);
+});
 test('ECB stale/invalid FX rejected',()=>{
  const xml='<Envelope><Cube time="2026-11-03"><Cube currency="USD" rate="1.1"/></Cube></Envelope>';
  close(parseEcb(xml,NOW).usd_per_eur,1.1);assert.throws(()=>parseEcb(xml.replace('2026-11-03','2026-10-20'),NOW));
