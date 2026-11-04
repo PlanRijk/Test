@@ -10,7 +10,8 @@ Historische voorbeelden heten `historically_simulated`, nieuwe modelwaarnemingen
 
 Bronnen: Yahoo Finance vanaf 2007-01-01 voor 150 aandelen en drie prijsindices;
 ECB gedateerde USD/GBP/CHF/SEK/DKK/NOK-referenties. Geen huidige wisselkoers op oude
-prijzen toepassen. Koersdata, volumes, splitsings- en dividendmeldingen worden bij
+prijzen toepassen. Aandelenbars zonder positief volume tellen niet als verhandelbare historische
+sessie; indexbars mogen wel nul volume hebben. Koersdata, volumes, splitsings- en dividendmeldingen worden bij
 import bevroren met bronhash en canonieke datasethash. Niet alle bedrijven hebben
 historie tot 2007. Ontbrekende bronnen en ongeschikte voorbeelden blijven zichtbaar.
 

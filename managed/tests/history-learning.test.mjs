@@ -70,3 +70,5 @@ test('owner UI labels simulated samples and missing credentials explicitly and e
  const html=historyMarkup({runtime:{connections:[{id:'alpaca',status:'credentials_required',role:'<script>x</script>'}],context:[]},counts:{}});
  assert.ok(html.includes('gesimuleerde'));assert.ok(html.includes('waiting_data'));assert.ok(html.includes('persoonlijke API-sleutels'));assert.ok(!html.includes('<script>'));
 });
+
+test('zero-volume equity bars are not executions or sessions; zero-volume index levels remain context',()=>{const b=series(),stock=source('AAPL',b).data;stock.volumes[0]=0;assert.equal(historySeries(stock).length,b.length-1);assert.equal(historySeries({...stock,symbol:'^STOXX50E'}).length,b.length);});

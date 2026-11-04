@@ -6,7 +6,7 @@ import {blockBounds} from './reliability.js';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),avg=a=>a.reduce((s,x)=>s+x,0)/(a.length||1),iso=t=>new Date(t).toISOString();
 export const utcDay=t=>iso(t).slice(0,10);
 export function stableOrder(text){let hash=2166136261;for(let i=0;i<text.length;i++)hash=Math.imul(hash^text.charCodeAt(i),16777619)>>>0;return hash;}
-export function historySeries(snapshot){return snapshot.timestamps.map((t,i)=>({day:utcDay(t*1000),open_time:iso(t*1000),close:snapshot.closes[i],volume:snapshot.volumes?.[i]??null}));}
+export function historySeries(snapshot){return snapshot.timestamps.map((t,i)=>({day:utcDay(t*1000),open_time:iso(t*1000),close:snapshot.closes[i],volume:snapshot.volumes?.[i]??null})).filter(b=>snapshot.symbol?.startsWith('^')||Number.isFinite(b.volume)&&b.volume>0);}
 export function rateMap(base){return new Map(base.fx.rows.map(r=>[r[0],Object.fromEntries(base.fx.columns.map((k,i)=>[k,r[i+1]]))]));}
 export function datedRate(map,date,currency){
  if(currency==='EUR')return {fx:1,fx_date:date};
