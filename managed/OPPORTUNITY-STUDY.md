@@ -53,12 +53,13 @@ Een indicatieve mand belegt EUR400 gelijk verdeeld over elf sectoren, met EUR100
 kasreserve. De vaste namen zijn AAPL, CAT, JNJ, JPM, NEE, LIN, XOM, KO, AMZN,
 GOOGL en PLD: bestaande Amerikaanse noteringen, zonder extra koersaanvragen.
 
-Start vereist twee opeenvolgende rondes met verse koersen voor alle elf namen.
+Start vereist twee opeenvolgende rondes met verse koersen voor alle elf namen
+en voor bestaande hoofdposities.
 Instap gebruikt latere quotes en dezelfde proefkosten; vervolgens houdt de mand
 de stukken aan. De hoofdproef krijgt op datzelfde moment een eigen nettoverkoop-
 waarde als vergelijkingsanker. Eerdere hoofdresultaten tellen niet mee als
 rendement sinds de mandstart. Er wordt geen gunstige historische instap verzonnen.
-Alleen volledig verse mandwaarderingen komen in de dagcurve.
+Alleen gelijktijdig verse mand- en hoofdwaarderingen komen in de dagcurve.
 
 De vergelijking blijft indicatief: Amerikaanse noteringen, verschillende feitelijke
 blootstelling en transactietijden, voorlopige kosten en geen dividend-/corporate-

@@ -120,7 +120,7 @@ begin
   insert into paperlab.opportunity_days values(d,paperlab.opportunity_day_summary(d)) on conflict(day) do update set record=excluded.record;
  end loop;
  update paperlab.opportunity_runtime set state=s,revision=revision+1 where singleton;
- if s->'basket'->>'stage'='holding' and (s->'basket'->>'current')::boolean then
+ if s->'basket'->>'stage'='holding' and (s->'basket'->>'current')::boolean and (s->'basket'->>'main_current')::boolean then
   insert into paperlab.opportunity_benchmark_days values(((s->>'last_check')::timestamptz at time zone 'UTC')::date,
    jsonb_build_object('time',s->>'last_check','fingerprint',s->>'fingerprint','started_at',s->'basket'->>'started_at','basket_eur',s->'basket'->'liquidation_estimate_eur','basket_return_percent',s->'basket'->'return_percent','main_return_percent',s->'basket'->'main_return_since_anchor_percent')) on conflict(day) do update set record=excluded.record;
  end if;

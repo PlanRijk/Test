@@ -59,6 +59,18 @@ def main():
         lease,_,_,out=outputs[-1]
         assert q('select public.paper_commit_tick('+literal(lease['token'])+'::uuid,'+str(lease['revision'])+','+jsql(out)+')')=='f'
         assert int(q('select count(*) from paperlab.opportunity_records'))==2;checks.append('lease_replay_does_not_duplicate_observations')
+        # Positive basket path: existing quote universe, no retrospective pricing.
+        basket=['AAPL','CAT','JNJ','JPM','NEE','LIN','XOM','KO','AMZN','GOOGL','PLD']
+        for offset in [130,135]:
+            time=T+offset*60000
+            batch['quotes']={k:{**quote,'time':iso(time),'bid':100.7*.9995,'ask':100.7*1.0005,'session_start':'2026-11-03T14:30:00Z','session_end':'2026-11-03T21:00:00Z'} for k in basket};batch['expected_open']=basket
+            q('update paperlab.portfolio set last_attempt=null');lease=get('select public.paper_claim_tick(false)')
+            r=subprocess.run(['node','--input-type=module','-e',NODE],input=json.dumps({'lease':lease,'batch':batch,'time':time}).encode(),capture_output=True,cwd=ROOT)
+            assert r.returncode==0,r.stderr.decode();out=json.loads(r.stdout)
+            assert q('select public.paper_commit_tick('+literal(lease['token'])+'::uuid,'+str(lease['revision'])+','+jsql(out)+')')=='t'
+        assert int(q('select count(*) from paperlab.opportunity_benchmark_days'))==1
+        assert get("select state->'basket' from paperlab.opportunity_runtime")['stage']=='holding'
+        checks.append('basket_entries_and_daily_comparison_use_later_fresh_prices_and_preserve_main_accounts')
         owner_view=get('select public.paper_opportunity_read(null)');assert owner_view['used_for_training'] is False
         assert len(get('select public.paper_opportunity_records(null)'))==2
         assert 'active' not in owner_view['state'];checks.append('owner_reads_compact_summary_and_bounded_export')

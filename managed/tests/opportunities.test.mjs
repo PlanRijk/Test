@@ -67,12 +67,18 @@ test('sector basket requires all eleven names and later quotes, stays distinct f
  assert.equal((await stepOpportunities(payload(later),market(T+600000,STUDY.basket),missing,T+600000)).state.basket.current,false);
  const jump=batch(T+600000,STUDY.basket,160);
  assert.equal((await stepOpportunities(payload(later),market(T+600000,STUDY.basket),jump,T+600000)).state.basket.stage,'review_required');
+ const staleMain=market(T+600000,STUDY.basket);staleMain.cash=400;staleMain.positions={'KBC.BR':{qty:1,cost:100,entry:100,entry_gross_eur:100}};staleMain.prices['KBC.BR']=100;staleMain.price_fx['KBC.BR']=1;
+ assert.equal((await stepOpportunities(payload(later),staleMain,batch(T+600000,STUDY.basket),T+600000)).state.basket.main_current,false);
 });
 test('maximum scope of two cohorts for 100 companies fits bounded runtime payload after entry',async()=>{
  const symbols=Object.keys(BY_SYMBOL);
  const first=await stepOpportunities({enabled:true,revision:1,state:{}},market(T,symbols),batch(T,symbols),T);
  const later=await stepOpportunities(payload(first),market(T+300000,symbols),batch(T+300000,symbols),T+300000);
  assert.equal(Object.keys(later.state.active).length,symbols.length*2);assert.ok(JSON.stringify(later.state).length<131072);assert.ok(JSON.stringify(later).length<800000);
+});
+test('basket cannot anchor against stale main holdings',async()=>{
+ const s=market(T,STUDY.basket);s.positions={'KBC.BR':{qty:1,cost:100,entry:100,entry_gross_eur:100}};s.prices['KBC.BR']=100;s.price_fx['KBC.BR']=1;
+ const first=await stepOpportunities({enabled:true,revision:1,state:{}},s,batch(T,STUDY.basket),T);assert.equal(first.state.basket.stage,'waiting');
 });
 test('study views escape explanations and never present hypothetical sums as portfolio profit',()=>{
  const markup=opportunityMarkup({state:{message:'<img src=x onerror=bad()>'},recent:[],counts:{records:2,clusters:1}});

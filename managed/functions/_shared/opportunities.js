@@ -21,11 +21,11 @@ function mainReasons(s,k){
 function liquidation(s){let total=s.cash;for(const[k,p]of Object.entries(s.positions)){if(!Number.isFinite(s.prices[k]))return null;const t=sale(s,k,p,s.prices[k]/fx(s,k)*.9995**2);total+=p.cost+t.net_pnl_eur;}return total;}
 function basketStep(b,s,quotes,time){
  b||={stage:'waiting',symbols:STUDY.basket};
- const all=STUDY.basket.every(k=>quotes[k]),sameSession=all&&STUDY.basket.every(k=>Date.parse(quotes[k].session_end)-time>600000);
+ const all=STUDY.basket.every(k=>quotes[k]),mainCurrent=Object.keys(s.positions).every(k=>quotes[k]),sameSession=all&&mainCurrent&&STUDY.basket.every(k=>Date.parse(quotes[k].session_end)-time>600000);
  if(b.stage==='waiting'&&sameSession){b={stage:'pending',symbols:STUDY.basket,decision_at:stamp(time),decision_quotes:Object.fromEntries(STUDY.basket.map(k=>[k,quotes[k].time]))};return b;}
  if(b.stage==='pending'){
   if(time-Date.parse(b.decision_at)>600000)return {stage:'waiting',symbols:STUDY.basket};
-  if(all&&STUDY.basket.every(k=>Date.parse(quotes[k].time)>Date.parse(b.decision_at)&&Date.parse(quotes[k].time)>Date.parse(b.decision_quotes[k]))){
+  if(all&&mainCurrent&&STUDY.basket.every(k=>Date.parse(quotes[k].time)>Date.parse(b.decision_at)&&Date.parse(quotes[k].time)>Date.parse(b.decision_quotes[k]))){
    const positions={},prices={},fees=[];
    for(const k of STUDY.basket){const q=quotes[k],price=q.ask*1.0005/q.fx_per_eur,buy=purchase(s,k,price,STUDY.basket_budget_eur/11);positions[k]={qty:buy.qty,cost:STUDY.basket_budget_eur/11,entry:price,entry_gross_eur:buy.qty*price};prices[k]=(q.bid+q.ask)/2/q.fx_per_eur;fees.push(buy.fee);}
    b={stage:'holding',symbols:STUDY.basket,started_at:stamp(time),cash:100,positions,prices,fees_eur:fees.reduce((a,v)=>a+v,0),main_anchor:liquidation(s),initial_eur:500};
@@ -35,7 +35,7 @@ function basketStep(b,s,quotes,time){
   for(const k of STUDY.basket)if(quotes[k]){const price=(quotes[k].bid+quotes[k].ask)/2/quotes[k].fx_per_eur;
    if(Math.abs(price/b.prices[k]-1)>.3){b.stage='review_required';b.message='Grote koers-/valutawijziging; mogelijke corporate action. Waardering geblokkeerd tot herbeoordeling.';return b;}b.prices[k]=price;}
   const value=100+STUDY.basket.reduce((v,k)=>{const t=sale(s,k,b.positions[k],b.prices[k]*.9995**2);return v+b.positions[k].cost+t.net_pnl_eur;},0);
-  b.liquidation_estimate_eur=value;b.return_percent=(value/500-1)*100;b.fresh_symbols=STUDY.basket.filter(k=>quotes[k]).length;b.current=all;b.last_check=stamp(time);
+  b.liquidation_estimate_eur=value;b.return_percent=(value/500-1)*100;b.fresh_symbols=STUDY.basket.filter(k=>quotes[k]).length;b.current=all;b.main_current=mainCurrent;b.last_check=stamp(time);
   const marked=liquidation(s);b.main_return_since_anchor_percent=marked!=null&&b.main_anchor>0?(marked/b.main_anchor-1)*100:null;
  }
  return b;
