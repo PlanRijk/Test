@@ -7,6 +7,7 @@ import {handler as researchHandler} from '../functions/paper-research/index.js';
 import {handler as learnHandler} from '../functions/paper-learn/index.js';
 import {handler as auditHandler} from '../functions/paper-audit/index.js';
 import {handler as dailyHandler} from '../functions/paper-daily/index.js';
+import {handler as historyHandler} from '../functions/paper-history/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
 globalThis.Deno={env:{get:name=>({SUPABASE_URL:'https://testproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-test-key',PAPERLAB_CRON_TOKEN:'test-cron-secret'})[name]}};
@@ -27,6 +28,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_tax_input'))return Response.json([]);
   if(String(url).endsWith('/paper_daily_read'))return Response.json({counts:{records:0}});
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
+  if(String(url).endsWith('/paper_history_export'))return Response.json([]);
   throw Error('Unexpected call: '+url);
  };
 }
@@ -64,5 +67,13 @@ test('daily study and export require owner MFA; daily collection requires its se
  globalThis.fetch=()=>{throw Error('Must not reach database');};
  for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await dailyHandler(new Request('https://test/functions/v1/paper-daily',{method:'POST',headers,body:'{}'}))).status,401);
  assert.equal((await dailyHandler(new Request('https://test/functions/v1/paper-daily',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'bad json'}))).status,503);
+});
+test('historical models and predictions require verified owner MFA; bootstrap accepts only cron authorization',async()=>{
+ mock();for(const query of ['?history-learning=1','?history-export=1']){
+  assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);
+  assert.equal((await apiHandler(req({query}))).status,200);
+ }
+ globalThis.fetch=()=>{throw Error('Must not access sources');};
+ for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await historyHandler(new Request('https://test/functions/v1/paper-history',{method:'POST',headers,body:'{}'}))).status,401);
 });
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});

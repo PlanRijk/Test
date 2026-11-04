@@ -23,7 +23,8 @@ export function parseDailyChart(data,item,fx,time){
   if(d>=today||!Number.isFinite(close)||close<=0||stamp>time||[0,6].includes(new Date(d+'T00:00:00Z').getUTCDay()))continue;
   if(bars.length&&d<=bars.at(-1).day)throw Error('Ongeordende dagbars.');
   const rate=fx.find(x=>x.date<=d&&x.rates[currency]);
-  bars.push({day:d,open_time:iso(stamp),close,fx:rate&&dateMs(d)-dateMs(rate.date)<=4*86400000?rate.rates[currency]:null,fx_date:rate?.date||null});
+  const volume=r.indicators?.quote?.[0]?.volume?.[i];
+  bars.push({day:d,open_time:iso(stamp),close,volume:Number.isFinite(volume)&&volume>=0?volume:null,fx:rate&&dateMs(d)-dateMs(rate.date)<=4*86400000?rate.rates[currency]:null,fx_date:rate?.date||null});
  }
  if(bars.length<21||dateMs(today)-dateMs(bars.at(-1).day)>4*86400000)throw Error('Te weinig of verouderde slotkoersen.');
  const actions=[];
@@ -82,7 +83,7 @@ export async function stepDaily(input,batch,time=Date.now()){
  const records=[],updates=[],bars=[],quality=[],items=Object.fromEntries(DAILY_COMPANIES.map(x=>[x.symbol,x])),revised=new Set(),old=new Map((input.bars||[]).map(b=>[b.symbol+'|'+b.day,b.close]));
  for(const [symbol,c]of Object.entries(batch.charts)){
   for(const b of c.bars){const prior=old.get(symbol+'|'+b.day);if(prior!=null&&Math.abs(b.close/prior-1)>.00001)revised.add(symbol);}
-  bars.push({symbol,...c.latest,observed_at:c.observed_at,actions:c.actions.filter(a=>a.day>=c.latest.day)});
+  bars.push({symbol,...c.latest,session_starts:c.bars.map(b=>Date.parse(b.open_time)/1000),observed_at:c.observed_at,actions:c.actions.filter(a=>a.day>=c.latest.day)});
  }
  for(const item of DAILY_COMPANIES){const c=batch.charts[item.symbol];quality.push({symbol:item.symbol,venue:item.exchange,status:!c?'missing':revised.has(item.symbol)?'revised':!c.latest.fx?'missing_fx':'usable',day:c?.latest.day||null,error:batch.errors[item.symbol]||null});}
  const active=input.active||[];

@@ -6,6 +6,7 @@ import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
 import {taxMarkup} from './tax.js';
 import {dailyMarkup} from './daily-study.js';
+import {historyMarkup} from './history-learning.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -74,11 +75,12 @@ async function loadOpportunities(){
 }
 $('#closeOpportunity').onclick=()=>$('#opportunityDetail').close();
 async function loadLearning(){
- try{const [result,purchases,shadows]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1')]);
-  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows]);}catch(e){$('#learningBody').textContent=e.message;}
+ try{const [result,purchases,shadows,history]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1'),api('?history-learning=1')]);
+  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history);}catch(e){$('#learningBody').textContent=e.message;}
 }
-function renderLearning(result,purchases){
- $('#learningBody').innerHTML=learningMarkup(result,purchases);
+function renderLearning(result,purchases,history){
+ $('#learningBody').innerHTML=historyMarkup(history)+learningMarkup(result,purchases);
+ $('#historyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?history-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','model_id','symbol','decision_at','probability','selected','status','origin','record_json'],...rows.map(r=>[r.id,r.model_id,r.symbol,r.decision_at,r.probability,r.selected,r.status,r.origin,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-historisch-model-voorwaarts.csv');});
  document.querySelectorAll('[data-purchase]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.purchase),b.dataset.shadow==='true'));
  $('#learningExport').onclick=e=>busy(e.currentTarget,async()=>{
   const rows=await api('?learning-export=1'),headers=['id','schema','fingerprint','symbol','venue','decision_time','entry_time','available_at','net_eur','features_json'];

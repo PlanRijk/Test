@@ -27,6 +27,8 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('history-learning'))return reply(await rpc('paper_history_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('history-export'))return reply(await rpc('paper_history_export',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('daily-study'))return reply(await rpc('paper_daily_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('daily-export'))return reply(await rpc('paper_daily_export',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('tax-report')){
