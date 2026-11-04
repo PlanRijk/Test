@@ -53,6 +53,12 @@ in hetzelfde account. De dashboardmeters van de providers blijven leidend.
   zeven dagen; app-verbruiksmaanden: vierentwintig maanden. Na negentig dagen
   blijven van de portefeuillecurve vier echte punten per UTC-dag over
   (eerste/laatste/laagste/hoogste). Aankoopdossiers en hoofdtransacties blijven behouden.
+- Het kansenregister deelt de koersbatch: maximaal twee observaties per bedrijf
+  en beursdag, tweehonderd lopende en vijfduizend afgesloten dossiers. Detail
+  blijft maximaal negentig dagen; kleine dagtotalen maximaal één jaar.
+  Vroege pauze bij tweehonderd MB database of twee GB geraamd workerverkeer.
+  Claims tellen de compacte onderzoeksstatus mee; verwerking telt aanvullend
+  tweemaal de omvang van dossiers/uitkomsten. Export is begrensd op vijfhonderd.
 - In de website verschijnt een waarschuwing vanaf 70% van een app-budget.
   Een pauze doet geen abonnementupgrade en plaatst geen echte brokerorders.
 - Automatische Render-deployments staan uit. Builds zijn kort en starten alleen

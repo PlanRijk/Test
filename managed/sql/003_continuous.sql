@@ -52,6 +52,7 @@ begin
  delete from paperlab.learning_events where id in(select id from paperlab.learning_events order by id desc offset 500);
  delete from paperlab.learning_trades where trade->>'side'='verkoop' and (time<now()-interval '180 days' or id in(select id from paperlab.learning_trades where trade->>'side'='verkoop' order by id desc offset 5000));
  delete from paperlab.free_usage where month<(date_trunc('month',now() at time zone 'UTC')-interval '24 months')::date;
+ if to_regprocedure('public.paper_opportunity_maintenance()') is not null then perform public.paper_opportunity_maintenance();end if;
  if to_regclass('cron.job_run_details') is not null then
   execute $clean$delete from cron.job_run_details where end_time<now()-interval '7 days' and jobid in(select jobid from cron.job where jobname in('paperlab-tick','paperlab-research','paperlab-learn','paperlab-maintenance'))$clean$;
  end if;

@@ -18,6 +18,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_read'))return Response.json({private_data:'owner only'});
   if(String(url).endsWith('/paper_learning_read'))return Response.json({samples:0,enabled:true});
   if(String(url).endsWith('/paper_purchase_analysis'))return Response.json([]);
+  if(String(url).endsWith('/paper_opportunity_read'))return Response.json({counts:{records:0},is_portfolio:false});
+  if(String(url).endsWith('/paper_opportunity_records'))return Response.json([]);
   throw Error('Unexpected call: '+url);
  };
 }
@@ -39,4 +41,9 @@ test('authenticated owner can read the learner without access to arbitrary model
  const forbidden=await apiHandler(req({method:'POST',body:{action:'learning',command:'upload-model',weights:[999]}}));assert.equal(forbidden.status,400);});
 test('training endpoint rejects both anonymous requests and owner-JWT requests without cron secret',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};for(const headers of [{},{Authorization:'Bearer '+jwt()}]){const r=await learnHandler(new Request('https://test/functions/v1/paper-learn',{method:'POST',headers,body:'{"manual":true}'}));assert.equal(r.status,401);}});
 test('purchase analysis identifiers are validated before database access',async()=>{mock();const r=await apiHandler(req({query:'?shadow-receipt=drop-table'}));assert.equal(r.status,400);});
+test('opportunity summaries, exports and dossiers require owner MFA',async()=>{mock();for(const query of ['?opportunities=1','?opportunity-export=1','?opportunity=op-'+24*'a'])assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);});
+test('owner can read observations but cannot inject results or arbitrary study commands',async()=>{mock();const r=await apiHandler(req({query:'?opportunities=1'}));assert.equal(r.status,200);assert.equal((await r.json()).is_portfolio,false);
+ assert.equal((await apiHandler(req({method:'POST',body:{action:'opportunities',command:'inject-results',net_eur:999}}))).status,400);
+ assert.equal((await apiHandler(req({query:'?opportunity=invalid-id'}))).status,400);
+});
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});

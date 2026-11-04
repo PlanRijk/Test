@@ -113,6 +113,13 @@ we eraan werken; er draait geen permanente denkende chatsessie.
 
 ## Bronnen
 
+Sinds 4 november is ook het vooraf vastgelegde register
+[Breder kansenonderzoek](OPPORTUNITY-STUDY.md) toegevoegd: meer hypothetische
+waarnemingen, vaste controlemomenten en meetperioden, plus een indicatieve
+elfsectorenmand. Deze gegevens blijven gescheiden van hoofdtransacties en de
+bestaande trainingslabels. De mand vervangt de ontbrekende gelijkwaardige
+wereldwijde ETF- en historische toetsen niet.
+
 - [Barber & Odean: origineel artikel](https://faculty.haas.berkeley.edu/odean/Papers%20current%20versions/Individual_Investor_Performance_Final.pdf)
 - [Auteurswebsite Odean](https://faculty.haas.berkeley.edu/odean/)
 - [Time Series Momentum: AQR/auteurs-samenvatting](https://www.aqr.com/Insights/Research/Journal-Article/Time-Series-Momentum)

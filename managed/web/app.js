@@ -2,6 +2,7 @@ import {CONFIG} from './config.js';
 import {COMPANIES,BY_SYMBOL} from './catalogue.js';
 import {freeBudgetAlert} from './usage.js';
 import {learningMarkup} from './learning.js';
+import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -56,7 +57,16 @@ $('#savedCodes').onchange=e=>$('#finishSetup').disabled=!e.target.checked;
 $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceChildren();await enter();});
 $('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
-const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse'};
+const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
+async function loadOpportunities(){
+ try{const result=await api('?opportunities=1');$('#opportunitiesBody').innerHTML=opportunityMarkup(result);
+  $('#studyToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'opportunities',command:e.currentTarget.dataset.command});await loadOpportunities();});
+  document.querySelectorAll('[data-opportunity]').forEach(b=>b.onclick=()=>busy(b,async()=>{const r=await api('?opportunity='+encodeURIComponent(b.dataset.opportunity));$('#opportunityDetailBody').innerHTML=opportunityDetailMarkup(r);$('#opportunityDetail').showModal();}));
+  $('#studyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?opportunity-export=1'),headers=['id','day','symbol','cohort','decision_at','statement','main_reasons_json','entry_json','outcomes_json','features_json','fingerprint','record_json'];
+   const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[headers,...rows.map(r=>[r.id,r.day,r.symbol,r.cohort,r.decision_at,r.statement,JSON.stringify(r.main_reasons),JSON.stringify(r.entry||null),JSON.stringify(r.outcomes),JSON.stringify(r.context?.features),r.fingerprint,JSON.stringify(r)])];download(new Blob(['\uFEFF'+lines.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-hypothetische-observaties.csv');});
+ }catch(e){$('#opportunitiesBody').textContent=e.message;}
+}
+$('#closeOpportunity').onclick=()=>$('#opportunityDetail').close();
 async function loadLearning(){
  try{const [result,purchases,shadows]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1')]);
   const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows]);}catch(e){$('#learningBody').textContent=e.message;}
@@ -72,7 +82,7 @@ function renderLearning(result,purchases){
   await api('',{action:'learning',command:b.dataset.learning,model:b.dataset.model||null});await loadLearning();
  }));
 }
-document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==button.dataset.page+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b===button));$('#pageTitle').textContent=titles[button.dataset.page];if(button.dataset.page==='learning')loadLearning();});
+document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==button.dataset.page+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b===button));$('#pageTitle').textContent=titles[button.dataset.page];if(button.dataset.page==='learning')loadLearning();if(button.dataset.page==='opportunities')loadOpportunities();});
 function plot(points){
  if(!points.length)return '<p class="muted">Nog geen koersmetingen.</p>';
  const values=points.map(p=>Number(p.value)),lo=Math.min(...values)*.999,hi=Math.max(...values)*1.001,range=hi-lo||1;
@@ -172,3 +182,4 @@ window.addEventListener('hashchange',()=>boot().catch(()=>authError('De activati
 boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));
 
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);
+setInterval(()=>{if(session&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);

@@ -25,6 +25,9 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
   modelversies, controles, aankoopdossiers en terugschakeling.
 - `sql/003_continuous.sql`: begrensde onderzoeksclaims en dagelijks onderhoud,
   ook wanneer paperhandel of leerverwerking gepauzeerd is.
+- `sql/004_opportunities.sql`: afzonderlijk kansenregister, vaste meetperioden,
+  gespreide indicatieve sectormand en begrensde onderzoeksopslag.
+  Zie [OPPORTUNITY-STUDY.md](OPPORTUNITY-STUDY.md).
 
 Het oude Python/SQLite-programma en zijn data blijven behouden. Import herschrijft
 geen bestaande transacties en weigert een afwijkende bestaande doelportefeuille
@@ -84,6 +87,7 @@ node managed/tests/security.test.mjs
 node managed/tests/usage.test.mjs
 node managed/tests/review.test.mjs
 node managed/tests/learning.test.mjs
+node managed/tests/opportunities.test.mjs
 node managed/check-public.mjs
 ```
 
@@ -98,6 +102,8 @@ gescheiden kasboeken, aankoopdossiers, trainingslabels en promotie/terugschakeli
 in een tijdelijke lokale testdatabase.
 `tests/test_continuous_database.py` toetst de oude einddatum, onderzoeksleases,
 budgetpauze en onderhoud zonder aankoopdossiers te verwijderen.
+`tests/test_opportunities_database.py` controleert tijdsvolgorde, afzondering
+van transacties/trainingslabels, beveiliging, budget en foutisolatie.
 
 Een geslaagde lokale test bewijst geen echte providerkoersen of live installatie.
 Voor oplevering moeten schema, import, anonieme weigering, eigenaaractivatie,

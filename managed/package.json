@@ -1,1 +1,1 @@
-{"name":"paperlab-managed","private":true,"type":"module","scripts":{"test":"node tests/engine.test.mjs && node tests/security.test.mjs && node tests/usage.test.mjs && node tests/review.test.mjs && node tests/learning.test.mjs"}}
+{"name":"paperlab-managed","private":true,"type":"module","scripts":{"test":"node tests/engine.test.mjs && node tests/security.test.mjs && node tests/usage.test.mjs && node tests/review.test.mjs && node tests/learning.test.mjs && node tests/opportunities.test.mjs"}}

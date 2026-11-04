@@ -147,11 +147,12 @@ end$$;
 
 create or replace function public.paper_claim_tick(p_manual boolean default false) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,pg_temp as $$
-declare p paperlab.portfolio;t uuid;u paperlab.free_usage;m date;charge bigint;learning jsonb;
+declare p paperlab.portfolio;t uuid;u paperlab.free_usage;m date;charge bigint;learning jsonb;opportunities jsonb;
 begin
   if to_regprocedure('public.paper_learning_budget_guard()') is not null then perform public.paper_learning_budget_guard();end if;
   select * into p from paperlab.portfolio where singleton for update;
   if not found then return null;end if;
+  if to_regprocedure('public.paper_opportunity_guard()') is not null then perform public.paper_opportunity_guard();end if;
   if not paperlab.run_open(p.state) then
     update paperlab.portfolio set state=jsonb_set(state,'{running}','false'),last_tick_status='trial_ended',revision=revision+1 where singleton;return null;
   end if;
@@ -163,7 +164,8 @@ begin
   -- Deliberately conservative application estimate, not provider billing data.
   -- Covers repeated state transfers plus a fixed per-attempt overhead.
   if to_regprocedure('public.paper_learning_payload()') is not null then learning:=public.paper_learning_payload();end if;
-  charge:=4*(octet_length(p.state::text)+coalesce(octet_length(learning::text),0)+16384);
+  if to_regprocedure('public.paper_opportunity_payload()') is not null then opportunities:=public.paper_opportunity_payload();end if;
+  charge:=4*(octet_length(p.state::text)+coalesce(octet_length(learning::text),0)+coalesce(octet_length(opportunities::text),0)+16384);
   if u.tick_attempts>=u.max_tick_attempts or u.estimated_worker_egress_bytes+charge>u.max_worker_egress_bytes or pg_database_size(current_database())>=u.max_database_bytes then
     update paperlab.portfolio set state=jsonb_set(jsonb_set(state,'{running}','false'),'{error}',to_jsonb('Automatisch gepauzeerd om gratis verbruikslimieten te beschermen. Controleer opslag en providergebruik voordat je hervat.'::text)),
       revision=revision+1,lease=null,lease_until=null,last_attempt=now(),last_tick_status='free_budget_paused' where singleton;
@@ -173,7 +175,7 @@ begin
   update paperlab.free_usage set tick_attempts=tick_attempts+1,estimated_worker_egress_bytes=estimated_worker_egress_bytes+charge where month=m;
   t=gen_random_uuid();
   update paperlab.portfolio set lease=t,lease_until=now()+interval '120 seconds',last_attempt=now(),last_tick_status='measuring' where singleton;
-  return jsonb_build_object('token',t,'revision',p.revision,'state',jsonb_set(p.state,'{running}','true'),'persist_running',p.state->'running','learning',learning);
+  return jsonb_build_object('token',t,'revision',p.revision,'state',jsonb_set(p.state,'{running}','true'),'persist_running',p.state->'running','learning',learning,'opportunities',opportunities);
 end$$;
 
 create or replace function public.paper_commit_tick(p_token uuid,p_revision bigint,p_output jsonb) returns boolean
@@ -222,6 +224,13 @@ begin
       perform public.paper_learning_apply(p_output->'learning',p_revision,p.state);
     exception when others then
       perform public.paper_learning_error('Leerbatch afgewezen; hoofdportefeuille behouden en leerbeleid teruggezet.');
+    end;
+  end if;
+  if jsonb_typeof(p_output->'opportunities')='object' and to_regprocedure('public.paper_opportunity_apply(jsonb)') is not null then
+    begin
+      perform public.paper_opportunity_apply(p_output->'opportunities');
+    exception when others then
+      perform public.paper_opportunity_error();
     end;
   end if;
   -- Raw data is bounded; trade receipts and equity/audit histories are retained.

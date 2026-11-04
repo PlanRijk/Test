@@ -26,6 +26,12 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('opportunities'))return reply(await rpc('paper_opportunity_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('opportunity-export'))return reply(await rpc('paper_opportunity_records',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('opportunity')){
+        const id=url.searchParams.get('opportunity');if(!/^op-[a-f0-9]{24}$/.test(id||''))return reply({error:'Ongeldig onderzoeks-ID.'},400,origin);
+        const result=await rpc('paper_opportunity_records',{p_owner:user.id,p_id:id});return reply(result||{error:'Niet gevonden.'},result?200:404,origin);
+      }
       if(url.searchParams.has('learning'))return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('learning-trades'))return reply(await rpc('paper_learning_trades',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('learning-export'))return reply(await rpc('paper_learning_export',{p_owner:user.id}),200,origin);
@@ -50,6 +56,10 @@ export async function handler(request){
       const ok=await rpc('paper_learning_action',{p_owner:user.id,p_action:body.command,p_model:body.model||null});
       if(!ok)return reply({error:'Model voldoet niet aan de bewijsvoorwaarden of de hoofdportefeuille is niet leeg.'},409,origin);
       return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
+    }
+    if(body.action==='opportunities'){
+      if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige onderzoeksbediening.'},400,origin);
+      await rpc('paper_opportunity_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_opportunity_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='step'){
       const response=await fetch(base()+'/functions/v1/paper-tick',{method:'POST',headers:{'Content-Type':'application/json','X-PaperLab-Cron':env('PAPERLAB_CRON_TOKEN')},body:JSON.stringify({manual:true}),signal:AbortSignal.timeout(80000)});

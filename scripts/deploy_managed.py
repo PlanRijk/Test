@@ -78,6 +78,7 @@ def database(ref):
     sql(ref,(ROOT/'managed/sql/001_paperlab.sql').read_text())
     sql(ref,(ROOT/'managed/sql/002_learning.sql').read_text())
     sql(ref,(ROOT/'managed/sql/003_continuous.sql').read_text())
+    sql(ref,(ROOT/'managed/sql/004_opportunities.sql').read_text())
     sql(ref,import_sql(state,records))
     result=sql(ref,"select (state->>'cash')::float8 as cash_eur,(select count(*) from paperlab.trades) as trades,revision from paperlab.portfolio where singleton",True)
     if not result or abs(result[0]['cash_eur']-manifest['cash_eur'])>1e-6 or result[0]['trades']!=manifest['trades']:
@@ -113,7 +114,7 @@ def learning_schema(ref):
       'events',(select coalesce(jsonb_agg(e order by e.id),'[]'::jsonb) from paperlab.events e),
       'observations',(select coalesce(jsonb_agg(o order by o.id),'[]'::jsonb) from paperlab.observations o)) as backup""",True)[0]['backup']
     private_json('learning-backup-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.json',backup)
-    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
+    for name in ['001_paperlab.sql','002_learning.sql','003_continuous.sql','004_opportunities.sql']:sql(ref,(ROOT/'managed/sql'/name).read_text())
     print(json.dumps({'stage':'learning-schema','status':'upgraded_without_reset','preserved_trade_actions':len(backup['trades'])}))
 
 
