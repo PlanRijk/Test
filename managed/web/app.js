@@ -6,6 +6,7 @@ import {freeBudgetAlert} from './usage.js';
 import {learningMarkup} from './learning.js';
 import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
+import {readingMarkup} from './reading.js';
 import {optimizationMarkup} from './optimization.js';
 import {taxMarkup} from './tax.js';
 import {dailyMarkup} from './daily-study.js';
@@ -66,7 +67,7 @@ $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceC
 $('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
 const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
-async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly()]);}
+async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly(),loadReading()]);}
 async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
 async function loadTaxOnly(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
@@ -206,3 +207,5 @@ boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));
 
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);
+
+async function loadReading(){try{const data=await api("?reading-study=1");$("#readingReport").innerHTML=readingMarkup(data);$("#readingToggle").onclick=async()=>{try{await api("",{action:"reading",command:data.runtime?.enabled?"pause":"resume"});await loadReading();}catch(e){$("#readingReport").textContent=e.message;}};}catch(e){$("#readingReport").textContent=e.message;}}

@@ -8,6 +8,7 @@ import {handler as learnHandler} from '../functions/paper-learn/index.js';
 import {handler as auditHandler} from '../functions/paper-audit/index.js';
 import {handler as dailyHandler} from '../functions/paper-daily/index.js';
 import {handler as historyHandler} from '../functions/paper-history/index.js';
+import {handler as readingHandler} from '../functions/paper-reading/index.js';
 import {handler as breadthHandler} from '../functions/paper-breadth/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
@@ -31,6 +32,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
   if(String(url).endsWith('/paper_history_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_reading_read'))return Response.json({notes:[],runtime:{enabled:true}});
+  if(String(url).endsWith('/paper_reading_action'))return Response.json(true);
   if(String(url).endsWith('/paper_capital_read'))return Response.json({runtime:{status:'collecting'}});
   if(String(url).endsWith('/paper_capital_action'))return Response.json(true);
   if(String(url).endsWith('/paper_capital_receipt'))return Response.json({account:'capital10k'});
@@ -126,3 +129,6 @@ test('candidate processing failure remains explicit while the original intraday 
 });
 
 test('capital summaries, receipts, exports and controls require owner MFA; deposits and resets rejected',async()=>{mock();for(const query of ['?capital-study=1','?capital-export=1','?capital-receipt=1'])assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?capital-study=1'}))).status,200);assert.equal((await apiHandler(req({query:'?capital-receipt=1'}))).status,200);assert.equal((await apiHandler(req({query:'?capital-receipt=bad'}))).status,400);for(const command of ['deposit','reset','change-risk'])assert.equal((await apiHandler(req({method:'POST',body:{action:'capital',command}}))).status,400);assert.equal((await apiHandler(req({method:'POST',body:{action:'capital',command:'pause'}}))).status,200);});
+
+test('reading notes require owner MFA; no browser model/source injection',async()=>{mock();assert.equal((await apiHandler(req({query:'?reading-study=1',token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?reading-study=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'reading',command:'pause'}}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'reading',command:'fetch',url:'https://arbitrary.invalid'}}))).status,400);});
+test('daily reading cannot be triggered by anonymous or owner JWT',async()=>{globalThis.fetch=()=>{throw Error('Must not reach source or database');};for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await readingHandler(new Request('https://test/functions/v1/paper-reading',{method:'POST',headers,body:'{}'}))).status,401);});

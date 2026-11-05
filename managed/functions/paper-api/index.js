@@ -27,6 +27,7 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('reading-study'))return reply(await rpc('paper_reading_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('capital-study'))return reply(await rpc('paper_capital_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('capital-export'))return reply(await rpc('paper_capital_receipt',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('capital-receipt')){
@@ -80,6 +81,10 @@ export async function handler(request){
       const ok=await rpc('paper_learning_action',{p_owner:user.id,p_action:body.command,p_model:body.model||null});
       if(!ok)return reply({error:'Model voldoet niet aan de bewijsvoorwaarden of de hoofdportefeuille is niet leeg.'},409,origin);
       return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
+    }
+    if(body.action==='reading'){
+      if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige leesbediening.'},400,origin);
+      await rpc('paper_reading_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_reading_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='capital'){
       if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige kapitaalbediening.'},400,origin);
