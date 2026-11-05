@@ -27,6 +27,12 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('capital-study'))return reply(await rpc('paper_capital_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('capital-export'))return reply(await rpc('paper_capital_receipt',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('capital-receipt')){
+        const id=Number(url.searchParams.get('capital-receipt'));if(!Number.isSafeInteger(id)||id<1)return reply({error:'Ongeldig kapitaalbewijs.'},400,origin);
+        const result=await rpc('paper_capital_receipt',{p_owner:user.id,p_id:id});return reply(result||{error:'Niet gevonden.'},result?200:404,origin);
+      }
       if(url.searchParams.has('candidate-study'))return reply(await rpc('paper_candidates_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('optimizations'))return reply(await rpc('paper_optimization_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('breadth-study'))return reply(await rpc('paper_breadth_read',{p_owner:user.id}),200,origin);
@@ -74,6 +80,10 @@ export async function handler(request){
       const ok=await rpc('paper_learning_action',{p_owner:user.id,p_action:body.command,p_model:body.model||null});
       if(!ok)return reply({error:'Model voldoet niet aan de bewijsvoorwaarden of de hoofdportefeuille is niet leeg.'},409,origin);
       return reply(await rpc('paper_learning_read',{p_owner:user.id}),200,origin);
+    }
+    if(body.action==='capital'){
+      if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige kapitaalbediening.'},400,origin);
+      await rpc('paper_capital_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_capital_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='candidates'){
       if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige kandidaatbediening.'},400,origin);

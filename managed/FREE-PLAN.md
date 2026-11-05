@@ -118,3 +118,5 @@ Genuine referentievoorbeelden: maximaal 5.000/twee jaar; leerdagen en kwaliteit:
 jaar. Trainingssnapshots: maximaal twaalf, samen 24 MB ongecomprimeerd.
 Een aanvullende nachtelijke audit heeft een lease en eigen verbruikscontrole;
 er zijn geen extra koersdownloads of betaalde diensten nodig. Zie RELIABILITY.md.
+
+De afzonderlijke [EUR10.000-proef](CAPITAL-STUDY.md) hergebruikt de marktbatch. Zij voegt geen dienst of koersdownload toe, maar wel begrensde database-/transferbelasting. Eigen maandraming 240 MB voor nieuwe aankopen en 300 MB harde pauze; aanvullende globale veiligheidsmarges blijven gelden.

@@ -31,6 +31,9 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
   if(String(url).endsWith('/paper_history_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_capital_read'))return Response.json({runtime:{status:'collecting'}});
+  if(String(url).endsWith('/paper_capital_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_capital_receipt'))return Response.json({account:'capital10k'});
   if(String(url).endsWith('/paper_candidates_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_candidates_action'))return Response.json(true);
   if(String(url).endsWith('/paper_optimization_read'))return Response.json({status:'reviewed'});
@@ -121,3 +124,5 @@ test('candidate processing failure remains explicit while the original intraday 
  globalThis.fetch=async(url)=>{const path=String(url);if(path.endsWith('/paper_candidates_claim'))return Response.json({error:'unavailable'},{status:503});if(path.endsWith('/paper_learning_train_input'))return Response.json({token:'lease',sample_count:3,days:1,samples:[],models:[],fingerprint:'test'});if(path.endsWith('/paper_learning_store'))return Response.json(true);throw Error('Unexpected RPC');};
  const r=await learnHandler(new Request('https://test/functions/v1/paper-learn',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'{"manual":true}'}));assert.equal(r.status,200);const result=await r.json();assert.equal(result.status,'waiting_data');assert.equal(result.candidates.status,'error');assert.equal(result.model_created,false);
 });
+
+test('capital summaries, receipts, exports and controls require owner MFA; deposits and resets rejected',async()=>{mock();for(const query of ['?capital-study=1','?capital-export=1','?capital-receipt=1'])assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?capital-study=1'}))).status,200);assert.equal((await apiHandler(req({query:'?capital-receipt=1'}))).status,200);assert.equal((await apiHandler(req({query:'?capital-receipt=bad'}))).status,400);for(const command of ['deposit','reset','change-risk'])assert.equal((await apiHandler(req({method:'POST',body:{action:'capital',command}}))).status,400);assert.equal((await apiHandler(req({method:'POST',body:{action:'capital',command:'pause'}}))).status,200);});

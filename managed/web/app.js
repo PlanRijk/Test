@@ -1,3 +1,4 @@
+import {capitalMarkup} from './capital.js';
 import {candidateMarkup} from './candidates.js';
 import {CONFIG} from './config.js';
 import {COMPANIES,BY_SYMBOL} from './catalogue.js';
@@ -80,11 +81,17 @@ async function loadOpportunities(){
 }
 $('#closeOpportunity').onclick=()=>$('#opportunityDetail').close();
 async function loadLearning(){
- try{const [result,purchases,shadows,history,breadth,candidates]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1'),api('?history-learning=1'),api('?breadth-study=1'),api('?candidate-study=1').catch(()=>({unavailable:true}))]);
-  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history,breadth,candidates);}catch(e){$('#learningBody').textContent=e.message;}
+ try{const [result,purchases,shadows,history,breadth,candidates,capital]=await Promise.all([api('?learning=1'),api('?purchase-analysis=1'),api('?learning-trades=1'),api('?history-learning=1'),api('?breadth-study=1'),api('?candidate-study=1').catch(()=>({unavailable:true})),api('?capital-study=1').catch(()=>({unavailable:true}))]);
+  const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history,breadth,candidates,capital);}catch(e){$('#learningBody').textContent=e.message;}
 }
-function renderLearning(result,purchases,history,breadth,candidates){
- $('#learningBody').innerHTML=candidateMarkup(candidates)+breadthMarkup(breadth)+historyMarkup(history)+learningMarkup(result,purchases);
+function renderLearning(result,purchases,history,breadth,candidates,capital){
+ $('#learningBody').innerHTML=capitalMarkup(capital)+candidateMarkup(candidates)+breadthMarkup(breadth)+historyMarkup(history)+learningMarkup(result,purchases);
+ if($('#capitalToggle')){
+  $('#capitalChart').innerHTML=plot((capital.curve||[]).map(c=>({time:c.last_at,value:c.last_value})));
+  $('#capitalToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'capital',command:e.currentTarget.dataset.command});await loadLearning();});
+  document.querySelectorAll('[data-capital-receipt]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.capitalReceipt),'capital'));
+  $('#capitalExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?capital-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','time','symbol','side','quantity','price_local','currency','commission_eur','net_result_eur','reason','receipt_json'],...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.snapshot.currency,t.fee,t.pnl,t.reason,JSON.stringify(t)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-10000-transacties.csv');});
+ }
  if($('#candidateToggle'))$('#candidateToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'candidates',command:e.currentTarget.dataset.command});await loadLearning();});
  $('#breadthToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'breadth',command:e.currentTarget.dataset.command});await loadLearning();});
  for(const [id,query,name]of [['breadthExport','?breadth-export=1','paperlab-brede-modelregistratie.csv'],['breadthTraces','?breadth-traces=1','paperlab-uitgebreide-modelinvoer.csv']])$('#'+id).onclick=e=>busy(e.currentTarget,async()=>{const rows=await api(query),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['model_id','symbol','day','origin','record_json'],...rows.map(r=>[r.model_id,r.symbol,r.day,r.origin||'exploratory_hypothetical',JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),name);});
@@ -156,8 +163,8 @@ for(const sector of [...new Set(COMPANIES.map(x=>x.sector))].sort()){const o=doc
 for(const id of ['search','sector','region'])$('#'+id).addEventListener('input',renderCatalogue);
 $('#toggle').onclick=e=>busy(e.currentTarget,async()=>{data=await api('',{action:data.state.running?'pause':'start'});render();});
 $('#step').onclick=e=>busy(e.currentTarget,async()=>{toast('Koersen ophalen en controleren…');data=await api('',{action:'step'});render();});
-async function openReceipt(id,shadow=false){try{receipt=await api((shadow?'?shadow-receipt=':'?receipt=')+id);const s=receipt.snapshot,t=s.tax_detail||{};
- const rows=[['Portefeuille',({reference:'Schaduwreferentie',low_turnover:'Schaduw · minder transacties',learned:'Schaduw · model'})[receipt.account]||'Hoofdproef'],['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
+async function openReceipt(id,shadow=false){try{receipt=await api((shadow==='capital'?'?capital-receipt=':shadow?'?shadow-receipt=':'?receipt=')+id);const s=receipt.snapshot,t=s.tax_detail||{};
+ const rows=[['Portefeuille',({capital10k:'Afzonderlijke €10.000-proef',reference:'Schaduwreferentie',low_turnover:'Schaduw · minder transacties',learned:'Schaduw · model'})[receipt.account]||'Hoofdproef'],['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
  $('#receiptBody').innerHTML=rows.map(([k,v])=>`<div class="receipt-row"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')+`<p>${esc(receipt.reason)}</p><p class="small muted">Indicatieve paperuitvoering met proefkosten. Geen brokerbevestiging.</p>`;$('#receipt').showModal();
  const r=s.purchase_rationale;
  if(r){

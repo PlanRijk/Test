@@ -85,6 +85,7 @@ def database(ref):
     sql(ref,(ROOT/'managed/sql/008_breadth_study.sql').read_text())
     sql(ref,(ROOT/'managed/sql/009_optimization_review.sql').read_text())
     sql(ref,(ROOT/'managed/sql/010_candidate_comparison.sql').read_text())
+    sql(ref,(ROOT/'managed/sql/011_capital_study.sql').read_text())
     sql(ref,import_sql(state,records))
     result=sql(ref,"select (state->>'cash')::float8 as cash_eur,(select count(*) from paperlab.trades) as trades,revision from paperlab.portfolio where singleton",True)
     if not result or abs(result[0]['cash_eur']-manifest['cash_eur'])>1e-6 or result[0]['trades']!=manifest['trades']:
