@@ -94,3 +94,7 @@ opslaggrens pauzeert verwerking; er volgt geen automatische betaalde upgrade.
 Er is pas een lerend model zodra echte voorbeelden een opleiding mogelijk maken.
 Een geïnstalleerde routine met status `waiting_data` betekent dat de gegevensopbouw
 werkt, niet dat al een winstgevend model beschikbaar is.
+
+## Aanvullende dagkandidaten
+
+Vanaf 5 november 2026 bestaat ook een afzonderlijke vergelijking met twee bevroren dagkandidaten. Dezelfde leercontrole volgt die dagelijks op gedeelde toekomstige uitkomsten, zonder extra marktverzoeken of wijzigingen aan deze intradayroute. Zie [CANDIDATE-COMPARISON.md](CANDIDATE-COMPARISON.md) voor het eigen trainingsvak, de vaste toets en opslaggrenzen.

@@ -31,6 +31,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
   if(String(url).endsWith('/paper_history_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_candidates_read'))return Response.json({runtime:{status:'observing'}});
+  if(String(url).endsWith('/paper_candidates_action'))return Response.json(true);
   if(String(url).endsWith('/paper_optimization_read'))return Response.json({status:'reviewed'});
   if(String(url).endsWith('/paper_breadth_read'))return Response.json({counts:{compact:0}});
   if(String(url).endsWith('/paper_breadth_export'))return Response.json([]);
@@ -111,4 +113,11 @@ test('optional optimization failure stays explicit without discarding a complete
  };
  const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'{"manual":true}'}));
  assert.equal(r.status,200);assert.equal(stored.optimization.status,'unavailable');assert.equal(stored.trading_changes,false);assert.ok(stored.sources.length>0);
+});
+
+test('separate candidate reads and controls require owner MFA and cannot promote a model',async()=>{mock();assert.equal((await apiHandler(req({query:'?candidate-study=1',token:jwt(uid,'aal1')}))).status,403);mock();assert.equal((await apiHandler(req({query:'?candidate-study=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'candidates',command:'promote'}}))).status,400);assert.equal((await apiHandler(req({method:'POST',body:{action:'candidates',command:'pause'}}))).status,200);});
+
+test('candidate processing failure remains explicit while the original intraday learner still checks its data',async()=>{
+ globalThis.fetch=async(url)=>{const path=String(url);if(path.endsWith('/paper_candidates_claim'))return Response.json({error:'unavailable'},{status:503});if(path.endsWith('/paper_learning_train_input'))return Response.json({token:'lease',sample_count:3,days:1,samples:[],models:[],fingerprint:'test'});if(path.endsWith('/paper_learning_store'))return Response.json(true);throw Error('Unexpected RPC');};
+ const r=await learnHandler(new Request('https://test/functions/v1/paper-learn',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'{"manual":true}'}));assert.equal(r.status,200);const result=await r.json();assert.equal(result.status,'waiting_data');assert.equal(result.candidates.status,'error');assert.equal(result.model_created,false);
 });

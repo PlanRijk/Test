@@ -19,6 +19,8 @@ database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 - `functions/paper-learn`: twee dagelijkse leercontroles; een klein statistisch
   model wordt pas na voldoende afgesloten referentietransacties getraind en
   vervolgens afzonderlijk met nieuwe gegevens getest. Zie [LEARNING.md](LEARNING.md).
+- `sql/010_candidate_comparison.sql` en [CANDIDATE-COMPARISON.md](CANDIDATE-COMPARISON.md):
+  twee afzonderlijke bevroren kandidaatmodellen, dagelijks getoetst op gedeelde toekomstige daguitkomsten via de bestaande leercontrole.
 - `sql/009_optimization_review.sql` en [OPTIMIZATION-REVIEW.md](OPTIMIZATION-REVIEW.md):
   periodieke kosten-, bron-, voortgangs- en budgetcontrole via de bestaande bronnenroutine, met begrensde logopruiming.
 - `sql/008_breadth_study.sql`, `functions/paper-breadth` en [BREADTH-STUDY.md](BREADTH-STUDY.md):
