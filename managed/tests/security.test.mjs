@@ -31,6 +31,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_daily_export'))return Response.json([]);
   if(String(url).endsWith('/paper_history_read'))return Response.json({counts:{predictions:0}});
   if(String(url).endsWith('/paper_history_export'))return Response.json([]);
+  if(String(url).endsWith('/paper_optimization_read'))return Response.json({status:'reviewed'});
   if(String(url).endsWith('/paper_breadth_read'))return Response.json({counts:{compact:0}});
   if(String(url).endsWith('/paper_breadth_export'))return Response.json([]);
   if(String(url).endsWith('/paper_breadth_action'))return Response.json(true);
@@ -92,3 +93,22 @@ test('breadth records, original-input exports and pause control require verified
  for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await breadthHandler(new Request('https://test/functions/v1/paper-breadth',{method:'POST',headers,body:'{}'}))).status,401);
 });
 test.after(()=>{globalThis.fetch=nativeFetch;delete globalThis.Deno;});
+
+test('optimization review requires owner MFA and a live application session',async()=>{mock();assert.equal((await apiHandler(req({query:'?optimizations=1',token:jwt(uid,'aal1')}))).status,403);mock({session:false});assert.equal((await apiHandler(req({query:'?optimizations=1'}))).status,401);mock();const r=await apiHandler(req({query:'?optimizations=1'}));assert.equal(r.status,200);assert.equal((await r.json()).status,'reviewed');});
+
+test('optional optimization failure stays explicit without discarding a completed source review',async()=>{
+ const {default:fs}=await import('node:fs'),s=JSON.parse(fs.readFileSync(new URL('./python-fixtures.json',import.meta.url))).state;let stored;
+ globalThis.fetch=async(url,opts={})=>{
+  const path=String(url);
+  if(path.endsWith('/paper_claim_research'))return Response.json('lease');
+  if(path.endsWith('/paper_context'))return Response.json(settings);
+  if(path.endsWith('/paper_read'))return Response.json({state:s,equity:500});
+  if(path.endsWith('/paper_research_input'))return Response.json({trades:[],quality:[]});
+  if(path.endsWith('/paper_optimization_input'))return Response.json({error:'unavailable'},{status:503});
+  if(path.endsWith('/paper_optimization_maintenance'))return Response.json({old_job_logs_removed:0,completed_bootstrap_jobs_disabled:0});
+  if(path.endsWith('/paper_commit_research')){stored=JSON.parse(opts.body).p_report;return Response.json(true);}
+  return new Response('',{status:403});
+ };
+ const r=await researchHandler(new Request('https://test/functions/v1/paper-research',{method:'POST',headers:{'X-PaperLab-Cron':'test-cron-secret'},body:'{"manual":true}'}));
+ assert.equal(r.status,200);assert.equal(stored.optimization.status,'unavailable');assert.equal(stored.trading_changes,false);assert.ok(stored.sources.length>0);
+});

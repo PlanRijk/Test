@@ -4,6 +4,7 @@ import {freeBudgetAlert} from './usage.js';
 import {learningMarkup} from './learning.js';
 import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
+import {optimizationMarkup} from './optimization.js';
 import {taxMarkup} from './tax.js';
 import {dailyMarkup} from './daily-study.js';
 import {historyMarkup} from './history-learning.js';
@@ -63,7 +64,9 @@ $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceC
 $('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
 const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
-async function loadTaxReport(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
+async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly()]);}
+async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
+async function loadTaxOnly(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
  try{const [result,reliability,daily]=await Promise.all([api('?opportunities=1'),api('?reliability=1'),api('?daily-study=1')]);$('#opportunitiesBody').innerHTML=dailyMarkup(daily)+reliabilityMarkup(reliability)+opportunityMarkup(result);
   $('#dailyStudyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?daily-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','symbol','decision_day','week','profile','sealed','record_json'],...rows.map(r=>[r.id,r.symbol,r.decision_day,r.week,r.profile,r.sealed,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-dagonderzoek.csv');});

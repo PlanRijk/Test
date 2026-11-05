@@ -27,6 +27,7 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('optimizations'))return reply(await rpc('paper_optimization_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('breadth-study'))return reply(await rpc('paper_breadth_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('breadth-export')||url.searchParams.has('breadth-traces'))return reply(await rpc('paper_breadth_export',{p_owner:user.id,p_traces:url.searchParams.has('breadth-traces')}),200,origin);
       if(url.searchParams.has('history-learning'))return reply(await rpc('paper_history_read',{p_owner:user.id}),200,origin);
