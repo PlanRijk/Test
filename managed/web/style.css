@@ -5,3 +5,5 @@
 #capitalStudy{overflow-wrap:anywhere}#capitalStudy .stats{grid-template-columns:repeat(2,minmax(0,1fr))}#capitalStudy .stats strong{font-size:23px}@media(max-width:600px){#capitalStudy .stats{grid-template-columns:1fr}}
 
 #readingReport{overflow-wrap:anywhere} #readingReport article{border-top:1px solid #ddd;margin-top:1rem;padding-top:.5rem}
+
+#geopoliticsReport{overflow-wrap:anywhere} #geopoliticsReport details{margin:.7rem 0} #geoChannel{max-width:100%;padding:.5rem} #geoChannels article{border-top:1px solid #ddd;margin-top:.7rem}

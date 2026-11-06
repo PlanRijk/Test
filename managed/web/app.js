@@ -6,6 +6,7 @@ import {freeBudgetAlert} from './usage.js';
 import {learningMarkup} from './learning.js';
 import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
+import {geopoliticsMarkup,bindGeopolitics} from './geopolitics.js';
 import {readingMarkup} from './reading.js';
 import {optimizationMarkup} from './optimization.js';
 import {taxMarkup} from './tax.js';
@@ -67,7 +68,7 @@ $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceC
 $('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
 const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
-async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly(),loadReading()]);}
+async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly(),loadReading(),loadGeopolitics()]);}
 async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
 async function loadTaxOnly(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
@@ -209,3 +210,5 @@ setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadL
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);
 
 async function loadReading(){try{const data=await api("?reading-study=1");$("#readingReport").innerHTML=readingMarkup(data);$("#readingToggle").onclick=async()=>{try{await api("",{action:"reading",command:data.runtime?.enabled?"pause":"resume"});await loadReading();}catch(e){$("#readingReport").textContent=e.message;}};}catch(e){$("#readingReport").textContent=e.message;}}
+
+async function loadGeopolitics(){try{const response=await fetch("./geopolitics-data.json");if(!response.ok)throw Error("Geopolitiek dossier niet beschikbaar.");const root=$("#geopoliticsReport");root.innerHTML=geopoliticsMarkup(await response.json());bindGeopolitics(root);}catch(e){$("#geopoliticsReport").textContent=e.message;}}

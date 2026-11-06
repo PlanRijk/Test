@@ -1,0 +1,436 @@
+{
+  "reviewed_at": "2026-11-06",
+  "used": [
+    {
+      "id": "imf_ch2",
+      "title": "IMF — Geopolitical Risks: Implications for Asset Prices and Financial Stability",
+      "url": "https://www.imf.org/-/media/files/publications/gfsr/2025/april/english/ch2.pdf",
+      "published": "2025-04",
+      "checked_at": "2026-11-06T10:43:36Z",
+      "read_scope": "Hoofdstuk 2: overzicht, transmissiekanalen, resultaten, casussen en beperkingen; geselecteerde passages.",
+      "download_bytes": 2045290,
+      "sha256": "e744aa859c8ff8925efe4c946ae61b5ce59f0c826174871dbb907dd2bfbfe351",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "imf_ch2_annex",
+      "title": "IMF — methodologische bijlage bij hoofdstuk 2",
+      "url": "https://www.imf.org/-/media/files/publications/gfsr/2025/april/english/ch2annex.pdf",
+      "published": "2025-04",
+      "checked_at": "2026-11-06T10:43:36Z",
+      "read_scope": "Selectie van gebeurtenissen, modellen, vensters en vooraf gemeten bedrijfsblootstelling.",
+      "download_bytes": 2320738,
+      "sha256": "aa8dbc11b9e2eb860031e71a603ce690027e1b179e66c3a40480fc87f5566881",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "imf_geo_correct_blog",
+      "title": "IMF — How Rising Geopolitical Risks Weigh on Asset Prices",
+      "url": "https://www.imf.org/en/Blogs/Articles/2025/04/14/how-rising-geopolitical-risks-weigh-on-asset-prices",
+      "published": "2025-04-14",
+      "checked_at": "2026-11-06T10:43:36Z",
+      "read_scope": "Volledige korte samenvatting; modelresultaten zijn geen voorspelling per gebeurtenis.",
+      "download_bytes": 9595,
+      "sha256": "4e1d8036fabca6933eee4a5d8485201222a9b98dcc1608e98c82504b1e9dae97",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "gpr_published",
+      "title": "Caldara & Iacoviello — Measuring Geopolitical Risk, AER 2022",
+      "url": "https://www.matteoiacoviello.com/gpr_files/GPR_PAPER.pdf",
+      "published": "2022-04",
+      "checked_at": "2026-11-06T10:43:36Z",
+      "read_scope": "Abstract, definitie, methode, kernresultaten en beperkingen; gepubliceerde versie, niet de 2018-werkversie.",
+      "download_bytes": 1208027,
+      "sha256": "61b51d1133e012a09fef611b6347575d720707bf1b1bc8067fa25970a9876640",
+      "hash_scope": "downloaded_response",
+      "authority": "academic_author",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "gpr_author",
+      "title": "GPR — auteurswebsite en gegevensmethodologie",
+      "url": "https://www.matteoiacoviello.com/gpr.htm",
+      "published": "2026-11-02",
+      "checked_at": "2026-11-06T10:42:11Z",
+      "read_scope": "Tekst over index, publicatiefrequentie, historische versies en herzieningen; download van HTML begrensd, geen volledige pagina of dataset verwerkt.",
+      "download_bytes": 6000000,
+      "sha256": "e26af246359f2bd302e2ba294b6002156b43e37b35cc9ed43d3bfd378f781971",
+      "hash_scope": "downloaded_prefix",
+      "authority": "academic_author",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "trade_fed",
+      "title": "Federal Reserve IFDP 1256 — The Economic Effects of Trade Policy Uncertainty",
+      "url": "https://www.federalreserve.gov/econres/ifdp/files/ifdp1256.pdf",
+      "published": "2019-09",
+      "checked_at": "2026-11-06T10:42:11Z",
+      "read_scope": "Abstract, introductie, investeringsresultaten en modelidentificatie; werkdocument, geen officiële beleidsvoorspelling.",
+      "download_bytes": 1265493,
+      "sha256": "cda6ca17b32f77744c948cfd148ff5beda267de7ee4d219eae77e4c55b76436f",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "trade_bis",
+      "title": "BIS — Easing trade tensions lift sentiment",
+      "url": "https://www.bis.org/publications/easing-trade-tensions-lift-sentiment",
+      "published": "2019-12",
+      "checked_at": "2026-11-06T10:42:11Z",
+      "read_scope": "Marktoverzicht: handelsde-escalatie, Saoedische olieschok, rente en gelijktijdig bedrijfsnieuws.",
+      "download_bytes": 166009,
+      "sha256": "7cc2b4b5b377e7736d13a0fb34ae7b2cabec2cc1ca660e34cb887e157dba7ebe",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "russia_imf",
+      "title": "IMF — How War in Ukraine Is Reverberating Across World’s Regions",
+      "url": "https://www.imf.org/en/Blogs/Articles/2022/03/15/blog-how-war-in-ukraine-is-reverberating-across-worlds-regions-031522",
+      "published": "2022-03-15",
+      "checked_at": "2026-11-06T10:42:11Z",
+      "read_scope": "Korte analyse van energie, voedsel, vertrouwen, financiering en regionale verschillen.",
+      "download_bytes": 13085,
+      "sha256": "5f26ce95103f79a2d766c8f863132eab03148f9d18b11fb10a3c37597397ef56",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "sanctions_eu",
+      "title": "Raad van de EU — sancties tegen Rusland",
+      "url": "https://www.consilium.europa.eu/en/policies/sanctions-against-russia/",
+      "published": "dynamisch",
+      "checked_at": "2026-11-06T10:42:12Z",
+      "read_scope": "Beleidsbereik en tijdlijn tot 2026. Primaire juridische beleidsbron; geen onafhankelijke impactschatting.",
+      "download_bytes": 136599,
+      "sha256": "3290568fedddfc8448bf6eacc7ee8f1f44dacb44b148369d6e88add05255e8c1",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "ukraine_timeline",
+      "title": "Raad van de EU — tijdlijn sancties Rusland",
+      "url": "https://www.consilium.europa.eu/en/policies/sanctions-against-russia/timeline-sanctions-against-russia/",
+      "published": "dynamisch",
+      "checked_at": "2026-11-06T10:43:40Z",
+      "read_scope": "Chronologie 2014–2026; historische gebeurtenissen achteraf geraadpleegd, geen bewijs van toen bekende publicatie-uren.",
+      "download_bytes": 401022,
+      "sha256": "c2873fddeefa1773efae85cd393dc0cbe333e3323daa300eeaafeedc8093135d",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "brexit_boe",
+      "title": "Bank of England — Inflation Report August 2016",
+      "url": "https://www.bankofengland.co.uk/inflation-report/2016/august-2016",
+      "published": "2016-08-04",
+      "checked_at": "2026-11-06T10:42:12Z",
+      "read_scope": "Secties over referendum, sterling, onzekerheid, vraag en beleidsreactie.",
+      "download_bytes": 83002,
+      "sha256": "904d55dfe0db8b6b01330571e4675d6e54029ab0f8f1b2e37916c659591eaded",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "brexit_bis",
+      "title": "BIS — Dissonant markets?",
+      "url": "https://www.bis.org/publications/dissonant-markets",
+      "published": "2016-09-18",
+      "checked_at": "2026-11-06T10:43:37Z",
+      "read_scope": "Eerste koersreactie op Brexit en later herstel; rol van beleid en verwachtingen.",
+      "download_bytes": 162665,
+      "sha256": "0522dc11848a935de1206593e0926c8732c65288ade646a69c539d2d094bbefa",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "lehman_fed",
+      "title": "Federal Reserve History — The Great Recession and Its Aftermath",
+      "url": "https://www.federalreservehistory.org/essays/great-recession-and-its-aftermath",
+      "published": "2013",
+      "checked_at": "2026-11-06T10:42:13Z",
+      "read_scope": "Historisch overzicht krediet, woningmarkt, financiële besmetting en beleidsreacties.",
+      "download_bytes": 45232,
+      "sha256": "66616a68e10cc34d78f1a6eeacc7c8de97ee3757b841f50e14d49f4e7581765d",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "euro_ecb",
+      "title": "ECB — toespraak Mario Draghi in Londen",
+      "url": "https://www.ecb.europa.eu/press/key/date/2012/html/sp120726.en.html",
+      "published": "2012-07-26",
+      "checked_at": "2026-11-06T10:42:13Z",
+      "read_scope": "Beleidscommitment en monetair transmissieprobleem; toespraak is geen causale rendementsschatting.",
+      "download_bytes": 108254,
+      "sha256": "ffda4d9233779b48770f0c9d5a3be6c286b81139ab17ff44bcfb0828abafabeb",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "gscpi_nyfed",
+      "title": "Federal Reserve Bank of New York — Global Supply Chain Pressure Index",
+      "url": "https://www.newyorkfed.org/research/policy/gscpi",
+      "published": "dynamisch",
+      "checked_at": "2026-11-06T10:42:14Z",
+      "read_scope": "Methode, meetbereik en publicatiebeperkingen; geen actuele numerieke reeks in PaperLab geïmporteerd.",
+      "download_bytes": 105136,
+      "sha256": "bf3de40a2ed419ac5aaeb92eb663607b7746fc50813a4efad65c8a72dda7c571",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "libya_iea",
+      "title": "IEA — oliereserves vrijgegeven wegens verstoring Libië",
+      "url": "https://www.iea.org/news/iea-makes-60-million-barrels-of-oil-available-to-market-to-offset-libyan-disruption",
+      "published": "2011-06-22",
+      "checked_at": "2026-11-06T10:42:14Z",
+      "read_scope": "Persbericht: aanbodverstoring en aangekondigde collectieve reservevrijgave.",
+      "download_bytes": 226794,
+      "sha256": "fa3e6f8e27dd87121203b9fe7a1d161bd30624faaa9dbadad24fe599cbef5870",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "iran_treasury",
+      "title": "US Treasury — herinvoering sancties Iran",
+      "url": "https://home.treasury.gov/news/press-releases/sm541",
+      "published": "2018-11-05",
+      "checked_at": "2026-11-06T10:43:38Z",
+      "read_scope": "Beleid en overgangstermijnen; standpunt van de uitvaardigende overheid, geen onafhankelijke effectmeting.",
+      "download_bytes": 88339,
+      "sha256": "a0c4b2552bdafcd45af69f3efa814ab0c426ebd6386d2f83aaf318dc631f3550",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "wto2024",
+      "title": "WTO — Global trade outlook, april 2024",
+      "url": "https://www.wto.org/english/news_e/news24_e/tfore_10apr24_e.htm",
+      "published": "2024-04-10",
+      "checked_at": "2026-11-06T10:44:56Z",
+      "read_scope": "Handelsvolumes, Rode Zee, vrachtkosten en beperkte eerste macro-impact.",
+      "download_bytes": 25005,
+      "sha256": "137c4ca25812c329a3e919f365ef62d8e775fb8de8bbce41609d881663ea7e9f",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "chips_legal",
+      "title": "Federal Register — exportcontroles chips en halfgeleiderapparatuur",
+      "url": "https://www.federalregister.gov/documents/2022/10/13/2022-21658/implementation-of-additional-export-controls-certain-advanced-computing-and-semiconductor",
+      "published": "2022-10-13",
+      "checked_at": "2026-11-06T10:44:56Z",
+      "read_scope": "Samenvatting en verschillende ingangsdatums vanaf 7 oktober 2022; juridische tekst, geen gemeten koersreactie.",
+      "download_bytes": 456947,
+      "sha256": "1f980b04fa9738b06addbe29ea55869604831ccc34b75ddba4f771f0dd64fbff",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "china2015_bis",
+      "title": "BIS — EME vulnerabilities take centre stage",
+      "url": "https://www.bis.org/publications/eme-vulnerabilities-take-centre-stage",
+      "published": "2015-09-13",
+      "checked_at": "2026-11-06T10:44:57Z",
+      "read_scope": "Renminbi, aandelen, grondstoffen, Griekenland en gelijktijdige dollar-/groeifactoren.",
+      "download_bytes": 163229,
+      "sha256": "379b8f547e5c4a38bc229f36e7b089aead5174e9c10e33c6c87e2415df98b7c1",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "fed_covid2020",
+      "title": "Federal Reserve — extensive new measures to support the economy",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200323b.htm",
+      "published": "2020-03-23",
+      "checked_at": "2026-11-06T10:47:18Z",
+      "read_scope": "Persbericht met tijdstip 08:00 EDT; omvang en bedoeling van maatregelen, geen eigen causale schatting.",
+      "download_bytes": 90679,
+      "sha256": "0705dca3dbbbd529688b0c923546a6b43692caf57786be827b8158b3a8fedf41",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "bis_margin2020",
+      "title": "BIS Bulletin 2 — Leverage and margin spirals during Covid-19",
+      "url": "https://www.bis.org/publications/bulletin-2-leverage-and-margin-spirals-fixed-income-markets-during-covid-19-crisis",
+      "published": "2020-04",
+      "checked_at": "2026-11-06T10:47:18Z",
+      "read_scope": "Korte bronpagina en kernmechanisme. Geen volledige PDF-analyse uitgevoerd.",
+      "download_bytes": 127566,
+      "sha256": "1322b0d08d32eb9505c90195ba19959a22c2374b80a3b35fc13e6009d8e7539d",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "imf2026",
+      "title": "IMF — Global Financial Stability Report April 2026",
+      "url": "https://www.imf.org/en/Publications/GFSR/Issues/2026/04/14/global-financial-stability-report-april-2026",
+      "published": "2026-04-14",
+      "checked_at": "2026-11-06T10:44:57Z",
+      "read_scope": "Korte overzichtspagina: energie, inflatieverwachtingen, financiering en kwetsbaarheden.",
+      "download_bytes": 15252,
+      "sha256": "ba9ccf692db732aebfc8276da85810b1886efb81024eb533dfa008c3a14dddb3",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "imf2026_ch1",
+      "title": "IMF — GFSR April 2026, hoofdstuk 1",
+      "url": "https://www.imf.org/-/media/files/publications/gfsr/2026/april/english/ch1.pdf",
+      "published": "2026-04-14",
+      "checked_at": "2026-11-06T10:47:18Z",
+      "read_scope": "Overzicht, marktontwikkelingen en versterkingskanalen; analyse van april, geen actuele novembermeting.",
+      "download_bytes": 2211808,
+      "sha256": "d94fe0d6928950f003f17ea584b56f1e36d48d8a1725df931ecb7cfb8f87b1f9",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    },
+    {
+      "id": "imf_geo2025",
+      "title": "IMF — Global Financial Stability Report April 2025, overzicht",
+      "url": "https://www.imf.org/en/Publications/GFSR/Issues/2025/04/22/global-financial-stability-report-april-2025",
+      "published": "2025-04-22",
+      "checked_at": "2026-11-06T10:42:11Z",
+      "read_scope": "Hoofdstukoverzicht en kernbevindingen; niet het volledige boek.",
+      "download_bytes": 13962,
+      "sha256": "f7233962259cf7c0dd096e95e790da494edcedf6f14006aead346dc2a5d07f8a",
+      "hash_scope": "downloaded_response",
+      "authority": "official_institution",
+      "content_stored_in_production": false
+    }
+  ],
+  "excluded": [
+    {
+      "id": "redsea_pdf",
+      "url": "https://unctad.org/system/files/official-document/osginf2024d1_en.pdf",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "covid_june_bis",
+      "url": "https://www.bis.org/publ/qtrpdf/r_qt2006a.htm",
+      "status": null,
+      "error": "HTTP Error 404: Not Found",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "redsea_report",
+      "url": "https://unctad.org/publication/navigating-troubled-waters-impact-global-trade-disruption-shipping-routes-red-sea-black",
+      "status": null,
+      "error": "The read operation timed out",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "redsea_bis",
+      "url": "https://www.bis.org/publ/qtrpdf/r_qt2403b.htm",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "russia_bis",
+      "url": "https://www.bis.org/publ/qtrpdf/r_qt2203a.htm",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "chip_bis_us",
+      "url": "https://www.bis.gov/press-release/commerce-implements-new-export-controls-advanced-computing-and-semiconductor-manufacturing-items-peoples-republic-china-prc",
+      "status": null,
+      "error": "HTTP Error 404: Not Found",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "gfsr_index",
+      "url": "https://www.imf.org/en/Publications/GFSR",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "imf_geo_ch2",
+      "url": "https://www.imf.org/-/media/Websites/IMF/imported-flagship-issues/external/2025/04/GFSR/English/ch2.ashx",
+      "status": null,
+      "error": "HTTP Error 429: Too Many Requests",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "imf_geo_blog",
+      "url": "https://www.imf.org/en/Blogs/Articles/2025/04/14/geopolitical-risks-may-raise-asset-prices-and-threaten-financial-stability",
+      "status": null,
+      "error": "HTTP Error 429: Too Many Requests",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "gpr_fed",
+      "url": "https://www.federalreserve.gov/econres/ifdp/files/ifdp1222.pdf",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "russia_ecb",
+      "url": "https://www.ecb.europa.eu/press/economic-bulletin/articles/2022/html/ecb.ebart202204_01~6b1dc6d0e6.en.html",
+      "status": null,
+      "error": "HTTP Error 404: Not Found",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "covid_bis",
+      "url": "https://www.bis.org/publ/qtrpdf/r_qt2003a.htm",
+      "status": 200,
+      "error": null,
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "redsea_unctad",
+      "url": "https://unctad.org/news/red-sea-black-sea-and-panama-canal-unctad-raises-alarm-global-trade-disruptions",
+      "status": null,
+      "error": "The read operation timed out",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    },
+    {
+      "id": "fragment_imf",
+      "url": "https://www.imf.org/en/Publications/SDN/Issues/2023/01/11/Geo-Economic-Fragmentation-and-the-Future-of-Multilateralism-528266",
+      "status": null,
+      "error": "HTTP Error 429: Too Many Requests",
+      "reason": "Niet gebruikt als onderbouwing; niet bereikbaar, verkeerde documentidentiteit of niet nodig."
+    }
+  ],
+  "notes": [
+    "UNCTAD osginf2024d1_en.pdf bleek een Gaza-rapport, niet de scheepvaartstudie; geen Rode-Zee-claim aan deze PDF ontleend.",
+    "BIS r_qt2403b.htm bleek een studie over de natuurlijke rente, niet een Rode-Zee-analyse.",
+    "De IMF-links voor een verkeerde legacy-route gaven 429; juiste links zijn uit de officiële publicatiepagina gehaald.",
+    "Geen volledige bronbestanden of boeken in de productiedatabase geladen."
+  ]
+}

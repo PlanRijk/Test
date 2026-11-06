@@ -148,5 +148,54 @@ export const SOURCES = [
     "kind": "html",
     "takeaway": "De onderzoeksbibliotheek onderscheidt markt-, omvang-, waarde-, winstgevendheids- en investeringsfactoren. De overgang van CRSP FIZ naar CIZ wijzigt onder meer de verwerking van dividenden.",
     "implication": "Leg datasetversie, dividendmethode en regio vast. Deze historische factorreeksen zijn geen actuele uitvoeringskoersen en nog niet opgenomen als handelskenmerken."
+  },
+  {
+    "id": "imfgeopolitics2025",
+    "url": "https://www.imf.org/en/Blogs/Articles/2025/04/14/how-rising-geopolitical-risks-weigh-on-asset-prices",
+    "kind": "article",
+    "takeaway": "Het IMF vindt uiteenlopende marktreacties op geopolitieke gebeurtenissen. Grote conflicten en echte handels-/financiële blootstelling wegen zwaarder dan alleen het aantal nieuwskoppen.",
+    "implication": "Onderzoeksnotitie uit april 2025, geen actuele voorspelling: vergelijk blootstelling, verwachtingen en tijdshorizon. Geen automatische modelinvoer."
+  },
+  {
+    "id": "gprmethodology",
+    "url": "https://www.matteoiacoviello.com/gpr.htm",
+    "kind": "html",
+    "takeaway": "De gepubliceerde GPR-methode onderscheidt dreiging en realisatie; indexwaarden hebben publicatievertraging en kunnen worden herzien. De nieuwsselectie heeft taal- en regiobias.",
+    "implication": "Deze controle leest metadata, niet de volledige indexreeks. Bewaar bij latere analyse de historische versie en toenmalige beschikbaarheid; GPR is geen live oorlogskans."
+  },
+  {
+    "id": "eusanctions",
+    "url": "https://www.consilium.europa.eu/en/policies/sanctions-against-russia/",
+    "kind": "html",
+    "takeaway": "De Raad van de EU documenteert sanctiemaatregelen en tijdlijnen. Aankondiging, ingangsdatum, uitzonderingen en tegenmaatregelen kunnen verschillen.",
+    "implication": "Primaire beleidsbron; metadata-controle en vooraf beoordeelde notitie, geen volledige juridische screening of causale effectmeting. Controleer per bedrijf producten en blootstelling."
+  },
+  {
+    "id": "supplychainnyfed",
+    "url": "https://www.newyorkfed.org/research/policy/gscpi",
+    "kind": "html",
+    "takeaway": "De NY Fed GSCPI beschrijft druk in wereldwijde toeleveringsketens op basis van transport- en productie-informatie.",
+    "implication": "Vertraagde macrocontext, geen uitvoeringskoers. Alleen bronpagina gecontroleerd; geen numerieke GSCPI-reeks of modelkenmerk geïmporteerd."
+  },
+  {
+    "id": "wtoredsea2024",
+    "url": "https://www.wto.org/english/news_e/news24_e/tfore_10apr24_e.htm",
+    "kind": "article",
+    "takeaway": "De WTO beschreef in april 2024 vertraagde leveringen en hogere vrachtkosten door de Rode-Zeeverstoring, met toen een relatief beperkte totale macro-impact.",
+    "implication": "Historische momentopname: toets route-, contract- en sectorblootstelling. Een hogere vrachtprijs bewijst geen winstgroei voor elke vervoerder."
+  },
+  {
+    "id": "chipcontrols2022",
+    "url": "https://www.federalregister.gov/documents/2022/10/13/2022-21658/implementation-of-additional-export-controls-certain-advanced-computing-and-semiconductor",
+    "kind": "html",
+    "takeaway": "De Amerikaanse regeling van oktober 2022 bevatte verschillende ingangsdatums voor exportcontroles op geavanceerde chips en apparatuur.",
+    "implication": "Een historische juridische bron en metadata-controle. Geen actuele productscreening of koopadvies; publicatie en eerste bekendmaking moeten afzonderlijk vaststaan."
+  },
+  {
+    "id": "imfgeopolitics2026",
+    "url": "https://www.imf.org/en/Publications/GFSR/Issues/2026/04/14/global-financial-stability-report-april-2026",
+    "kind": "article",
+    "takeaway": "Het IMF beschrijft in april 2026 hoe een energieschok via inflatieverwachtingen en het rentepad aandelen én obligaties kan raken.",
+    "implication": "Analyse van april, geen live beoordeling van november. Onderzoek gedeelde energie-, rente- en financieringsblootstelling; klassieke spreiding garandeert geen bescherming."
   }
 ];
