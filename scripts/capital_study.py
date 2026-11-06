@@ -16,6 +16,9 @@ def fingerprint():
 
 def configure(ref):
     value=fingerprint()
+    columns=sql(ref,"select 1 from information_schema.columns where table_schema='paperlab' and table_name='capital_runtime' and column_name='execution_profile'",True)
+    if columns and sql(ref,"select execution_profile from paperlab.capital_runtime where execution_profile is not null",True):
+        raise RuntimeError('Multiday phase active; use the versioned horizon installer, never reapply the legacy capital schema.')
     exists=sql(ref,"select to_regclass('paperlab.capital_runtime') is not null as present",True)[0]['present']
     if exists:
         rows=sql(ref,"select policy->>'implementation_sha256' as implementation from paperlab.capital_runtime where profile is not null",True)
