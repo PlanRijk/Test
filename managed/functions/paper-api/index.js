@@ -103,7 +103,7 @@ export async function handler(request){
       await rpc('paper_opportunity_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_opportunity_read',{p_owner:user.id}),200,origin);
     }
     if(body.action==='step'){
-      const response=await fetch(base()+'/functions/v1/paper-tick-multiday',{method:'POST',headers:{'Content-Type':'application/json','X-PaperLab-Cron':env('PAPERLAB_CRON_TOKEN')},body:JSON.stringify({manual:true}),signal:AbortSignal.timeout(80000)});
+      const response=await fetch(base()+'/functions/v1/paper-tick-compact',{method:'POST',headers:{'Content-Type':'application/json','X-PaperLab-Cron':env('PAPERLAB_CRON_TOKEN')},body:JSON.stringify({manual:true}),signal:AbortSignal.timeout(80000)});
       if(!response.ok)throw Error('Koersmeting mislukt.');return reply(await rpc('paper_read',{p_owner:user.id,p_revision:-1}),200,origin);
     }
     if(body.action==='recovery-codes'){

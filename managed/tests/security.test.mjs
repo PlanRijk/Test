@@ -8,6 +8,7 @@ import {handler as learnHandler} from '../functions/paper-learn/index.js';
 import {handler as auditHandler} from '../functions/paper-audit/index.js';
 import {handler as dailyHandler} from '../functions/paper-daily/index.js';
 import {handler as historyHandler} from '../functions/paper-history/index.js';
+import {handler as compactHandler} from '../functions/paper-tick-compact/index.js';
 import {handler as multidayHandler} from '../functions/paper-tick-multiday/index.js';
 import {handler as readingHandler} from '../functions/paper-reading/index.js';
 import {handler as breadthHandler} from '../functions/paper-breadth/index.js';
@@ -135,3 +136,5 @@ test('reading notes require owner MFA; no browser model/source injection',async(
 test('daily reading cannot be triggered by anonymous or owner JWT',async()=>{globalThis.fetch=()=>{throw Error('Must not reach source or database');};for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await readingHandler(new Request('https://test/functions/v1/paper-reading',{method:'POST',headers,body:'{}'}))).status,401);});
 
 test('multiday market route requires independent cron secret before source/ledger access',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};assert.equal((await multidayHandler(new Request('https://test/functions/v1/paper-tick-multiday',{method:'POST',body:'{}'}))).status,401);});
+
+test('compact transport route rejects anonymous callers before data access',async()=>{globalThis.fetch=()=>{throw Error('No database access');};assert.equal((await compactHandler(new Request('https://test/functions/v1/paper-tick-compact',{method:'POST',body:'{}'}))).status,401);});

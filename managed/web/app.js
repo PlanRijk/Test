@@ -8,6 +8,7 @@ import {opportunityMarkup,opportunityDetailMarkup} from './opportunities.js';
 import {reliabilityMarkup} from './reliability.js';
 import {geopoliticsMarkup,bindGeopolitics} from './geopolitics.js';
 import {readingMarkup} from './reading.js';
+import {booksMarkup,latencyMarkup} from './books.js';
 import {optimizationMarkup} from './optimization.js';
 import {taxMarkup} from './tax.js';
 import {dailyMarkup} from './daily-study.js';
@@ -209,6 +210,9 @@ boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);
 setInterval(()=>{if(session&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);
 
-async function loadReading(){try{const data=await api("?reading-study=1");$("#readingReport").innerHTML=readingMarkup(data);$("#readingToggle").onclick=async()=>{try{await api("",{action:"reading",command:data.runtime?.enabled?"pause":"resume"});await loadReading();}catch(e){$("#readingReport").textContent=e.message;}};}catch(e){$("#readingReport").textContent=e.message;}}
+async function loadReading(){
+ $('#booksReport').innerHTML=booksMarkup();$('#latencyReport').innerHTML=latencyMarkup();
+ try{$('#readingReport').innerHTML=readingMarkup(await api('?reading-study=1'));}catch{$('#readingReport').textContent='Het notitiearchief is momenteel niet beschikbaar. De notitieroutine is gestopt.';}
+}
 
 async function loadGeopolitics(){try{const response=await fetch("./geopolitics-data.json");if(!response.ok)throw Error("Geopolitiek dossier niet beschikbaar.");const root=$("#geopoliticsReport");root.innerHTML=geopoliticsMarkup(await response.json());bindGeopolitics(root);}catch(e){$("#geopoliticsReport").textContent=e.message;}}
