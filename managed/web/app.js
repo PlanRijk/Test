@@ -1,3 +1,4 @@
+import {readTabSession,writeTabSession,clearTabSession} from './tab-session.js';
 import {capitalMarkup} from './capital.js';
 import {candidateMarkup} from './candidates.js';
 import {CONFIG} from './config.js';
@@ -17,16 +18,21 @@ import {breadthMarkup} from './breadth-study.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false;
+let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false,refreshInFlight=null,cacheActive=false,sessionStartedAt=Date.now(),lastCacheWrite=0,currentPage='overview';
 function authError(message){$('#authError').textContent=message;$('#authError').hidden=!message;}
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000);}
 function form(id,title,text){for(const x of ['loginForm','passwordForm','factorForm','recoveryForm','recoveryCodes'])$('#'+x).hidden=x!==id;$('#authTitle').textContent=title;$('#authText').textContent=text;authError('');}
-function setSession(s){session={access_token:s.access_token,refresh_token:s.refresh_token,expires_at:Date.now()+(s.expires_in||3600)*1000};}
+function tabStorage(){try{return window.sessionStorage;}catch{return null;}}
+function saveTab(){if(cacheActive&&session){writeTabSession(tabStorage(),session,{started_at:sessionStartedAt,last_activity:lastActivity,page:currentPage});lastCacheWrite=Date.now();}}
+function setSession(s){session={access_token:s.access_token,refresh_token:s.refresh_token,expires_at:Date.now()+(s.expires_in||3600)*1000};saveTab();}
 async function auth(path,method='GET',body=null,anonymous=false){
  const r=await fetch(CONFIG.url+'/auth/v1'+path,{method,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(session&&!anonymous?{Authorization:'Bearer '+session.access_token}:{})},body:body?JSON.stringify(body):undefined});
  const result=await r.json().catch(()=>({}));if(!r.ok)throw Error(result.msg||result.message||result.error_description||'Aanmelden niet voltooid. Controleer je gegevens.');return result;
 }
-async function refresh(){if(session&&session.expires_at<Date.now()+60000)setSession(await auth('/token?grant_type=refresh_token','POST',{refresh_token:session.refresh_token},true));}
+async function refresh(){
+ if(session&&session.expires_at<Date.now()+60000&&!refreshInFlight){const previous=session.refresh_token;refreshInFlight=auth('/token?grant_type=refresh_token','POST',{refresh_token:previous},true).then(next=>{if(session?.refresh_token===previous)setSession(next);}).catch(async error=>{if(session?.refresh_token===previous)await logout(false);throw error;}).finally(()=>refreshInFlight=null);}
+ if(refreshInFlight)await refreshInFlight;
+}
 async function api(query='',body=null){
  if(!session)throw Error('Meld opnieuw aan.');await refresh();
  const r=await fetch(CONFIG.url+'/functions/v1/paper-api'+query,{method:body?'POST':'GET',headers:{apikey:CONFIG.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
@@ -50,11 +56,12 @@ async function recoveryCodes(){
  $('#savedCodes').checked=false;$('#finishSetup').disabled=true;$('#app').hidden=true;$('#auth').hidden=false;
  form('recoveryCodes','Bewaar je herstelcodes','Je vorige herstelcodes vervallen zodra je nieuwe codes maakt.');
 }
-async function enter(){
+async function enter({restoring=false}={}){
  data=await api();if(data.not_initialized)throw Error('De portefeuille wordt nog geïnstalleerd.');
- $('#auth').hidden=true;$('#app').hidden=false;lastActivity=Date.now();render();
+ if(!restoring){lastActivity=Date.now();sessionStartedAt=lastActivity;}cacheActive=true;saveTab();$('#auth').hidden=true;$('#app').hidden=false;render();
 }
 async function logout(remote=true){
+ cacheActive=false;clearTabSession(tabStorage());
  if(remote&&session){try{await api('',{action:'logout'});}catch{}try{await auth('/logout','POST',{});}catch{}}
  session=null;data=null;factor=null;$('#app').hidden=true;$('#auth').hidden=false;$('#password').value='';$('#manualSecret').textContent='';$('#qr').removeAttribute('src');$('#codes').replaceChildren();form('loginForm','Welkom terug','Meld aan met je wachtwoord en authenticator.');
 }
@@ -66,8 +73,9 @@ $('#useRecovery').onclick=()=>form('recoveryForm','Authenticator herstellen','Ge
 $('#recoveryForm').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{await api('',{action:'recover',code:$('#recoveryCode').value.trim().toLowerCase()});$('#recoveryCode').value='';await setupFactor();});};
 $('#savedCodes').onchange=e=>$('#finishSetup').disabled=!e.target.checked;
 $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceChildren();await enter();});
-$('#logout').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
-for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>lastActivity=Date.now(),{passive:true});
+$('#logout').onclick=()=>logout();$('#logoutHeader').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
+for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>{if(session&&!$('#app').hidden){lastActivity=Date.now();if(lastActivity-lastCacheWrite>5000)saveTab();}},{passive:true});
+window.addEventListener('pagehide',saveTab);
 const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
 async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly(),loadReading(),loadGeopolitics()]);}
 async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
@@ -108,7 +116,15 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
   await api('',{action:'learning',command:b.dataset.learning,model:b.dataset.model||null});await loadLearning();
  }));
 }
-document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==button.dataset.page+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b===button));$('#pageTitle').textContent=titles[button.dataset.page];if(button.dataset.page==='learning')loadLearning();if(button.dataset.page==='opportunities')loadOpportunities();if(button.dataset.page==='research')loadTaxReport();});
+async function showPage(page){
+ currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
+ if(currentPage==='learning')await loadLearning();if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();
+}
+document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
+$('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{
+ if(polling){toast('Gegevens worden al opgehaald.');return;}polling=true;
+ try{data=await api();render();await showPage(currentPage);$('#globalError').hidden=true;toast('Laatste gegevens opgehaald.');}finally{polling=false;}
+});
 function plot(points){
  if(!points.length)return '<p class="muted">Nog geen koersmetingen.</p>';
  const values=points.map(p=>Number(p.value)),lo=Math.min(...values)*.999,hi=Math.max(...values)*1.001,range=hi-lo||1;
@@ -199,10 +215,11 @@ setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now(
 async function boot(){
  if(!CONFIG.url||!CONFIG.key){authError('De beveiligde installatie wordt voorbereid.');$('#loginForm').hidden=true;return;}
  const fragment=new URLSearchParams(location.hash.slice(1));if(fragment.has('access_token')){
-  $('#app').hidden=true;$('#auth').hidden=false;
+  cacheActive=false;clearTabSession(tabStorage());$('#app').hidden=true;$('#auth').hidden=false;
   setSession({access_token:fragment.get('access_token'),refresh_token:fragment.get('refresh_token'),expires_in:Number(fragment.get('expires_in')||3600)});
   history.replaceState(null,'',location.pathname);form('passwordForm','Activeer je privéaccount','Kies een uniek wachtwoord van minstens veertien tekens. Daarna koppel je je authenticator.');
- }else if(fragment.has('error')){history.replaceState(null,'',location.pathname);authError('De activatielink is ongeldig of verlopen. Vraag een nieuwe privélink.');}
+ }else if(fragment.has('error')){clearTabSession(tabStorage());history.replaceState(null,'',location.pathname);authError('De activatielink is ongeldig of verlopen. Vraag een nieuwe privélink.');}
+ else if(!session){const cached=readTabSession(tabStorage());if(cached){session=cached.session;sessionStartedAt=cached.started_at;lastActivity=cached.last_activity;currentPage=cached.page;cacheActive=true;form('loginForm','Aanmelding controleren','Je bestaande aanmelding wordt gecontroleerd.');$('#loginForm').hidden=true;try{await enter({restoring:true});await showPage(currentPage);}catch{await logout(false);authError('Je aanmelding is verlopen of kon niet worden bevestigd. Meld opnieuw aan.');}}}
 }
 window.addEventListener('hashchange',()=>boot().catch(()=>authError('De activatielink kon niet worden geopend.')));
 boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));

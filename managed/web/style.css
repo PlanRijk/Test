@@ -7,3 +7,7 @@
 #readingReport{overflow-wrap:anywhere} #readingReport article{border-top:1px solid #ddd;margin-top:1rem;padding-top:.5rem}
 
 #geopoliticsReport{overflow-wrap:anywhere} #geopoliticsReport details{margin:.7rem 0} #geoChannel{max-width:100%;padding:.5rem} #geoChannels article{border-top:1px solid #ddd;margin-top:.7rem}
+
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}@media(max-width:600px){.workspace>header{align-items:flex-start;gap:16px;flex-wrap:wrap}.header-actions{justify-content:flex-start}.header-actions button{padding:9px 12px}}
+
+.header-logout{display:none}@media(max-width:600px){.header-logout{display:inline-flex}}

@@ -1,0 +1,82 @@
+{
+  "purpose": "One read-only public snapshot, ages not a guaranteed feed delay",
+  "samples": [
+    {
+      "symbol": "WDP.BR",
+      "requested_at": 1794235588.0970051,
+      "http": 200,
+      "age_seconds": 910.45,
+      "provider_delay": null
+    },
+    {
+      "symbol": "UCB.BR",
+      "requested_at": 1794235588.0978253,
+      "http": 200,
+      "age_seconds": 909.44,
+      "provider_delay": null
+    },
+    {
+      "symbol": "ARGX.BR",
+      "requested_at": 1794235588.0983644,
+      "http": 200,
+      "age_seconds": 905.41,
+      "provider_delay": null
+    },
+    {
+      "symbol": "ACKB.BR",
+      "requested_at": 1794235588.0988574,
+      "http": 200,
+      "age_seconds": 1480.49,
+      "provider_delay": null
+    },
+    {
+      "symbol": "KBC.BR",
+      "requested_at": 1794235588.414322,
+      "http": 200,
+      "age_seconds": 939.61,
+      "provider_delay": null
+    },
+    {
+      "symbol": "SOF.BR",
+      "requested_at": 1794235588.441751,
+      "http": 200,
+      "age_seconds": 982.65,
+      "provider_delay": null
+    },
+    {
+      "symbol": "ELI.BR",
+      "requested_at": 1794235588.4452043,
+      "http": 200,
+      "age_seconds": 903.63,
+      "provider_delay": null
+    },
+    {
+      "symbol": "UMI.BR",
+      "requested_at": 1794235588.4880807,
+      "http": 200,
+      "age_seconds": 965.7,
+      "provider_delay": null
+    },
+    {
+      "symbol": "ABI.BR",
+      "requested_at": 1794235588.6100037,
+      "http": 200,
+      "age_seconds": 909.88,
+      "provider_delay": null
+    },
+    {
+      "symbol": "DIE.BR",
+      "requested_at": 1794235588.6267977,
+      "http": 200,
+      "age_seconds": 1202.84,
+      "provider_delay": null
+    },
+    {
+      "symbol": "^BFX",
+      "requested_at": 1794235588.651389,
+      "http": 200,
+      "age_seconds": 913.87,
+      "provider_delay": null
+    }
+  ]
+}

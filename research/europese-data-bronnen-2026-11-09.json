@@ -1,0 +1,134 @@
+{
+  "checked": "2026-11-09",
+  "sources": [
+    {
+      "name": "euronext_webservices",
+      "url": "https://www.euronext.com/data/web-services",
+      "final_url": "https://www.euronext.com/en/data/how-access-market-data/web-services",
+      "http": 200,
+      "bytes": 457653,
+      "sha256": "3e2af5ceaaaab0a8807f3c45497f2b2a6c7916105ebb477201f0a0c081d720d7"
+    },
+    {
+      "name": "euronext_access",
+      "url": "https://www.euronext.com/en/data/real-time-data/how-access-market-data",
+      "final_url": "https://www.euronext.com/en/data/real-time-data/how-access-market-data",
+      "http": 200,
+      "bytes": 404760,
+      "sha256": "9a82f21c118b46ed42ec6c5156ef07d028a5919b6fe53efc6c79b06051264398"
+    },
+    {
+      "name": "euronext_pricing",
+      "url": "https://www.euronext.com/en/data/real-time-data/pricing-specs-agreements/market-data-pricing-policies",
+      "final_url": "https://www.euronext.com/en/data/real-time-data/pricing-specs-agreements/market-data-pricing-policies",
+      "http": 200,
+      "bytes": 395572,
+      "sha256": "d908fe22dd6333c1fab8e368c40d15233e5c9b6715047c7128fa67741e2c20ee"
+    },
+    {
+      "name": "ibkr_api_ack_valid",
+      "url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/compliance-requirements-for-api-market-data/market-data-api-acknowledgement",
+      "final_url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/compliance-requirements-for-api-market-data/market-data-api-acknowledgement",
+      "http": 200,
+      "bytes": 150717,
+      "sha256": "299b69fe5278464715b1a71b3ec274ed5caec1eeb7eb14b5e2cc8aa98aad8171"
+    },
+    {
+      "name": "ibkr_automation",
+      "url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/compliance-requirements-for-api-market-data/api-user-activity-certification/automation-and-software-disclosure",
+      "final_url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/compliance-requirements-for-api-market-data/api-user-activity-certification/automation-and-software-disclosure",
+      "http": 200,
+      "bytes": 153804,
+      "sha256": "48f1a83e493bbba31290d0753829d4d794d12074eed248ad4418b4d2019555a5"
+    },
+    {
+      "name": "euronext_realtime_product",
+      "url": "https://www.euronext.com/en/products-services/euronext-real-time-data",
+      "final_url": "https://www.euronext.com/en/products-services/euronext-real-time-data",
+      "http": 200,
+      "bytes": 455353,
+      "sha256": "db8e538bbad4dc09c6e98c73eabc4d023fc0c39b088d9b112288148a128a571a"
+    },
+    {
+      "name": "euronext_rcb",
+      "url": "https://www.euronext.com/en/data/real-time/reasonable-commercial-basis",
+      "final_url": "https://www.euronext.com/en/data/real-time/reasonable-commercial-basis",
+      "http": 200,
+      "bytes": 446457,
+      "sha256": "d957b56dd391586a5ca4f50ea1f1ed096f4156d9837cf1a48cbb54dc8232a310"
+    },
+    {
+      "name": "twelve_pricing",
+      "url": "https://twelvedata.com/pricing",
+      "final_url": "https://twelvedata.com/pricing",
+      "http": 200,
+      "bytes": 680045,
+      "sha256": "04f22fb00fd106c61bde8d1cb7426d3720008009fde526da8224ea867f62f29e"
+    },
+    {
+      "name": "ibkr_requirements",
+      "url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/introduction",
+      "final_url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/introduction",
+      "http": 200,
+      "bytes": 143521,
+      "sha256": "6ad02f8ba61495a514235f6fe14d67e11d4624bbd943f2b578b53acfe3954f6c"
+    },
+    {
+      "name": "euronext_data",
+      "url": "https://www.euronext.com/en/data",
+      "final_url": "https://www.euronext.com/en/data",
+      "http": 200,
+      "bytes": 440438,
+      "sha256": "db0581366132a8c02964eadf33f804b062813afe389d3f4252fb3da1bb93dd2f"
+    },
+    {
+      "name": "euronext_realtime",
+      "url": "https://www.euronext.com/en/market-data/real-time-market-data",
+      "final_url": "https://www.euronext.com/en/data",
+      "http": 200,
+      "bytes": 440438,
+      "sha256": "db0581366132a8c02964eadf33f804b062813afe389d3f4252fb3da1bb93dd2f"
+    },
+    {
+      "name": "euronext_services",
+      "url": "https://www.euronext.com/en/market-data/euronext-web-services",
+      "final_url": "https://www.euronext.com/en/data",
+      "http": 200,
+      "bytes": 440438,
+      "sha256": "db0581366132a8c02964eadf33f804b062813afe389d3f4252fb3da1bb93dd2f"
+    },
+    {
+      "name": "euronext_bel20",
+      "url": "https://live.euronext.com/en/product/indices/BE0389555039-XBRU/market-information",
+      "final_url": "https://live.euronext.com/en/product/indices/BE0389555039-XBRU/market-information",
+      "http": 200,
+      "bytes": 247454,
+      "sha256": "02f38c7c67a45199c3aa3c9115e1cb1d85ab1adfde047524df0d23b62fb87a0b"
+    },
+    {
+      "name": "ibkr_prices",
+      "url": "https://www.interactivebrokers.com/en/pricing/market-data-pricing.php",
+      "final_url": "https://www.interactivebrokers.com/en/pricing/market-data-pricing.php",
+      "http": 200,
+      "bytes": 438265,
+      "sha256": "cd3916edbadb3f9f3754e240e12232e3023248cd105b345bf03b1e4f84e379cc"
+    },
+    {
+      "name": "ibkr_api",
+      "url": "https://www.interactivebrokers.com/campus/ibkr-api-page/market-data-subscriptions/",
+      "final_url": "https://www.interactivebrokers.com/docs/general/market-data-subscriptions/introduction",
+      "http": 200,
+      "bytes": 143520,
+      "sha256": "8727af8aefaca96ac7a71a9927f3d2251bef16a08add026c48b2834d81e92343"
+    },
+    {
+      "name": "twelve_exchanges",
+      "url": "https://twelvedata.com/exchanges",
+      "final_url": "https://twelvedata.com/exchanges",
+      "http": 200,
+      "bytes": 326036,
+      "sha256": "0e550378b9394139162999a5c80e031f4b6aee18b322faa0c44adf771e4e1498"
+    }
+  ],
+  "note": "Only metadata; no full vendor feed or copyrighted page text included."
+}
