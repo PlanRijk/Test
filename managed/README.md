@@ -4,6 +4,14 @@ Deze uitvoering gebruikt een gratis Render **Static Site** en een bestaand
 Supabase Free-project in een EU-regio. Er wordt geen VPS, betaalde webservice,
 database, disk, custom domain, SMS of AI-abonnement aangemaakt.
 
+## Huidige website
+
+https://paperlab-prive.onrender.com · standaard de actieve €10.000-proef.
+Posities en motivaties bij Mijn portefeuille; brononderzoek bij Marktdata;
+daguitkomsten bij Onderzoeksresultaten; koopkritiek en modellen apart. De oude
+€500-referentie blijft bereikbaar via Instellingen. Zie [IEX-RESEARCH.md](IEX-RESEARCH.md)
+en [FUND-COMPARISON.md](FUND-COMPARISON.md).
+
 ## Onderdelen
 
 - `web/`: Nederlandstalige website; alleen publieke projectconfiguratie.
@@ -57,8 +65,9 @@ te resetten. Oude profielen blijven herkenbaar. Nieuwe uitvoeringen noemen
 
 Frontendconfiguratie bevat alleen de project-URL en een publishable/anon-key.
 Managementtokens, service-role keys, cronsecret, gebruikerwachtwoorden en TOTP-
-seeds horen nooit in browserbestanden of Git. Sessietokens staan alleen in het
-browsergeheugen; herladen vereist opnieuw aanmelden. Alleen een door Supabase
+seeds horen nooit in browserbestanden of Git. Sessietokens blijven alleen in het tabbladgeheugen en sessionStorage; herladen
+herstelt pas na servercontrole. Dertig minuten inactiviteit of maximaal acht uur
+vereist opnieuw aanmelden. Wachtwoorden en TOTP-codes worden niet bewaard. Alleen een door Supabase
 geverifieerde eigenaar met AAL2 kan de portefeuille lezen of bedienen.
 
 RLS staat aan op alle tabellen in het niet-publieke schema `paperlab`. De RPC's

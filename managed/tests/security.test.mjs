@@ -1,3 +1,4 @@
+import {handler as iexHandler} from '../functions/paper-iex-research/index.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {verifyOwner} from '../functions/_shared/platform.js';
@@ -22,6 +23,9 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_context'))return Response.json(settings);
   if(String(url).endsWith('/auth/v1/user'))return Response.json(user);
   if(String(url).endsWith('/paper_session'))return Response.json(session);
+  if(String(url).endsWith('/paper_iex_read'))return Response.json({runtime:{status:'observing'}});
+  if(String(url).endsWith('/paper_iex_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_dashboard_read'))return Response.json({available:true,account:{summary:{positions:12}}});
   if(String(url).endsWith('/paper_read'))return Response.json({private_data:'owner only'});
   if(String(url).endsWith('/paper_learning_read'))return Response.json({samples:0,enabled:true});
   if(String(url).endsWith('/paper_purchase_analysis'))return Response.json([]);
@@ -138,3 +142,7 @@ test('daily reading cannot be triggered by anonymous or owner JWT',async()=>{glo
 test('multiday market route requires independent cron secret before source/ledger access',async()=>{globalThis.fetch=()=>{throw Error('Must not reach database');};assert.equal((await multidayHandler(new Request('https://test/functions/v1/paper-tick-multiday',{method:'POST',body:'{}'}))).status,401);});
 
 test('compact transport route rejects anonymous callers before data access',async()=>{globalThis.fetch=()=>{throw Error('No database access');};assert.equal((await compactHandler(new Request('https://test/functions/v1/paper-tick-compact',{method:'POST',body:'{}'}))).status,401);});
+
+test('IEX research requires owner MFA and application session; browser cannot reset or configure it',async()=>{mock();for(const token of[null,jwt(uid,'aal1'),jwt('33333333-3333-4333-8333-333333333333')]){const r=await apiHandler(req({token,query:'?iex-study=1'}));assert.notEqual(r.status,200);}assert.equal((await apiHandler(req({query:'?iex-study=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'iex-study',command:'reset'}}))).status,400);assert.equal((await apiHandler(req({method:'POST',body:{action:'iex-study',command:'pause'}}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?iex-study=1'}))).status,401);assert.equal((await iexHandler(new Request('https://test',{method:'POST'}))).status,401);});
+
+test('active dashboard is owner MFA and application-session protected',async()=>{mock();assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?dashboard=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,401);});

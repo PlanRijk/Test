@@ -16,10 +16,12 @@ async def main():
   if proxy:
    u=urlsplit(proxy);opts['proxy']={'server':u.scheme+'://'+u.hostname+(':'+str(u.port)if u.port else'')}
   browser=await p.chromium.launch(**opts);context=await browser.new_context(viewport={'width':1400,'height':1000});page=await context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  counts={'password':0,'factor':0,'refresh':0,'reads':0};actions=[];revoked=False
+  counts={'password':0,'factor':0,'refresh':0,'reads':0,'dashboard':0};actions=[];revoked=False
+  dashboard={'available':True,'main_running':True,'account':{'enabled':True,'allow_entries':True,'data_complete':True,'pending_buys':0,'summary':{'positions':12,'buys_today':10,'cash_eur':3800,'equity_eur':9750,'liquidation_eur':9716,'positions_detail':[],'risk_config':{'max_positions':12,'max_buys_per_day':12,'min_cash_eur':1000,'max_exposure_fraction':.8}}},'trades':[],'curve':[]}
+  dashboard_error=False
   fixture=json.loads((ROOT/'managed/tests/python-fixtures.json').read_text())['state'];fixture['positions']={};fixture['operation_mode']='continuous';fixture['running']=True
   async def route(r):
-   nonlocal revoked
+   nonlocal revoked,dashboard_error
    u=urlsplit(r.request.url);path=u.path
    if u.hostname=='paperlab.test':
     name=path.lstrip('/')or'index.html';file=WEB/name
@@ -40,7 +42,13 @@ async def main():
     elif token not in ['Bearer synthetic-aal2','Bearer synthetic-aal2-rotated']:status=403;out={'error':'Tweefactor vereist'}
     elif r.request.method=='POST':actions.append(body.get('action'));out={'ok':True}
     else:
-     counts['reads']+=1;s=copy.deepcopy(fixture);s['cash']=500+counts['reads'];out={'revision':counts['reads'],'state':s,'equity':s['cash'],'trade_count':0,'curve':[],'events':[],'trades':[],'collector_status':'fixture','free_usage':None}
+     counts['reads']+=1
+     if'dashboard=1'in u.query:
+      counts['dashboard']+=1
+      if dashboard_error:status=503;out={'error':'synthetic unavailable'}
+      else:out=copy.deepcopy(dashboard)
+     else:
+      s=copy.deepcopy(fixture);s['cash']=500+counts['reads'];out={'revision':counts['reads'],'state':s,'equity':s['cash'],'trade_count':0,'curve':[],'events':[],'trades':[],'collector_status':'fixture','free_usage':None}
    else:status=404;out={'error':'unexpected fixture route'}
    await r.fulfill(status=status,body=json.dumps(out),content_type='application/json')
   await context.route('**/*',route)
@@ -48,7 +56,14 @@ async def main():
   async def login():
    await page.locator('#email').fill('test@example.invalid');await page.locator('#password').fill('synthetic-test-password');await page.locator('#loginForm button').click();await page.locator('#factorForm').wait_for(state='visible');assert await page.evaluate(f'sessionStorage.getItem({json.dumps(KEY)})')is None;await page.locator('#code').fill('123456');await page.locator('#factorForm button[type=submit],#factorForm button.primary').first.click();await page.locator('#app').wait_for(state='visible')
   await page.goto('https://paperlab.test/');await login();saved=await page.evaluate(f'sessionStorage.getItem({json.dumps(KEY)})');assert'synthetic-test-password'not in saved
-  before=counts['reads'];await page.locator('#refreshData').click();await page.wait_for_function("document.querySelector('#toast').textContent==='Laatste gegevens opgehaald.'");assert counts['reads']==before+1;assert not actions
+  await page.locator('#dashboardChart').wait_for(state='visible');assert'Alle 12 plaatsen'in await page.locator('#dashboardBody').inner_text()
+  before=counts['reads'];await page.locator('#refreshData').click();await page.get_by_text('Laatste gegevens opgehaald.',exact=True).wait_for(state='visible');assert counts['reads']==before+1;assert not actions
+  dashboard_error=True;await page.locator('#refreshData').click();await page.locator('#globalError').wait_for(state='visible');assert'synthetic unavailable'in await page.locator('#globalError').inner_text();assert not actions;dashboard_error=False
+  await page.locator('#refreshData').click();await page.locator('#globalError').wait_for(state='hidden')
+  await page.locator('[data-page=trades]').click();await page.locator('#tradesPage').wait_for(state='visible');assert'10.000'in await page.locator('#tradesPage').inner_text()
+  await page.locator('[data-page=settings]').click();await page.locator('#settingsPage').wait_for(state='visible');assert'Hoofdkoersroutine: actief'in await page.locator('#mainRoutineStatus').inner_text()
+  await page.locator('[data-jump=reference]').click();await page.locator('#referencePage').wait_for(state='visible');assert await page.locator('#positions').count()==1
+  await page.locator('[data-page=overview]').click()
   await page.locator('[data-page=catalogue]').click();await page.reload();await page.locator('#app').wait_for(state='visible');await page.locator('#cataloguePage').wait_for(state='visible');assert counts['password']==1 and counts['factor']==1
   await page.evaluate("sessionStorage.setItem('__fixture_patch','expire')")
   await page.reload();await page.locator('#app').wait_for(state='visible');assert counts['refresh']==1;assert'synthetic-aal2-rotated'in await page.evaluate(f'sessionStorage.getItem({json.dumps(KEY)})')

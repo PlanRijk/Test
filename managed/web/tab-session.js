@@ -1,7 +1,7 @@
 // Per-tab session only. The server still checks owner, MFA, revocation and expiry.
 export const TAB_SESSION_KEY='paperlab.tab-session.v1';
 export const IDLE_MS=30*60*1000,MAX_SESSION_MS=8*60*60*1000;
-const pages=new Set(['overview','catalogue','trades','research','learning','opportunities']);
+const pages=new Set(['overview','catalogue','trades','research','learning','opportunities','settings','reference']);
 export function clearTabSession(storage){try{storage?.removeItem(TAB_SESSION_KEY);}catch{}}
 export function readTabSession(storage,now=Date.now()){
  try{

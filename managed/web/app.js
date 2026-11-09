@@ -1,3 +1,5 @@
+import {dashboardMarkup,portfolioMarkup,strategyReviewMarkup} from './dashboard.js';
+import {iexMarkup} from './iex-research.js';
 import {readTabSession,writeTabSession,clearTabSession} from './tab-session.js';
 import {capitalMarkup} from './capital.js';
 import {candidateMarkup} from './candidates.js';
@@ -18,7 +20,7 @@ import {breadthMarkup} from './breadth-study.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false,refreshInFlight=null,cacheActive=false,sessionStartedAt=Date.now(),lastCacheWrite=0,currentPage='overview';
+let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false,refreshInFlight=null,cacheActive=false,sessionStartedAt=Date.now(),lastCacheWrite=0,currentPage='overview',dashboardData=null,lastDashboardLoad=0;
 function authError(message){$('#authError').textContent=message;$('#authError').hidden=!message;}
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000);}
 function form(id,title,text){for(const x of ['loginForm','passwordForm','factorForm','recoveryForm','recoveryCodes'])$('#'+x).hidden=x!==id;$('#authTitle').textContent=title;$('#authText').textContent=text;authError('');}
@@ -58,12 +60,12 @@ async function recoveryCodes(){
 }
 async function enter({restoring=false}={}){
  data=await api();if(data.not_initialized)throw Error('De portefeuille wordt nog geïnstalleerd.');
- if(!restoring){lastActivity=Date.now();sessionStartedAt=lastActivity;}cacheActive=true;saveTab();$('#auth').hidden=true;$('#app').hidden=false;render();
+ if(!restoring){lastActivity=Date.now();sessionStartedAt=lastActivity;}cacheActive=true;saveTab();$('#auth').hidden=true;$('#app').hidden=false;render();await loadDashboard();
 }
 async function logout(remote=true){
  cacheActive=false;clearTabSession(tabStorage());
  if(remote&&session){try{await api('',{action:'logout'});}catch{}try{await auth('/logout','POST',{});}catch{}}
- session=null;data=null;factor=null;$('#app').hidden=true;$('#auth').hidden=false;$('#password').value='';$('#manualSecret').textContent='';$('#qr').removeAttribute('src');$('#codes').replaceChildren();form('loginForm','Welkom terug','Meld aan met je wachtwoord en authenticator.');
+ session=null;data=null;factor=null;dashboardData=null;lastDashboardLoad=0;$('#app').hidden=true;$('#auth').hidden=false;$('#password').value='';$('#manualSecret').textContent='';$('#qr').removeAttribute('src');$('#codes').replaceChildren();form('loginForm','Welkom terug','Meld aan met je wachtwoord en authenticator.');
 }
 async function busy(button,work){const text=button.textContent;button.disabled=true;try{await work();}catch(e){if($('#app').hidden)authError(e.message);else toast(e.message);}finally{button.disabled=false;button.textContent=text;}}
 $('#loginForm').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{setSession(await auth('/token?grant_type=password','POST',{email:$('#email').value.trim(),password:$('#password').value},true));$('#password').value='';await setupFactor();});};
@@ -76,12 +78,12 @@ $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceC
 $('#logout').onclick=()=>logout();$('#logoutHeader').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>{if(session&&!$('#app').hidden){lastActivity=Date.now();if(lastActivity-lastCacheWrite>5000)saveTab();}},{passive:true});
 window.addEventListener('pagehide',saveTab);
-const titles={overview:'Portefeuilleoverzicht',catalogue:'Aandelencatalogus',trades:'Transactiegeschiedenis',research:'Onderzoek & handelsregels',learning:'Leren & aankoopanalyse',opportunities:'Breder kansenonderzoek'};
-async function loadTaxReport(){await Promise.allSettled([loadOptimization(),loadTaxOnly(),loadReading(),loadGeopolitics()]);}
+const titles={overview:'Overzicht',catalogue:'Aandelen',trades:'Mijn portefeuille',research:'Marktdata',learning:'Koopaanpak & modellen',opportunities:'Onderzoeksresultaten',settings:'Instellingen',reference:'€500-referentie'};
+async function loadTaxReport(){await Promise.allSettled([loadReading(),loadIexStudy()]);}
 async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
 async function loadTaxOnly(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
- try{const [result,reliability,daily]=await Promise.all([api('?opportunities=1'),api('?reliability=1'),api('?daily-study=1')]);$('#opportunitiesBody').innerHTML=dailyMarkup(daily)+reliabilityMarkup(reliability)+opportunityMarkup(result);
+ try{const [result,reliability,daily]=await Promise.all([api('?opportunities=1'),api('?reliability=1'),api('?daily-study=1')]);$('#opportunitiesBody').innerHTML=dailyMarkup(daily)+'<details class="study-section"><summary>Korte vergelijkingen en onafhankelijke betrouwbaarheidstoetsen</summary>'+reliabilityMarkup(reliability)+opportunityMarkup(result)+'</details>';
   $('#dailyStudyExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?daily-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','symbol','decision_day','week','profile','sealed','record_json'],...rows.map(r=>[r.id,r.symbol,r.decision_day,r.week,r.profile,r.sealed,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-dagonderzoek.csv');});
   $('#studyArchiveExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?archive-export=1'),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','day','symbol','cohort','sealed','codec_version','profile','compact_record_json'],...rows.map(r=>[r.id,r.day,r.symbol,r.cohort,r.sealed,r.codec_version,r.profile,JSON.stringify(r)])].map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-compact-archief.csv');});
   $('#studyToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'opportunities',command:e.currentTarget.dataset.command});await loadOpportunities();});
@@ -96,7 +98,7 @@ async function loadLearning(){
   const rows=shadows.map(x=>({...x,shadow:true}));renderLearning(result,[...purchases,...rows],history,breadth,candidates,capital);}catch(e){$('#learningBody').textContent=e.message;}
 }
 function renderLearning(result,purchases,history,breadth,candidates,capital){
- $('#learningBody').innerHTML=capitalMarkup(capital)+candidateMarkup(candidates)+breadthMarkup(breadth)+historyMarkup(history)+learningMarkup(result,purchases);
+ $('#learningBody').innerHTML='<details class="study-section"><summary>Leerproces: ontbrekend bewijs en aankoopanalyse</summary>'+learningMarkup(result,purchases)+'</details><details class="study-section"><summary>Afzonderlijke kandidaatmodellen</summary>'+candidateMarkup(candidates)+'</details><details class="study-section"><summary>Historische en brede modelregistratie</summary>'+breadthMarkup(breadth)+historyMarkup(history)+'</details><details class="study-section"><summary>Uitgebreid kasboek en instellingen €10.000-proef</summary>'+capitalMarkup(capital)+'</details>';
  if($('#capitalToggle')){
   $('#capitalChart').innerHTML=plot((capital.curve||[]).map(c=>({time:c.last_at,value:c.last_value})));
   $('#capitalToggle').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'capital',command:e.currentTarget.dataset.command});await loadLearning();});
@@ -118,12 +120,12 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
 }
 async function showPage(page){
  currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
- if(currentPage==='learning')await loadLearning();if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();
+ if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();}if(currentPage==='learning')await Promise.allSettled([loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
 }
 document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
 $('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{
  if(polling){toast('Gegevens worden al opgehaald.');return;}polling=true;
- try{data=await api();render();await showPage(currentPage);$('#globalError').hidden=true;toast('Laatste gegevens opgehaald.');}finally{polling=false;}
+ try{if(['overview','trades'].includes(currentPage)){if(!await loadDashboard(true))return;}else{data=await api();render();}await showPage(currentPage);$('#globalError').hidden=true;toast('Laatste gegevens opgehaald.');}finally{polling=false;}
 });
 function plot(points){
  if(!points.length)return '<p class="muted">Nog geen koersmetingen.</p>';
@@ -211,7 +213,7 @@ $('#png').onclick=()=>{
  for(const line of lines){x.font=line.font;x.fillStyle=line.color;x.fillText(line.text,45,line.y);}c.toBlob(blob=>blob&&download(blob,'paperlab-transactie-'+receipt.id+'.png'),'image/png');
 };
 $('#export').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?export=1'),headers=['id','time_utc','symbol','side','quantity','price_local','currency','fee_eur','pnl_eur','fx_units_per_eur','transaction_tax_eur','capital_gains_reserve_eur','foreign_tax_reserve_eur','adr_reserve_eur','strategy_version','reason','purchase_rationale_json'];const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[headers,...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.currency||'USD',t.fee,t.pnl,t.fx,t.tax_detail?.transaction_tax_eur||0,t.tax_detail?.capital_gains_reserve_eur||0,t.tax_detail?.foreign_tax_reserve_eur||0,t.tax_detail?.adr_reserve_eur||0,t.strategy_version||'momentum-v1',t.reason,t.purchase_rationale?JSON.stringify(t.purchase_rationale):''])];download(new Blob(['\uFEFF'+lines.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-transacties.csv');});
-setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now()-lastActivity>1800000){await logout();return;}polling=true;try{const next=await api('?revision='+data.revision);if(next.unchanged){data.collector_status=next.collector_status;renderCatalogue();}else{data=next;render();}}catch(e){$('#globalError').textContent=e.message;$('#globalError').hidden=false;}finally{polling=false;}},60000);
+setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now()-lastActivity>1800000){await logout();return;}polling=true;try{if(['overview','trades'].includes(currentPage)){await loadDashboard(true);return;}if(!['catalogue','reference','settings'].includes(currentPage))return;const next=await api('?revision='+data.revision);if(next.unchanged){data.collector_status=next.collector_status;renderCatalogue();}else{data=next;render();}}catch(e){$('#globalError').textContent=e.message;$('#globalError').hidden=false;}finally{polling=false;}},60000);
 async function boot(){
  if(!CONFIG.url||!CONFIG.key){authError('De beveiligde installatie wordt voorbereid.');$('#loginForm').hidden=true;return;}
  const fragment=new URLSearchParams(location.hash.slice(1));if(fragment.has('access_token')){
@@ -233,3 +235,20 @@ async function loadReading(){
 }
 
 async function loadGeopolitics(){try{const response=await fetch("./geopolitics-data.json");if(!response.ok)throw Error("Geopolitiek dossier niet beschikbaar.");const root=$("#geopoliticsReport");root.innerHTML=geopoliticsMarkup(await response.json());bindGeopolitics(root);}catch(e){$("#geopoliticsReport").textContent=e.message;}}
+
+async function loadIexStudy(){try{const root=$('#iexResearch');root.innerHTML=iexMarkup(await api('?iex-study=1'));const button=$('#iexToggle');if(button)button.onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'iex-study',command:e.currentTarget.dataset.command});await loadIexStudy();});}catch{$('#iexResearch').textContent='IEX-onderzoeksstatus kon niet worden opgehaald. Er is daarmee geen nieuwe meting bevestigd.';}}
+setInterval(()=>{if(session&&!$('#app').hidden&&currentPage==='research')loadIexStudy();},60000);
+
+async function loadDashboard(force=false){
+ try{if(force||!dashboardData||Date.now()-lastDashboardLoad>5000){dashboardData=await api('?dashboard=1');lastDashboardLoad=Date.now();}
+ $('#dashboardBody').innerHTML=dashboardMarkup(dashboardData);$('#portfolioBody').innerHTML=portfolioMarkup(dashboardData);$('#strategyReview').innerHTML=strategyReviewMarkup();
+ if($('#dashboardChart'))$('#dashboardChart').innerHTML=plot((dashboardData.curve||[]).map(c=>({time:c.last_at,value:c.last_value})));
+ document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>showPage(b.dataset.jump));
+ document.querySelectorAll('[data-dashboard-receipt]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.dashboardReceipt),'capital'));
+ if($('#dashboardExport'))$('#dashboardExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?capital-export=1'),q=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','time','symbol','side','qty','price','fee','pnl','reason'],...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.fee,t.pnl,t.reason])].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-10000-transacties.csv');});
+ const account=dashboardData.account||{};$('#dashboardPause').textContent=account.enabled?'€10.000-proef pauzeren':'€10.000-proef hervatten';$('#dashboardPause').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'capital',command:account.enabled?'pause':'resume'});await loadDashboard(true);});
+ $('#mainPause').textContent=dashboardData.main_running?'Hoofdkoersroutine pauzeren':'Hoofdkoersroutine hervatten';$('#mainPause').onclick=e=>busy(e.currentTarget,async()=>{data=await api('',{action:dashboardData.main_running?'pause':'start'});render();await loadDashboard(true);});
+ $('#globalError').hidden=true;
+ $('#mainRoutineStatus').textContent='Hoofdkoersroutine: '+(dashboardData.main_running?'actief':'gepauzeerd')+'. Laatste ronde: '+when(dashboardData.main_last_update)+' Belgische tijd.';return true;
+ }catch(e){$('#globalError').textContent='Actief dashboard kon niet worden vernieuwd: '+e.message;$('#globalError').hidden=false;return false;}
+}
