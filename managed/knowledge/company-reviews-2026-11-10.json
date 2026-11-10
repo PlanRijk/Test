@@ -1,0 +1,106 @@
+[
+  {
+    "symbol": "AAPL",
+    "reviewed_at": "2026-11-10T08:47:50.265291+00:00",
+    "reviewer": "PaperLab research review; qualitative judgement, not an audited moat score",
+    "reviewed_accessions": [
+      "0000320193-26-000026",
+      "0000320193-26-000020",
+      "0001140361-26-042798",
+      "0000320193-26-000024",
+      "0000320193-26-000018"
+    ],
+    "sources": [
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm",
+        "published_at": "2026-11-03T13:05:15.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm",
+        "published_at": "2026-07-31T10:01:02.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/ef20085077_8k.htm",
+        "published_at": "2026-11-09T21:30:40.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000024/aapl-20261102.htm",
+        "published_at": "2026-11-02T21:30:23.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm",
+        "published_at": "2026-07-30T20:30:28.000Z"
+      }
+    ],
+    "balance_end": "2026-09-26",
+    "events": [],
+    "limitations": [
+      "Primary issuer disclosures can be incomplete; no independent consensus or complete live news feed.",
+      "A risk review is an assessment, not a guarantee that future adverse events are absent."
+    ],
+    "moat": {
+      "status": "supported",
+      "evidence": "Het jaarverslag beschrijft een geïntegreerd aanbod van hardware, besturingssysteem en diensten, een ecosysteem van externe software/accessoires en distributie. Dat ondersteunt mogelijke overstapkosten en merksterkte; de onderneming noemt ook agressieve prijsconcurrentie en imitatie. Dit is een kwalitatieve beoordeling, geen garantie van een duurzaam rendement."
+    },
+    "total_debt": 87611000000,
+    "risks": {
+      "flags": [
+        "elevated_supply_chain",
+        "elevated_trade_and_ai_risk"
+      ],
+      "summary": "Jaarverslag 2026 beoordeeld op concurrentie, afhankelijkheid van componenten en externe capaciteit, handelstarieven en AI-uitvoering. De 8-K van 9 november meldt USD 7,5 miljard nieuwe obligaties. Conservatief opgeteld bij USD 80,111 miljard gerapporteerde langlopende schuld en commercial paper, zonder vrijval door aflossing of extra cash te veronderstellen. De gelezen meldingen tonen geen vastgestelde breuk van de ondernemingsthese; onzekerheid blijft bestaan."
+    }
+  },
+  {
+    "symbol": "MSFT",
+    "reviewed_at": "2026-11-10T08:47:50.265291+00:00",
+    "reviewer": "PaperLab research review; qualitative judgement, not an audited moat score",
+    "reviewed_accessions": [
+      "0001193125-26-436133",
+      "0001193125-26-323660",
+      "0001193125-26-448357",
+      "0001193125-26-447173",
+      "0001193125-26-436149"
+    ],
+    "sources": [
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930.htm",
+        "published_at": "2026-10-28T20:07:39.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm",
+        "published_at": "2026-07-29T20:08:01.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526448357/d177209d8k.htm",
+        "published_at": "2026-11-05T11:01:52.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526447173/d178557d8k.htm",
+        "published_at": "2026-11-04T21:01:27.000Z"
+      },
+      {
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436149/msft-20261028.htm",
+        "published_at": "2026-10-28T20:11:03.000Z"
+      }
+    ],
+    "balance_end": "2026-09-30",
+    "events": [],
+    "limitations": [
+      "Primary issuer disclosures can be incomplete; no independent consensus or complete live news feed.",
+      "A risk review is an assessment, not a guarantee that future adverse events are absent."
+    ],
+    "moat": {
+      "status": "supported",
+      "evidence": "Het jaarverslag beschrijft een geïntegreerd Microsoft Cloud-aanbod en schaalvoordelen door datacenters, gedeelde vraag en multitenancy. De combinatie van productiviteit, infrastructuur en ontwikkelaars ondersteunt een mogelijke concurrentiepositie. Het verslag waarschuwt tegelijk voor lage toetredingsdrempels in delen van de markt en snelle AI-concurrentie."
+    },
+    "total_debt": 60481000000,
+    "risks": {
+      "flags": [
+        "elevated_ai_capex",
+        "elevated_regulatory_and_cyber_risk"
+      ],
+      "summary": "Jaar- en kwartaalrapport beoordeeld op versnelde AI-investeringen, onzeker toekomstig rendement, concurrentie, cyberveiligheid, regelgeving, energie en geopolitiek. De 8-K van 4 november meldt USD 25 miljard obligaties; conservatief opgeteld bij de USD 35,481 miljard gerapporteerde schuld, zonder aflossing of cashopbrengst te verrekenen. De 8-K van 5 november betreft een bestuurder die niet herkiesbaar is en volgens de melding geen beleidsconflict heeft. Hogere investerings- en uitvoeringsrisico’s blijven expliciet aanwezig."
+    }
+  }
+]

@@ -1,3 +1,6 @@
+import{handler as companyDiagnosticHandler}from'../functions/paper-company-diagnostic/index.js';
+import{handler as companyDailyHandler}from'../functions/paper-company-daily/index.js';
+import{handler as companyTickHandler}from'../functions/paper-tick-company/index.js';
 import {handler as iexHandler} from '../functions/paper-iex-research/index.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,6 +28,8 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_session'))return Response.json(session);
   if(String(url).endsWith('/paper_iex_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_iex_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_company_summary'))return Response.json({profile:'test'});
+  if(String(url).endsWith('/paper_company_read'))return Response.json({runtime:{policy:{},catalogue:[]},dossiers:{}});
   if(String(url).endsWith('/paper_dashboard_read'))return Response.json({available:true,account:{summary:{positions:12}}});
   if(String(url).endsWith('/paper_read'))return Response.json({private_data:'owner only'});
   if(String(url).endsWith('/paper_learning_read'))return Response.json({samples:0,enabled:true});
@@ -146,3 +151,5 @@ test('compact transport route rejects anonymous callers before data access',asyn
 test('IEX research requires owner MFA and application session; browser cannot reset or configure it',async()=>{mock();for(const token of[null,jwt(uid,'aal1'),jwt('33333333-3333-4333-8333-333333333333')]){const r=await apiHandler(req({token,query:'?iex-study=1'}));assert.notEqual(r.status,200);}assert.equal((await apiHandler(req({query:'?iex-study=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'iex-study',command:'reset'}}))).status,400);assert.equal((await apiHandler(req({method:'POST',body:{action:'iex-study',command:'pause'}}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?iex-study=1'}))).status,401);assert.equal((await iexHandler(new Request('https://test',{method:'POST'}))).status,401);});
 
 test('active dashboard is owner MFA and application-session protected',async()=>{mock();assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?dashboard=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,401);});
+
+test('company evidence needs owner MFA; collectors and trading worker require independent cron authorization',async()=>{mock();assert.equal((await apiHandler(req({query:'?companies=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?companies=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?companies=1'}))).status,401);globalThis.fetch=()=>{throw Error('No private RPC permitted');};for(const h of[companyDailyHandler,companyTickHandler,companyDiagnosticHandler])assert.equal((await h(new Request('https://test',{method:'POST'}))).status,401);});

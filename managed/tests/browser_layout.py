@@ -37,12 +37,12 @@ async def main():
     await r.fulfill(body=json.dumps(out),content_type='application/json')
    await context.route('**/*',route)
    await page.add_init_script("sessionStorage.setItem('paperlab.tab-session.v1',JSON.stringify({version:1,session:{access_token:'synthetic-aal2',refresh_token:'synthetic-refresh',expires_at:Date.now()+3600000},started_at:Date.now(),last_activity:Date.now(),page:'overview'}))")
-   await page.goto(target+'/');await page.locator('#dashboardChart').wait_for(state='visible');assert'Alle 12 plaatsen'in await page.locator('#dashboardBody').inner_text()
+   await page.goto(target+'/');await page.locator('#dashboardChart').wait_for(state='visible');assert('bedrijfspijlers'in await page.locator('#dashboardBody').inner_text())if fixtures['dashboard']['account']['summary'].get('company_policy')else('Alle 12 plaatsen'in await page.locator('#dashboardBody').inner_text())
    await page.screenshot(path=str(ROOT/f'.data/managed/dashboard-{width}.png'),full_page=True)
    for name in['trades','catalogue','research','opportunities','learning','settings']:
     await page.locator(f'[data-page="{name}"]').click();await page.locator('#'+name+'Page').wait_for(state='visible')
     if name=='trades':
-     await page.locator('[data-dashboard-receipt]').first.wait_for(state='visible');assert await page.locator('#portfolioBody .clean-table tbody tr').count()==12
+     await page.locator('[data-dashboard-receipt]').first.wait_for(state='visible');assert await page.locator('#portfolioBody .clean-table tbody tr').count()==fixtures['dashboard']['account']['summary']['positions']
      await page.locator('[data-dashboard-receipt]').first.click();await page.locator('#receipt').wait_for(state='visible');assert'Oorspronkelijke aankoopmotivatie'in await page.locator('#receipt').inner_text();await page.locator('#closeReceipt').click()
      async with page.expect_download()as download:await page.locator('#dashboardExport').click()
      assert(await download.value).suggested_filename=='paperlab-10000-transacties.csv'
@@ -52,12 +52,14 @@ async def main():
     if name=='opportunities':await page.locator('#dailyStudy').wait_for(state='visible');assert'Netto-uitkomsten'in await page.locator('#opportunitiesBody').inner_text()
     if name=='learning':
      await page.locator('#fundComparison summary').click();await page.locator('#fundComparison table').wait_for(state='visible');assert'Berkshire'in await page.locator('#strategyReview').inner_text();assert'undefined'not in await page.locator('#learningBody').inner_text()
+     if'companies'in fixtures:
+      await page.locator('#companyReview h2').wait_for(state='visible');await page.locator('#companyReview summary').filter(has_text='Dekking van alle').click();assert await page.locator('#companyCoverage tbody tr').count()==100;assert'Eerst het bedrijf'in await page.locator('#companyReview').inner_text()
     if name=='settings':await page.locator('#mainRoutineStatus').get_by_text('Hoofdkoersroutine:',exact=False).wait_for(state='visible')
     assert await page.locator('body').evaluate('(e)=>e.scrollWidth<=innerWidth'),(width,name)
     assert not errors,errors
    assert not actions,actions
    await page.locator('[data-page=learning]').click();await page.screenshot(path=str(ROOT/f'.data/managed/strategy-{width}.png'),full_page=True)
-   print('Layout passed',width,': active account, reasons, 12 positions, receipts, CSV, six live quotes, 53 research rows, daily results, fund sources and all navigation; no live API writes.')
+   print('Layout passed',width,': active account, reasons, open positions, receipts, CSV, six live quotes, 53 research rows, daily results, fund sources and all navigation; no live API writes.')
    await context.close()
   await b.close()
 asyncio.run(main())

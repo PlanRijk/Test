@@ -12,6 +12,13 @@ daguitkomsten bij Onderzoeksresultaten; koopkritiek en modellen apart. De oude
 €500-referentie blijft bereikbaar via Instellingen. Zie [IEX-RESEARCH.md](IEX-RESEARCH.md)
 en [FUND-COMPARISON.md](FUND-COMPARISON.md).
 
+## Vijf bedrijfspijlers
+
+Vanaf 10 november krijgen nieuwe actieve €10.000-paperaankopen een verplichte
+brongebonden bedrijfsbeoordeling en een aparte instaproute. Ontbrekende gegevens
+blokkeren de koop. Zie [COMPANY-ENTRIES.md](COMPANY-ENTRIES.md); dit is nog geen
+bewezen winstgevende strategie. De vaste referentieproeven blijven behouden.
+
 ## Onderdelen
 
 - `web/`: Nederlandstalige website; alleen publieke projectconfiguratie.

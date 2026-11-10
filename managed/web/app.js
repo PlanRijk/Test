@@ -1,3 +1,4 @@
+import{companiesMarkup,companyReceiptMarkup}from'./companies.js';
 import {dashboardMarkup,portfolioMarkup,strategyReviewMarkup} from './dashboard.js';
 import {iexMarkup} from './iex-research.js';
 import {readTabSession,writeTabSession,clearTabSession} from './tab-session.js';
@@ -120,7 +121,7 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
 }
 async function showPage(page){
  currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
- if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();}if(currentPage==='learning')await Promise.allSettled([loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
+ if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
 }
 document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
 $('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{
@@ -187,7 +188,7 @@ $('#step').onclick=e=>busy(e.currentTarget,async()=>{toast('Koersen ophalen en c
 async function openReceipt(id,shadow=false){try{receipt=await api((shadow==='capital'?'?capital-receipt=':shadow?'?shadow-receipt=':'?receipt=')+id);const s=receipt.snapshot,t=s.tax_detail||{};
  const rows=[['Portefeuille',({capital10k:'Afzonderlijke €10.000-proef',reference:'Schaduwreferentie',low_turnover:'Schaduw · minder transacties',learned:'Schaduw · model'})[receipt.account]||'Hoofdproef'],['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
  $('#receiptBody').innerHTML=rows.map(([k,v])=>`<div class="receipt-row"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')+`<p>${esc(receipt.reason)}</p><p class="small muted">Indicatieve paperuitvoering met proefkosten. Geen brokerbevestiging.</p>`;$('#receipt').showModal();
- const r=s.purchase_rationale;
+ const r=s.purchase_rationale;$('#receiptBody').innerHTML+=companyReceiptMarkup(r);
  if(r){
   $('#receiptBody').innerHTML+=`<h3>Oorspronkelijke aankoopmotivatie</h3><p>${esc(r.decision?.statement||'')}</p><p>${esc(r.execution?.statement||'')}</p>`;
   if(r.decision?.note)$('#receiptBody').innerHTML+=`<p class="muted">${esc(r.decision.note)}</p>`;
@@ -252,3 +253,5 @@ async function loadDashboard(force=false){
  $('#mainRoutineStatus').textContent='Hoofdkoersroutine: '+(dashboardData.main_running?'actief':'gepauzeerd')+'. Laatste ronde: '+when(dashboardData.main_last_update)+' Belgische tijd.';return true;
  }catch(e){$('#globalError').textContent='Actief dashboard kon niet worden vernieuwd: '+e.message;$('#globalError').hidden=false;return false;}
 }
+
+async function loadCompanies(){try{$('#companyReview').innerHTML=companiesMarkup(await api('?companies=1'));}catch{$('#companyReview').textContent='Bedrijfsvoorwaarden konden niet worden opgehaald. Geen nieuwe goedkeuring bevestigd.';}}

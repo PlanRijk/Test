@@ -34,3 +34,8 @@ en de website maken die richting expliciet; zij activeren geen nieuw model, wijz
 geen bestaand onderzoeksprotocol en fabriceren geen historische benchmarkresultaten.
 De Apple-referentie van de oorspronkelijke €500-proef is geen passende wereldwijde
 vergelijking voor de actieve €10.000-rekening.
+
+Vanaf 10 november geldt voor nieuwe actieve aankopen de afzonderlijke
+[vijf-pijlerfilter](COMPANY-ENTRIES.md). Dit voegt brongebonden financiële en
+kwalitatieve voorwaarden toe, zonder bewezen netto voordeel of een getoetst
+intrinsiekewaardemodel te claimen. De beoordeling hierboven beschrijft de eerdere fase.
