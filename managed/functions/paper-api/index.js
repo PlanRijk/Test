@@ -41,6 +41,7 @@ export async function handler(request){
         const result=await rpc('paper_capital_receipt',{p_owner:user.id,p_id:id});return reply(result||{error:'Niet gevonden.'},result?200:404,origin);
       }
       if(url.searchParams.has('candidate-study'))return reply(await rpc('paper_candidates_read',{p_owner:user.id}),200,origin);
+      if(url.searchParams.has('weekly-reflection'))return reply(await rpc('paper_weekly_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('optimizations'))return reply(await rpc('paper_optimization_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('breadth-study'))return reply(await rpc('paper_breadth_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('breadth-export')||url.searchParams.has('breadth-traces'))return reply(await rpc('paper_breadth_export',{p_owner:user.id,p_traces:url.searchParams.has('breadth-traces')}),200,origin);

@@ -1,3 +1,4 @@
+import{weeklyReflectionMarkup}from'./weekly-reflection.js';
 import{coverageOverview,coverageDetail}from'./company-coverage.js';
 import{companiesMarkup,companyReceiptMarkup}from'./companies.js';
 import {dashboardMarkup,portfolioMarkup,strategyReviewMarkup} from './dashboard.js';
@@ -82,6 +83,7 @@ for(const type of ['pointerdown','keydown','touchstart'])document.addEventListen
 window.addEventListener('pagehide',saveTab);
 const titles={overview:'Overzicht',catalogue:'Aandelen',trades:'Mijn portefeuille',research:'Marktdata',learning:'Koopaanpak & modellen',opportunities:'Onderzoeksresultaten',settings:'Instellingen',reference:'€500-referentie'};
 async function loadTaxReport(){await Promise.allSettled([loadReading(),loadIexStudy()]);}
+async function loadWeeklyReflection(){try{$('#weeklyReflection').innerHTML=weeklyReflectionMarkup(await api('?weekly-reflection=1'));}catch{$('#weeklyReflection').textContent='Weekreflectie niet opgehaald; laatste uitvoering is niet bevestigd.';}}
 async function loadOptimization(){try{$('#optimizationReport').innerHTML=optimizationMarkup(await api('?optimizations=1'));}catch(e){$('#optimizationReport').textContent=e.message;}}
 async function loadTaxOnly(){try{$('#taxReport').innerHTML=taxMarkup(await api('?tax-report=1'));}catch(e){$('#taxReport').textContent=e.message;}}
 async function loadOpportunities(){
@@ -122,7 +124,7 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
 }
 async function showPage(page){
  currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
- if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();await loadCompanyCoverage();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
+ if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();await loadCompanyCoverage();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization(),loadWeeklyReflection()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
 }
 document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
 $('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{

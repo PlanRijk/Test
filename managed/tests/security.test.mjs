@@ -52,6 +52,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_capital_receipt'))return Response.json({account:'capital10k'});
   if(String(url).endsWith('/paper_candidates_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_candidates_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_weekly_read'))return Response.json({latest:{kind:'preview'}});
   if(String(url).endsWith('/paper_optimization_read'))return Response.json({status:'reviewed'});
   if(String(url).endsWith('/paper_breadth_read'))return Response.json({counts:{compact:0}});
   if(String(url).endsWith('/paper_breadth_export'))return Response.json([]);
@@ -157,3 +158,5 @@ test('active dashboard is owner MFA and application-session protected',async()=>
 test('company evidence needs owner MFA; collectors and trading worker require independent cron authorization',async()=>{mock();assert.equal((await apiHandler(req({query:'?companies=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?companies=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?companies=1'}))).status,401);globalThis.fetch=()=>{throw Error('No private RPC permitted');};for(const h of[companyDailyHandler,companyTickHandler,companyDiagnosticHandler])assert.equal((await h(new Request('https://test',{method:'POST'}))).status,401);});
 
 test('broad company source cards require owner MFA and reject arbitrary symbols; source monitor requires cron secret',async()=>{mock();assert.equal((await apiHandler(req({query:'?company-coverage=1'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=ASML.AS'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=FOREIGN'}))).status,400);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?company-coverage=1',token}))).status,200);globalThis.fetch=()=>{throw Error('No private/source access');};assert.equal((await coverageHandler(new Request('https://test',{method:'POST'}))).status,401);});
+
+test('weekly reflections require owner MFA and remain read-only',async()=>{mock();assert.equal((await apiHandler(req({query:'?weekly-reflection=1',token:jwt(uid,'aal1')}))).status,403);const r=await apiHandler(req({query:'?weekly-reflection=1'}));assert.equal(r.status,200);assert.equal((await r.json()).latest.kind,'preview');assert.equal((await apiHandler(req({method:'POST',body:{action:'weekly-reflection',command:'run'}}))).status,400);});

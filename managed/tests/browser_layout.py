@@ -58,6 +58,8 @@ async def main():
      await page.get_by_text('Vandaag per bedrijf',exact=False).click();assert await page.locator('#iexCompanies tbody tr').count()==53
     if name=='opportunities':await page.locator('#dailyStudy').wait_for(state='visible');assert'Netto-uitkomsten'in await page.locator('#opportunitiesBody').inner_text()
     if name=='learning':
+     if'weekly-reflection'in fixtures:
+      await page.locator('#weeklyReflection h2').wait_for(state='visible');assert'Wekelijkse marktreflectie'in await page.locator('#weeklyReflection').inner_text();assert'Eerste nulmeting'in await page.locator('#weeklyReflection').inner_text();assert'undefined'not in await page.locator('#weeklyReflection').inner_text();await page.screenshot(path=str(ROOT/f'.data/managed/weekly-reflection-{width}.png'),full_page=False)
      await page.locator('#fundComparison summary').click();await page.locator('#fundComparison table').wait_for(state='visible');assert'Berkshire'in await page.locator('#strategyReview').inner_text();assert'undefined'not in await page.locator('#learningBody').inner_text()
      if'companies'in fixtures:
       await page.locator('#companyReview h2').wait_for(state='visible');await page.locator('#companyReview summary').filter(has_text='Dekking van alle').click();assert await page.locator('#companyCoverage tbody tr').count()==100;assert'Eerst het bedrijf'in await page.locator('#companyReview').inner_text()
