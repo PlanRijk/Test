@@ -26,6 +26,8 @@ def main():
   seed=[{'symbol':c['symbol'],'reference':reference if c['symbol']=='AAPL'else None,'record':{'version':'source-resilience-v1','symbol':c['symbol'],'route':'cached_reference_audit','last_financial_success_at':at,'trade_approval':False,'same_provider_independent':False,'verification':{'status':'missing_primary_or_secondary','critical_conflict':False}}}for c in old['c']]
   for i in range(0,100,10):q('select public.paper_source_seed('+jsql(seed[i:i+10])+')')
   assert get('select public.paper_source_read('+literal(owner)+'::uuid)')['counts']['companies']==100
+  q("update paperlab.source_reliability set reference='null'::jsonb where symbol='AMD'");assert get('select public.paper_source_read('+literal(owner)+'::uuid)')['counts']['primary_references']==1
+  q("update paperlab.source_reliability set reference='[]'::jsonb where symbol='AMD'",'Official source reference must be an object')
   for role in['anon','authenticated']:
    for cmd in['select public.paper_source_read(null)','select *from paperlab.source_reliability','select public.paper_source_claim(true)']:q('set role '+role+';'+cmd,'permission denied')
   q('set role service_role;'+cfg,'permission denied');q("set role service_role;select public.paper_source_seed('[]')",'permission denied');q('set role service_role;select public.paper_company_coverage_claim_source_base_v1(true)','permission denied');q('select public.paper_source_read(null)','Owner required')

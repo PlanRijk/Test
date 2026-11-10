@@ -37,7 +37,7 @@ def configure(ref,correction_path=None):
   if old is not None and old!=d['policy']:raise RuntimeError('Source policy frozen; explicit new version needed')
  jobs=sql(ref,'select jobid,jobname,schedule,command,active from cron.job order by jobid',True);job=[j for j in jobs if j['jobname']=='paperlab-company-coverage'];assert len(job)==1
  new=job[0]['command'].replace('/paper-company-coverage','/paper-source-resilience');assert'/paper-source-resilience'in new
- sql(ref,(ROOT/'managed/sql/024_source_resilience.sql').read_text());corrections(ref,correction_path);sql(ref,'select public.paper_source_configure('+jsql(d['policy'])+','+jsql(d['registry'])+')');seed(ref)
+ sql(ref,(ROOT/'managed/sql/024_source_resilience.sql').read_text());sql(ref,(ROOT/'managed/sql/025_source_reference_null.sql').read_text());corrections(ref,correction_path);sql(ref,'select public.paper_source_configure('+jsql(d['policy'])+','+jsql(d['registry'])+')');seed(ref)
  deploy_function(ref,'paper-source-resilience');deploy_function(ref,'paper-api');sql(ref,'select cron.alter_job('+str(job[0]['jobid'])+',command:='+literal(new)+')')
  assert before==sql(ref,SNAPSHOT,True)[0]['frozen'];assert trade==sql(ref,"select jsonb_build_object('company',(select policy from paperlab.company_runtime),'exits',(select policy from paperlab.net_exit_runtime),'audit',(select policy from paperlab.strategy_audit_runtime),'coverage',(select policy from paperlab.company_coverage_runtime))as policies",True)[0]['policies']
  after=sql(ref,'select jobid,jobname,schedule,command,active from cron.job order by jobid',True);assert after==[{**j,'command':new}if j['jobid']==job[0]['jobid']else j for j in jobs]

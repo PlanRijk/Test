@@ -63,3 +63,7 @@ Controle: Node-regressies voor terugval, cache, ratelimits, vergelijkbaarheid, X
 MFA en commitfouten; geïsoleerde PostgreSQL-regressie voor rechten, budgetten,
 lease-eenmaligheid, materiële conflicten en behoud van brondata. Bron- en handels-
 beleidsvingerafdrukken worden bij deployment gecontroleerd.
+
+SQL025 normaliseert JSON-null naar SQL-NULL bij ontbrekende bronreferenties.
+Dit verandert uitsluitend het opslagformaat en de correcte referentieteller,
+niet de bronpolicy of beslisregels. Niet-objectreferenties worden geweigerd.
