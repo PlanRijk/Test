@@ -58,6 +58,8 @@ async def main():
      await page.get_by_text('Vandaag per bedrijf',exact=False).click();assert await page.locator('#iexCompanies tbody tr').count()==53
     if name=='opportunities':await page.locator('#dailyStudy').wait_for(state='visible');assert'Netto-uitkomsten'in await page.locator('#opportunitiesBody').inner_text()
     if name=='learning':
+     if'strategy-audit'in fixtures:
+      await page.locator('#strategyAuditSection > summary').click();await page.locator('#strategyAudit h2').wait_for(state='visible');assert'instapvoordeel is nog niet bewezen'in await page.locator('#strategyAudit').inner_text();assert'24 uur'in await page.locator('#strategyAudit').inner_text();assert'undefined'not in await page.locator('#strategyAudit').inner_text();await page.locator('#strategyAudit').screenshot(path=str(ROOT/f'.data/managed/strategy-audit-{width}.png'))
      if'weekly-reflection'in fixtures:
       await page.locator('#weeklyReflection h2').wait_for(state='visible');assert'Wekelijkse marktreflectie'in await page.locator('#weeklyReflection').inner_text();assert'Eerste nulmeting'in await page.locator('#weeklyReflection').inner_text();assert'undefined'not in await page.locator('#weeklyReflection').inner_text();await page.screenshot(path=str(ROOT/f'.data/managed/weekly-reflection-{width}.png'),full_page=False)
      await page.locator('#fundComparison summary').click();await page.locator('#fundComparison table').wait_for(state='visible');assert'Berkshire'in await page.locator('#strategyReview').inner_text();assert'undefined'not in await page.locator('#learningBody').inner_text()

@@ -1,3 +1,4 @@
+import{exitAudit}from'../_shared/exit-audit.js';
 import{coverageAssessment}from'../_shared/company-coverage.js';
 import{COMPANY_SOURCES}from'../_shared/company-source-catalogue.js';
 import{assessCompany}from'../_shared/company-analysis.js';
@@ -30,6 +31,7 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('strategy-audit')){const d=await rpc('paper_strategy_audit_read',{p_owner:user.id});try{d.exit_diagnostic=exitAudit(await rpc('paper_exit_audit_input',{p_owner:user.id}));}catch{d.exit_diagnostic_unavailable=true;}return reply(d,200,origin);}
       if(url.searchParams.has('profit-exits'))return reply(await rpc('paper_net_exit_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('dashboard')){const d=await rpc('paper_dashboard_read',{p_owner:user.id});try{d.profit_exits=await rpc('paper_net_exit_read',{p_owner:user.id});}catch{d.exits_unavailable=true;}try{d.company_entry=await rpc('paper_company_summary',{p_owner:user.id});}catch{d.company_unavailable=true;}return reply(d,200,origin);}
       if(url.searchParams.has('company-coverage')){const v=url.searchParams.get('company-coverage'),symbol=v==='1'?null:v;if(symbol&&!COMPANY_SOURCES.some(c=>c.symbol===symbol))return reply({error:'Onbekend bedrijf.'},400,origin);const d=await rpc('paper_company_coverage_read',{p_owner:user.id,p_symbol:symbol});if(symbol&&d.records?.[0]){const quoteAt=Date.parse(d.price_time);if(!Number.isFinite(quoteAt)||quoteAt>Date.now()||Date.now()-quoteAt>7*86400000)d.price=null;d.analysis=coverageAssessment(d.records[0],d.price,d.company_dossier);const item=COMPANY_SOURCES.find(c=>c.symbol===symbol);d.company=item;d.pillar_check=assessCompany(d.company_dossier||d.records[0].verified_financials,d.price,item.currency);}return reply(d,200,origin);}

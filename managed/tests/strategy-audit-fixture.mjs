@@ -1,0 +1,2 @@
+import{netFixture}from'./net-exit-fixture.mjs';import{AUDIT_POLICY}from'../functions/_shared/strategy-entry-audit.js';import{AUDIT_IMPLEMENTATION_SHA}from'../functions/_shared/strategy-audit-implementation.js';import{NET_EXIT_IMPLEMENTATION_SHA}from'../functions/_shared/net-exit-implementation.js';
+export async function auditedFixture(){return{...await netFixture(),audit_profile:'audit-test',audit_policy:{...AUDIT_POLICY,implementation_sha256:AUDIT_IMPLEMENTATION_SHA,net_exit_implementation_sha256:NET_EXIT_IMPLEMENTATION_SHA},recent_exits:{}};}
