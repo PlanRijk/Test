@@ -28,7 +28,8 @@ async def main():
     if u.path!='/functions/v1/paper-api':await r.abort();return
     if r.request.method!='GET':actions.append(r.request.post_data);await r.abort();return
     query=parse_qs(u.query);name=next(iter(query),'')
-    if name in fixtures:out=copy.deepcopy(fixtures[name])
+    if name=='company-coverage':out=fixtures.get('coverage_overview',{})if query[name][0]=='1'else fixtures.get('coverage_details',{}).get(query[name][0],{})
+    elif name in fixtures:out=copy.deepcopy(fixtures[name])
     elif name=='capital-receipt':
      out=next(t for t in fixtures['capital-receipts']if str(t['id'])==query[name][0])
     elif name=='capital-export':out=fixtures['capital-receipts']
@@ -46,6 +47,12 @@ async def main():
      await page.locator('[data-dashboard-receipt]').first.click();await page.locator('#receipt').wait_for(state='visible');assert'Oorspronkelijke aankoopmotivatie'in await page.locator('#receipt').inner_text();await page.locator('#closeReceipt').click()
      async with page.expect_download()as download:await page.locator('#dashboardExport').click()
      assert(await download.value).suggested_filename=='paperlab-10000-transacties.csv'
+    if name=='catalogue'and'coverage_details'in fixtures:
+     await page.locator('#companyCoverageOverview h2').wait_for(state='visible');assert await page.locator('[data-company-source]').count()==100
+     for symbol in['AAPL','ASML.AS','UCB.BR','JPM']:
+      await page.locator(f'[data-company-source="{symbol}"]').click();await page.locator('#companyDossier').wait_for(state='visible');assert symbol in await page.locator('#companyDossierBody').inner_text();assert'brongebonden onderzoeksbeoordeling'in await page.locator('#companyDossierBody').inner_text();
+      if symbol=='UCB.BR':await page.screenshot(path=str(ROOT/f'.data/managed/source-dossier-{width}.png'),full_page=False)
+      await page.locator('#closeCompanyDossier').click()
     if name=='research':
      await page.locator('#iexWatchlist').wait_for(state='visible');assert await page.locator('#iexWatchlist tbody tr').count()==6
      await page.get_by_text('Vandaag per bedrijf',exact=False).click();assert await page.locator('#iexCompanies tbody tr').count()==53

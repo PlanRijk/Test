@@ -1,3 +1,4 @@
+import{handler as coverageHandler}from'../functions/paper-company-coverage/index.js';
 import{handler as companyDiagnosticHandler}from'../functions/paper-company-diagnostic/index.js';
 import{handler as companyDailyHandler}from'../functions/paper-company-daily/index.js';
 import{handler as companyTickHandler}from'../functions/paper-tick-company/index.js';
@@ -28,6 +29,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_session'))return Response.json(session);
   if(String(url).endsWith('/paper_iex_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_iex_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_company_coverage_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_summary'))return Response.json({profile:'test'});
   if(String(url).endsWith('/paper_company_read'))return Response.json({runtime:{policy:{},catalogue:[]},dossiers:{}});
   if(String(url).endsWith('/paper_dashboard_read'))return Response.json({available:true,account:{summary:{positions:12}}});
@@ -153,3 +155,5 @@ test('IEX research requires owner MFA and application session; browser cannot re
 test('active dashboard is owner MFA and application-session protected',async()=>{mock();assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?dashboard=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?dashboard=1'}))).status,401);});
 
 test('company evidence needs owner MFA; collectors and trading worker require independent cron authorization',async()=>{mock();assert.equal((await apiHandler(req({query:'?companies=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?companies=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?companies=1'}))).status,401);globalThis.fetch=()=>{throw Error('No private RPC permitted');};for(const h of[companyDailyHandler,companyTickHandler,companyDiagnosticHandler])assert.equal((await h(new Request('https://test',{method:'POST'}))).status,401);});
+
+test('broad company source cards require owner MFA and reject arbitrary symbols; source monitor requires cron secret',async()=>{mock();assert.equal((await apiHandler(req({query:'?company-coverage=1'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=ASML.AS'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=FOREIGN'}))).status,400);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?company-coverage=1',token}))).status,200);globalThis.fetch=()=>{throw Error('No private/source access');};assert.equal((await coverageHandler(new Request('https://test',{method:'POST'}))).status,401);});

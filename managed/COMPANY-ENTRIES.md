@@ -112,3 +112,8 @@ zijn geraamd verkeer, geen 17 MB extra opgeslagen bedrijfsdocumenten.
 
 Hervat de broncron pas na een aangetoonde werkende officiële bronverbinding. Geen
 netwerkbeperking omzeilen, bronweigering als succes tonen of dagbudget resetten.
+
+De latere [brede bronketen](COMPANY-COVERAGE.md) voegt honderd bronkaarten en
+aanvullende financiële monitoring toe. Die bronroute heeft een werkende live test,
+terwijl de directe SEC-collector gepauzeerd blijft. De koopvoorwaarden zijn
+hierdoor niet versoepeld; financiële actualisering is geen kwalitatieve goedkeuring.

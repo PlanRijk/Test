@@ -1,3 +1,5 @@
+import{coverageAssessment}from'../_shared/company-coverage.js';
+import{COMPANY_SOURCES}from'../_shared/company-source-catalogue.js';
 import{assessCompany}from'../_shared/company-analysis.js';
 import {allowedOrigin,base,claims,context,digest,env,reply,requestBody,rpc,serviceKey,verifyOwner} from '../_shared/platform.js';
 import {annualTaxReport} from '../_shared/tax-report.js';
@@ -29,6 +31,7 @@ export async function handler(request){
     }
     if(request.method==='GET'){
       if(url.searchParams.has('dashboard')){const d=await rpc('paper_dashboard_read',{p_owner:user.id});try{d.company_entry=await rpc('paper_company_summary',{p_owner:user.id});}catch{d.company_unavailable=true;}return reply(d,200,origin);}
+      if(url.searchParams.has('company-coverage')){const v=url.searchParams.get('company-coverage'),symbol=v==='1'?null:v;if(symbol&&!COMPANY_SOURCES.some(c=>c.symbol===symbol))return reply({error:'Onbekend bedrijf.'},400,origin);const d=await rpc('paper_company_coverage_read',{p_owner:user.id,p_symbol:symbol});if(symbol&&d.records?.[0]){const quoteAt=Date.parse(d.price_time);if(!Number.isFinite(quoteAt)||quoteAt>Date.now()||Date.now()-quoteAt>7*86400000)d.price=null;d.analysis=coverageAssessment(d.records[0],d.price,d.company_dossier);const item=COMPANY_SOURCES.find(c=>c.symbol===symbol);d.company=item;d.pillar_check=assessCompany(d.company_dossier||d.records[0].verified_financials,d.price,item.currency);}return reply(d,200,origin);}
       if(url.searchParams.has('companies')){const d=await rpc('paper_company_read',{p_owner:user.id});d.assessments=Object.fromEntries(Object.entries(d.dossiers||{}).map(([k,v])=>[k,assessCompany(v,d.prices?.[k],d.runtime.catalogue.find(c=>c.symbol===k)?.currency,Date.now(),d.runtime.policy)]));return reply(d,200,origin);}
       if(url.searchParams.has('reading-study'))return reply(await rpc('paper_reading_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('capital-study'))return reply(await rpc('paper_capital_read',{p_owner:user.id}),200,origin);

@@ -16,3 +16,8 @@
 @media(max-width:1150px){.dashboard-stats strong{font-size:25px}.research-cards{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr}}@media(max-width:600px){.workspace{padding:18px 14px}.dashboard-intro{flex-direction:column;gap:12px}.dashboard-intro h2{font-size:25px}.stats{gap:10px}.stats article{padding:16px 12px}.dashboard-stats strong{font-size:23px}.dashboard-grid{gap:14px}.review-grid{grid-template-columns:1fr}.panel{padding:18px 15px}h1{font-size:24px}.study-section>summary{padding:16px}.header-actions{width:100%}}
 
 .company-details{padding:18px 20px}.company-details li{margin:12px 0}.company-details li p{color:var(--muted);font-size:13px;margin-top:4px}
+
+#companyDossier{width:min(1050px,96vw);max-height:90vh;overflow:auto}#companyDossierBody li{margin:9px 0}#companyDossierBody li p{color:var(--muted);font-size:13px}.company-coverage-note{color:var(--muted)}
+
+#companyDossierBody{overflow-wrap:anywhere}
+#companyDossierBody table{width:100%;table-layout:fixed}#companyDossierBody th:first-child{width:65%}#companyDossierBody td:last-child{white-space:nowrap;overflow-wrap:normal}#companyDossier>.panel-head{position:sticky;top:0;background:var(--panel);z-index:2;padding-bottom:12px}

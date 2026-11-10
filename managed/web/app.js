@@ -1,3 +1,4 @@
+import{coverageOverview,coverageDetail}from'./company-coverage.js';
 import{companiesMarkup,companyReceiptMarkup}from'./companies.js';
 import {dashboardMarkup,portfolioMarkup,strategyReviewMarkup} from './dashboard.js';
 import {iexMarkup} from './iex-research.js';
@@ -121,7 +122,7 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
 }
 async function showPage(page){
  currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
- if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
+ if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();await loadCompanyCoverage();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();}
 }
 document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
 $('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{
@@ -179,7 +180,7 @@ function render(){
 function renderCatalogue(){
  const s=data?.state,term=$('#search').value.trim().toLowerCase(),region=$('#region').value,sector=$('#sector').value;
  const rows=COMPANIES.filter(x=>(!term||(x.name+' '+x.symbol).toLowerCase().includes(term))&&(!sector||x.sector===sector)&&(!region||(region==='brussels'?x.exchange==='XBRU':region==='us'?['XNAS','XNYS'].includes(x.exchange):!['XNAS','XNYS','XBRU'].includes(x.exchange))));
- $('#catalogueRows').innerHTML=rows.map(x=>{const q=s?.last_observation?.[x.symbol],p=s?.prices?.[x.symbol],age=q?(Date.now()-Date.parse(q.time))/1000:Infinity;return `<tr><td><strong>${esc(x.name)}</strong><small>${esc(x.symbol)}</small></td><td>${esc(x.sector)}<small>${esc(x.exchange)} · ${esc(x.currency)}</small></td><td>${q&&p?esc(num.format(p))+' '+esc(x.currency):'—'}<small>${!q?'Nog geen verse meting':age<=120?'Recente bronkoers':'Oude waarneming · geen actuele uitvoering'}</small></td><td>${q?esc(when(q.time)):'—'}</td></tr>`;}).join('');
+ $('#catalogueRows').innerHTML=rows.map(x=>{const q=s?.last_observation?.[x.symbol],p=s?.prices?.[x.symbol],age=q?(Date.now()-Date.parse(q.time))/1000:Infinity;return `<tr><td><strong>${esc(x.name)}</strong><small>${esc(x.symbol)}</small></td><td>${esc(x.sector)}<small>${esc(x.exchange)} · ${esc(x.currency)}</small></td><td>${q&&p?esc(num.format(p))+' '+esc(x.currency):'—'}<small>${!q?'Nog geen verse meting':age<=120?'Recente bronkoers':'Oude waarneming · geen actuele uitvoering'}</small></td><td>${q?esc(when(q.time)):'—'}</td><td><button class="secondary" data-company-source="${esc(x.symbol)}">Bronnen & analyse</button></td></tr>`;}).join('');
 }
 for(const sector of [...new Set(COMPANIES.map(x=>x.sector))].sort()){const o=document.createElement('option');o.value=o.textContent=sector;$('#sector').append(o);}
 for(const id of ['search','sector','region'])$('#'+id).addEventListener('input',renderCatalogue);
@@ -255,3 +256,7 @@ async function loadDashboard(force=false){
 }
 
 async function loadCompanies(){try{$('#companyReview').innerHTML=companiesMarkup(await api('?companies=1'));}catch{$('#companyReview').textContent='Bedrijfsvoorwaarden konden niet worden opgehaald. Geen nieuwe goedkeuring bevestigd.';}}
+
+async function loadCompanyCoverage(){try{$('#companyCoverageOverview').innerHTML=coverageOverview(await api('?company-coverage=1'));}catch{$('#companyCoverageOverview').textContent='De brede brondekking kon niet worden opgehaald. Er is geen koopgoedkeuring bevestigd.';}}
+$('#closeCompanyDossier').onclick=()=>$('#companyDossier').close();
+document.addEventListener('click',e=>{const b=e.target.closest('[data-company-source]');if(!b)return;busy(b,async()=>{const d=await api('?company-coverage='+encodeURIComponent(b.dataset.companySource));$('#companyDossierBody').innerHTML=coverageDetail(d);$('#companyDossier').showModal();});});

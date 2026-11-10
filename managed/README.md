@@ -19,6 +19,13 @@ brongebonden bedrijfsbeoordeling en een aparte instaproute. Ontbrekende gegevens
 blokkeren de koop. Zie [COMPANY-ENTRIES.md](COMPANY-ENTRIES.md); dit is nog geen
 bewezen winstgevende strategie. De vaste referentieproeven blijven behouden.
 
+## Bronkaarten voor alle honderd bedrijven
+
+Onder Aandelen opent elk bedrijf zijn eigen brongebonden analyse. Primaire
+verslagcijfers, aanvullende reeksen en nog ontbrekende kwalitatieve onderbouwing
+worden zichtbaar onderscheiden. De gratis automatische financiële bronmonitor
+blijft apart van de koopgoedkeuring. Zie [COMPANY-COVERAGE.md](COMPANY-COVERAGE.md).
+
 ## Onderdelen
 
 - `web/`: Nederlandstalige website; alleen publieke projectconfiguratie.
