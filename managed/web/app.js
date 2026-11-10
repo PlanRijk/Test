@@ -1,3 +1,4 @@
+import{profitExitReceiptMarkup}from'./profit-exits.js';
 import{weeklyReflectionMarkup}from'./weekly-reflection.js';
 import{coverageOverview,coverageDetail}from'./company-coverage.js';
 import{companiesMarkup,companyReceiptMarkup}from'./companies.js';
@@ -191,7 +192,7 @@ $('#step').onclick=e=>busy(e.currentTarget,async()=>{toast('Koersen ophalen en c
 async function openReceipt(id,shadow=false){try{receipt=await api((shadow==='capital'?'?capital-receipt=':shadow?'?shadow-receipt=':'?receipt=')+id);const s=receipt.snapshot,t=s.tax_detail||{};
  const rows=[['Portefeuille',({capital10k:'Afzonderlijke €10.000-proef',reference:'Schaduwreferentie',low_turnover:'Schaduw · minder transacties',learned:'Schaduw · model'})[receipt.account]||'Hoofdproef'],['Aandeel',receipt.symbol],['Actie',receipt.side],['Besluit',when(s.decision_time)],['Uitvoering',when(receipt.time)],['Aantal',num.format(receipt.qty)],['Lokale uitvoeringsprijs',num.format(receipt.price)+' '+(s.currency||'USD')],['Valuta-eenheden per EUR',num.format(s.fx)],['Commissie',euros(receipt.fee)],['TOB',euros(t.transaction_tax_eur)],['Meerwaardereserve',euros(t.capital_gains_reserve_eur)],['Internationale reserve',euros((t.foreign_tax_reserve_eur||0)+(t.adr_reserve_eur||0))],['Resultaat',euros(receipt.pnl)],['Profiel',s.strategy_version||'momentum-v1']];
  $('#receiptBody').innerHTML=rows.map(([k,v])=>`<div class="receipt-row"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')+`<p>${esc(receipt.reason)}</p><p class="small muted">Indicatieve paperuitvoering met proefkosten. Geen brokerbevestiging.</p>`;$('#receipt').showModal();
- const r=s.purchase_rationale;$('#receiptBody').innerHTML+=companyReceiptMarkup(r);
+ const r=s.purchase_rationale;$('#receiptBody').innerHTML+=companyReceiptMarkup(r)+profitExitReceiptMarkup(s.profit_exit);
  if(r){
   $('#receiptBody').innerHTML+=`<h3>Oorspronkelijke aankoopmotivatie</h3><p>${esc(r.decision?.statement||'')}</p><p>${esc(r.execution?.statement||'')}</p>`;
   if(r.decision?.note)$('#receiptBody').innerHTML+=`<p class="muted">${esc(r.decision.note)}</p>`;

@@ -1,3 +1,4 @@
+import{handler as netExitHandler}from'../functions/paper-tick-net-exits/index.js';
 import{handler as coverageHandler}from'../functions/paper-company-coverage/index.js';
 import{handler as companyDiagnosticHandler}from'../functions/paper-company-diagnostic/index.js';
 import{handler as companyDailyHandler}from'../functions/paper-company-daily/index.js';
@@ -32,6 +33,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_company_coverage_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_summary'))return Response.json({profile:'test'});
   if(String(url).endsWith('/paper_company_read'))return Response.json({runtime:{policy:{},catalogue:[]},dossiers:{}});
+  if(String(url).endsWith('/paper_net_exit_read'))return Response.json({runtime:{profile:'net-test'}});
   if(String(url).endsWith('/paper_dashboard_read'))return Response.json({available:true,account:{summary:{positions:12}}});
   if(String(url).endsWith('/paper_read'))return Response.json({private_data:'owner only'});
   if(String(url).endsWith('/paper_learning_read'))return Response.json({samples:0,enabled:true});
@@ -160,3 +162,7 @@ test('company evidence needs owner MFA; collectors and trading worker require in
 test('broad company source cards require owner MFA and reject arbitrary symbols; source monitor requires cron secret',async()=>{mock();assert.equal((await apiHandler(req({query:'?company-coverage=1'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=ASML.AS'}))).status,200);assert.equal((await apiHandler(req({query:'?company-coverage=FOREIGN'}))).status,400);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?company-coverage=1',token}))).status,200);globalThis.fetch=()=>{throw Error('No private/source access');};assert.equal((await coverageHandler(new Request('https://test',{method:'POST'}))).status,401);});
 
 test('weekly reflections require owner MFA and remain read-only',async()=>{mock();assert.equal((await apiHandler(req({query:'?weekly-reflection=1',token:jwt(uid,'aal1')}))).status,403);const r=await apiHandler(req({query:'?weekly-reflection=1'}));assert.equal(r.status,200);assert.equal((await r.json()).latest.kind,'preview');assert.equal((await apiHandler(req({method:'POST',body:{action:'weekly-reflection',command:'run'}}))).status,400);});
+
+test('net profit policy needs owner MFA; no browser can alter net-exit rules',async()=>{mock();assert.equal((await apiHandler(req({query:'?profit-exits=1',token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?profit-exits=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'profit-exits',minimum:0}}))).status,400);});
+
+test('net exit worker rejects anonymous and owner-token calls without cron secret',async()=>{globalThis.fetch=()=>{throw Error('No database access');};for(const headers of[{}, {Authorization:'Bearer '+jwt()}])assert.equal((await netExitHandler(new Request('https://test',{method:'POST',headers}))).status,401);});

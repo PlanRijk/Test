@@ -1,0 +1,2 @@
+import{fixture}from'./company-fixture.mjs';import{NET_EXIT_POLICY}from'../functions/_shared/net-exit-policy.js';import{NET_EXIT_IMPLEMENTATION_SHA}from'../functions/_shared/net-exit-implementation.js';import{COMPANY_IMPLEMENTATION_SHA}from'../functions/_shared/company-implementation.js';
+export async function netFixture(){return{...await fixture(),exit_profile:'net-exit-test',exit_policy:{...NET_EXIT_POLICY,implementation_sha256:NET_EXIT_IMPLEMENTATION_SHA,company_implementation_sha256:COMPANY_IMPLEMENTATION_SHA}};}
