@@ -18,6 +18,7 @@ import {handler as historyHandler} from '../functions/paper-history/index.js';
 import {handler as compactHandler} from '../functions/paper-tick-compact/index.js';
 import {handler as multidayHandler} from '../functions/paper-tick-multiday/index.js';
 import {handler as readingHandler} from '../functions/paper-reading/index.js';
+import {handler as sourceHandler} from '../functions/paper-source-resilience/index.js';
 import {handler as breadthHandler} from '../functions/paper-breadth/index.js';
 const uid='11111111-1111-4111-8111-111111111111',sid='22222222-2222-4222-8222-222222222222',origin='https://paperlab-test.onrender.com';
 const settings={owner_id:uid,origin},nativeFetch=globalThis.fetch;
@@ -31,6 +32,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_session'))return Response.json(session);
   if(String(url).endsWith('/paper_iex_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_iex_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_source_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_coverage_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_summary'))return Response.json({profile:'test'});
   if(String(url).endsWith('/paper_company_read'))return Response.json({runtime:{policy:{},catalogue:[]},dossiers:{}});
@@ -170,3 +172,13 @@ test('net profit policy needs owner MFA; no browser can alter net-exit rules',as
 test('net exit worker rejects anonymous and owner-token calls without cron secret',async()=>{globalThis.fetch=()=>{throw Error('No database access');};for(const headers of[{}, {Authorization:'Bearer '+jwt()}])assert.equal((await netExitHandler(new Request('https://test',{method:'POST',headers}))).status,401);});
 
 test('strategy audit needs owner MFA; worker and parameters cannot be controlled from the browser',async()=>{mock();assert.equal((await apiHandler(req({query:'?strategy-audit=1',token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?strategy-audit=1'}))).status,200);assert.equal((await apiHandler(req({method:'POST',body:{action:'strategy-audit',risk:999}}))).status,400);globalThis.fetch=()=>{throw Error('No database access');};assert.equal((await auditedHandler(new Request('https://test',{method:'POST'}))).status,401);});
+
+test('source reliability stays owner-MFA private and source collection needs the independent cron credential',async()=>{
+ mock();for(const query of ['?source-reliability=1','?source-reliability=AAPL']){
+  assert.equal((await apiHandler(req({query,token:jwt(uid,'aal1')}))).status,403);
+  assert.equal((await apiHandler(req({query}))).status,200);
+ }
+ assert.equal((await apiHandler(req({query:'?source-reliability=INVALID'}))).status,400);
+ globalThis.fetch=()=>{throw Error('Must not reach database');};
+ for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await sourceHandler(new Request('https://test/functions/v1/paper-source-resilience',{method:'POST',headers,body:'{}'}))).status,401);
+});

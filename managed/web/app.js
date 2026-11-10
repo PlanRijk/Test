@@ -1,3 +1,4 @@
+import{sourceReliabilityOverview,sourceReliabilityDetail}from'./source-reliability.js';
 import{strategyAuditMarkup}from'./strategy-audit.js';
 import{profitExitReceiptMarkup}from'./profit-exits.js';
 import{weeklyReflectionMarkup}from'./weekly-reflection.js';
@@ -262,6 +263,6 @@ async function loadDashboard(force=false){
 
 async function loadCompanies(){try{$('#companyReview').innerHTML=companiesMarkup(await api('?companies=1'));}catch{$('#companyReview').textContent='Bedrijfsvoorwaarden konden niet worden opgehaald. Geen nieuwe goedkeuring bevestigd.';}}
 
-async function loadCompanyCoverage(){try{$('#companyCoverageOverview').innerHTML=coverageOverview(await api('?company-coverage=1'));}catch{$('#companyCoverageOverview').textContent='De brede brondekking kon niet worden opgehaald. Er is geen koopgoedkeuring bevestigd.';}}
+async function loadCompanyCoverage(){try{const [coverage,reliability]=await Promise.all([api('?company-coverage=1'),api('?source-reliability=1').catch(()=>({}))]);$('#companyCoverageOverview').innerHTML=coverageOverview(coverage)+sourceReliabilityOverview(reliability);}catch{$('#companyCoverageOverview').textContent='De brede brondekking kon niet worden opgehaald. Er is geen koopgoedkeuring bevestigd.';}}
 $('#closeCompanyDossier').onclick=()=>$('#companyDossier').close();
-document.addEventListener('click',e=>{const b=e.target.closest('[data-company-source]');if(!b)return;busy(b,async()=>{const d=await api('?company-coverage='+encodeURIComponent(b.dataset.companySource));$('#companyDossierBody').innerHTML=coverageDetail(d);$('#companyDossier').showModal();});});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-company-source]');if(!b)return;busy(b,async()=>{const [d,r]=await Promise.all([api('?company-coverage='+encodeURIComponent(b.dataset.companySource)),api('?source-reliability='+encodeURIComponent(b.dataset.companySource)).catch(()=>({}))]);$('#companyDossierBody').innerHTML=sourceReliabilityDetail(r)+coverageDetail(d);$('#companyDossier').showModal();});});

@@ -29,6 +29,7 @@ async def main():
     if r.request.method!='GET':actions.append(r.request.post_data);await r.abort();return
     query=parse_qs(u.query);name=next(iter(query),'')
     if name=='company-coverage':out=fixtures.get('coverage_overview',{})if query[name][0]=='1'else fixtures.get('coverage_details',{}).get(query[name][0],{})
+    elif name=='source-reliability':out=fixtures.get('source_overview',{})if query[name][0]=='1'else fixtures.get('source_details',{}).get(query[name][0],{})
     elif name in fixtures:out=copy.deepcopy(fixtures[name])
     elif name=='capital-receipt':
      out=next(t for t in fixtures['capital-receipts']if str(t['id'])==query[name][0])
@@ -51,6 +52,8 @@ async def main():
      await page.locator('#companyCoverageOverview h2').wait_for(state='visible');assert await page.locator('[data-company-source]').count()==100
      for symbol in['AAPL','ASML.AS','UCB.BR','JPM']:
       await page.locator(f'[data-company-source="{symbol}"]').click();await page.locator('#companyDossier').wait_for(state='visible');assert symbol in await page.locator('#companyDossierBody').inner_text();assert'brongebonden onderzoeksbeoordeling'in await page.locator('#companyDossierBody').inner_text();
+      if'source_details'in fixtures:
+       assert await page.locator('#sourceReliabilityDetail').count()==1;assert await page.locator('.source-pillar-grid article').count()==5;assert await page.locator('.source-pillar-grid article').first.evaluate('(e)=>e.clientWidth')>120;assert'Bronbetrouwbaarheid en terugval'in await page.locator('#sourceReliabilityDetail').inner_text();assert'undefined'not in await page.locator('#sourceReliabilityDetail').inner_text()
       if symbol=='UCB.BR':await page.screenshot(path=str(ROOT/f'.data/managed/source-dossier-{width}.png'),full_page=False)
       await page.locator('#closeCompanyDossier').click()
     if name=='research':
