@@ -5,6 +5,8 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from scripts import managed_api as api
 from scripts.compact_transport import SNAPSHOT
 def configure(ref):
+ if api.sql(ref,"select to_regclass('paperlab.swing_runtime')is not null as present",True)[0]['present']:
+  if api.sql(ref,"select profile is not null as active from paperlab.swing_runtime",True)[0]['active']:raise RuntimeError('Daily/week paper epoch active; research-first migration cannot overwrite its supervisor')
  before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,'select jobid,jobname,schedule,active from cron.job order by jobid',True)
  api.sql(ref,(ROOT/'managed/sql/029_private_archives.sql').read_text())
  api.sql(ref,(ROOT/'managed/sql/031_strategy_priority.sql').read_text())
