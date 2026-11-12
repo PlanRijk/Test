@@ -19,7 +19,7 @@ def archive_key():
  return value
 def configure(ref):
  before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,"select jobid,jobname,schedule,active from cron.job where jobname<>'paperlab-project-followup'order by jobid",True)
- for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
+ for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql','032_daily_weekly_swing.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
  value=archive_key();api.request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_ARCHIVE_KEY','value':value}])
  service=api.keys(ref)['service_role']
  try:b=api.project_request(ref,service,'/storage/v1/bucket/'+BUCKET)
