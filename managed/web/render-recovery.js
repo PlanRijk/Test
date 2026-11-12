@@ -1,0 +1,6 @@
+import {recoveryKey} from './access-recovery-crypto.js';
+import {encryptRender} from './render-recovery-crypto.js';
+const $=id=>document.getElementById(id);let config;
+try{const r=await fetch('/access-recovery-key.json',{cache:'no-store',credentials:'omit',redirect:'error'});if(!r.ok)throw Error();config=await r.json();await recoveryKey(config);$('encrypt').disabled=false;$('status').textContent='Gereed. Vul uitsluitend je Render API-key in.';}catch{$('status').textContent='Herstelsleutel niet beschikbaar of verlopen. Vraag een nieuwe sleutel in de chat.';}
+$('form').addEventListener('submit',async e=>{e.preventDefault();$('encrypt').disabled=true;$('result').hidden=true;$('output').value='';try{$('output').value=await encryptRender($('token').value,config);$('result').hidden=false;$('status').textContent='Versleuteld. Plak alleen het herstelbericht binnen 30 minuten in deze Codex-chat.';}catch{$('status').textContent='Versleutelen mislukt. Controleer de Render-key (rnd_) en de geldigheid van deze pagina.';}finally{$('token').value='';$('encrypt').disabled=false;}});
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('output').value);$('status').textContent='Versleuteld bericht gekopieerd.';}catch{$('output').focus();$('output').select();$('status').textContent='Kopieer de geselecteerde versleutelde tekst.';}});
