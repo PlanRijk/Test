@@ -30,6 +30,8 @@ def main():
    new=after[oid];assert all(old[k]==new[k]for k in['owner','acl','config'])
    changed+=old['definition']!=new['definition']
   assert changed==20
+  source_oid=next(oid for oid,v in functions.items()if'CREATE OR REPLACE FUNCTION public.paper_source_commit('in v['definition']);q(functions[source_oid]['definition']);q(migration);assert get("select to_json(pg_get_functiondef("+source_oid+"))")==after[source_oid]['definition']
+  q(after[source_oid]['definition'].replace('AS $function$','AS $function$\n-- unexpected source edit'));q(migration,'Budget-patched function changed');q(after[source_oid]['definition']);q(migration)
   q("insert into paperlab.free_usage(month)values((date_trunc('month',now())+interval'1 month')::date)");assert q("select max_worker_egress_bytes from paperlab.free_usage where month>date_trunc('month',now())::date")=='4000000000'
   for role in ['anon','authenticated']:
    q('set role '+role+';select *from paperlab.traffic_budget_runtime','permission denied');q('set role '+role+';select public.paper_traffic_budget_read(null)','permission denied')

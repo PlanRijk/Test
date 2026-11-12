@@ -33,8 +33,8 @@ do $patch$declare item jsonb;rule jsonb;proc oid;definition text;original text;o
   select p.oid into strict proc from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'and p.proname=item->>'name';
   definition:=pg_get_functiondef(proc);original:=definition;
   if exists(select 1 from paperlab.traffic_budget_patches where signature=proc::regprocedure::text)then
-   if encode(sha256(convert_to(definition,'UTF8')),'hex')<>(select after_hash from paperlab.traffic_budget_patches where signature=proc::regprocedure::text)then raise exception'Budget-patched function changed: %',item->>'name';end if;
-   continue;
+   if encode(sha256(convert_to(definition,'UTF8')),'hex')=(select after_hash from paperlab.traffic_budget_patches where signature=proc::regprocedure::text)then continue;end if;
+   if encode(sha256(convert_to(definition,'UTF8')),'hex')<>(select before_hash from paperlab.traffic_budget_patches where signature=proc::regprocedure::text)then raise exception'Budget-patched function changed: %',item->>'name';end if;
   end if;
   for rule in select value from jsonb_array_elements(item->'rules')loop
    oldcount:=(length(definition)-length(replace(definition,rule->>'old','')))/length(rule->>'old');
@@ -42,7 +42,7 @@ do $patch$declare item jsonb;rule jsonb;proc oid;definition text;original text;o
    definition:=replace(definition,rule->>'old',rule->>'new');
   end loop;
   execute definition;
-  insert into paperlab.traffic_budget_patches(signature,before_hash,after_hash)values(proc::regprocedure::text,encode(sha256(convert_to(original,'UTF8')),'hex'),encode(sha256(convert_to(pg_get_functiondef(proc),'UTF8')),'hex'));
+  insert into paperlab.traffic_budget_patches(signature,before_hash,after_hash)values(proc::regprocedure::text,encode(sha256(convert_to(original,'UTF8')),'hex'),encode(sha256(convert_to(pg_get_functiondef(proc),'UTF8')),'hex'))on conflict(signature)do update set after_hash=excluded.after_hash;
  end loop;
 end$patch$;
 create or replace function public.paper_traffic_budget_read(p_owner uuid)returns jsonb language plpgsql security definer set search_path=pg_catalog,pg_temp as $read$

@@ -28,7 +28,9 @@ Nieuwe gezamenlijke transfergrenzen (`traffic-budget-v2`):
 SQL026 wijzigt uitsluitend 30 bekende transfervergelijkingen in 20 bestaande
 functies via exact getelde tekstsubstituties. Een onbekende bronversie breekt de
 hele transactie af. OID, eigenaar, rechten en functie-instellingen blijven behouden.
-De oude en nieuwe functiehash worden apart vastgelegd. De claim met volledige
+De oude en nieuwe functiehash worden apart vastgelegd. Na herinstallatie van oudere
+SQL moet SQL026 als laatste worden toegepast; exact de reeds bekende bronversie
+mag opnieuw worden omgezet, onbekende bronwijzigingen worden geweigerd. De claim met volledige
 float8-precisie blijft intact. Een lagere handmatig ingestelde globale limiet wordt
 geresepecteerd. De huidige standaardkap van 3 GB wordt 4 GB, evenals de standaard
 voor nieuwe verbruiksmaanden; historische maanden blijven behouden.
