@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'"><title>PaperLab · Beheertoegang herstellen</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/access-recovery.css"><script type="module" src="/access-recovery.js"></script></head>
+<body><main class="auth-wrap"><section class="auth-card">
+<div class="brand"><span class="brand-mark">P</span> PaperLab</div>
+<h1>Beheertoegang herstellen</h1>
+<p>Dit formulier versleutelt je nieuwe Supabase access token in deze browser. De leesbare token wordt niet door dit formulier verstuurd of in browseropslag bewaard.</p>
+<p>Je deelt daarna alleen het versleutelde herstelbericht in de bestaande Codex-chat. Alleen de bijbehorende privésleutel in de cloudomgeving kan dat bericht openen.</p>
+<p><a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener noreferrer">Open Supabase Access Tokens</a>. Gebruik de persoonlijke beheertoken voor het bestaande PaperLab-project.</p>
+<form id="accessRecoveryForm" autocomplete="off"><label>Nieuwe Supabase access token<input id="accessRecoveryToken" type="password" autocomplete="off" spellcheck="false" maxlength="184" required></label><button class="primary" id="accessRecoveryEncrypt" disabled>Versleutel herstelbericht</button></form>
+<p id="accessRecoveryStatus" role="status">Herstelsleutel controleren…</p>
+<section id="accessRecoveryResult" hidden><label>Versleuteld herstelbericht<textarea id="accessRecoveryOutput" rows="9" readonly spellcheck="false" aria-label="Versleuteld herstelbericht"></textarea></label><button class="secondary" id="accessRecoveryCopy">Kopieer versleuteld bericht</button><p>Plak dit bericht binnen 30 minuten in de Codex-chat. Plak daar nooit de leesbare token.</p></section>
+<p class="auth-note">Dit formulier wijzigt geen portefeuille of handelsregel. Een token kan pas na ontvangst en controle gebruikt worden om de toegang te herstellen.</p>
+</section></main></body></html>

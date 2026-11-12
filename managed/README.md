@@ -190,3 +190,11 @@ De eenmalige fase `continuous-enable` is specifiek voor de goedgekeurde overgang
 zonder bestaande modellen/opleidingslabels. Zij behoudt de rekeningen en vernieuwt
 uitsluitend de vergelijkingsfingerprint voor de gewijzigde looptijdcode. Herhaal
 haar niet wanneer later echte opleidingsgegevens of modellen bestaan.
+
+## Beheertoegang herstellen
+
+Bij geweigerde Codex-beheertokens en niet-overeenkomende Render-workspaces is er
+[een expliciete versleutelde herstelroute](ACCESS-RECOVERY.md). Alleen de publieke
+herstelsleutel staat in de website; de privésleutel en leesbare token horen nooit
+in chat of Git. Het beheercommando na herstel is
+`python scripts/access_recovery.py run scripts/managed_status.py`.
