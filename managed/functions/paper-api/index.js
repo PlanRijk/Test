@@ -122,6 +122,15 @@ export async function handler(request){
       if(!['pause','resume'].includes(body.command))return reply({error:'Ongeldige onderzoeksbediening.'},400,origin);
       await rpc('paper_opportunity_action',{p_owner:user.id,p_action:body.command});return reply(await rpc('paper_opportunity_read',{p_owner:user.id}),200,origin);
     }
+    if(body.action==='earnings-review'){
+      await rpc('paper_earnings_review',{p_owner:user.id,p_task:body.task,p_note:body.note,p_source_url:body.source_url});return reply({ok:true},200,origin);
+    }
+    if(body.action==='earnings-freeze'){
+      await rpc('paper_earnings_freeze',{p_owner:user.id,p_cycle:body.cycle,p_forecast:body.forecast});return reply({ok:true},200,origin);
+    }
+    if(body.action==='earnings-actual'){
+      await rpc('paper_earnings_actual',{p_owner:user.id,p_cycle:body.cycle,p_result:body.result});return reply({ok:true},200,origin);
+    }
     if(body.action==='step'){
       const response=await fetch(base()+'/functions/v1/paper-tick-swing',{method:'POST',headers:{'Content-Type':'application/json','X-PaperLab-Cron':env('PAPERLAB_CRON_TOKEN')},body:JSON.stringify({manual:true}),signal:AbortSignal.timeout(80000)});
       if(!response.ok)throw Error('Koersmeting mislukt.');return reply(await rpc('paper_read',{p_owner:user.id,p_revision:-1}),200,origin);
