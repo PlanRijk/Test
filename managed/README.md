@@ -12,6 +12,15 @@ daguitkomsten bij Onderzoeksresultaten; koopkritiek en modellen apart. De oude
 €500-referentie blijft bereikbaar via Instellingen. Zie [IEX-RESEARCH.md](IEX-RESEARCH.md)
 en [FUND-COMPARISON.md](FUND-COMPARISON.md).
 
+## Actieve strategische prioriteit
+
+Vanaf 12 november: **beheer bestaande posities, onderzoek vóór nieuwe instap**.
+Nieuwe aankopen in capital10k zijn afzonderlijk geblokkeerd totdat kosten,
+uitvoering en een samenhangend meerdaags protocol voldoende zijn onderbouwd.
+Posities en beschermende verkopen blijven behouden. De bestaande bevroren
+context-kandidaat krijgt onderzoeksvoorrang, geen handelspromotie.
+Zie [STRATEGY-PRIORITY.md](STRATEGY-PRIORITY.md) voor de keuze, voorwaarden en behoudscontroles.
+
 ## Actualisatie onderzoek en herstel — 12 november 2026
 
 Alle honderd bedrijven hebben een uitgebreid financieel onderzoeksdossier.
