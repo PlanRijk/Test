@@ -1,0 +1,753 @@
+{
+  "version": "earnings-pilot-v1",
+  "companies": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple",
+      "calendar_url": "https://investor.apple.com/investor-relations/default.aspx",
+      "questions": [
+        "iPhone- en dienstenomzet",
+        "Brutomarge, productmix en China",
+        "Kasstroom en aandeleninkoop"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/ef20085077_8k.htm",
+          "sha256": "a8d629df7e12b25a00c5eee8ca0f1fbf6a7c95a0588bdcd9446c55728b8789cc",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:33:28.274951+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm",
+          "sha256": "58c72ba42db6f658d94fbc5248c758d46138d0fba48dceaf6704116205c06eef",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:33:28.687954+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm",
+          "sha256": "51ecd7df6a218bc3cc5d9c0715db088e9246612bb0631325ad34491aa0a37cd5",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:33:29.014832+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.apple.com/investor-relations/default.aspx",
+          "sha256": "b7e41aa067f785e68ee73760694a9e597d8ad5f1756795563b3a4efd26d49de2",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:33:29.584224+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:21:19.976Z",
+      "financial_period": "2026-09-30",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-09-30: omzet 478.834.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 15.1%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 132.175.000.000 USD; operationele kasstroom 145.097.000.000 USD; vrije kasstroom 136.056.000.000 USD. Indicatieve nettomarge 27.6%. Operationele kasstroom/positieve jaarwinst 1.10×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 80.111.000.000 USD, liquide middelen 36.305.000.000 USD. Indicatieve netto-schuld 43.806.000.000 USD. Netto-schuld/vrije kasstroom 0.32×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -1.9%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 114.477.000.000 USD; 11.7% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft",
+      "calendar_url": "https://www.microsoft.com/en-us/investor/default",
+      "questions": [
+        "Azure-groei en cloudorders",
+        "AI-investeringen tegenover kasstroom",
+        "Segmentmarges en capaciteitsbeperkingen"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526448357/d177209d8k.htm",
+          "sha256": "d03e1f497f337cc7ec8062948bbea0f8bc462bbd6c2de0169054883041915f5e",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:33:28.211263+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.microsoft.com/en-us/investor/default",
+          "sha256": "a69637a8670c8ed291e00edbcd7df6831a9b1a2e630f0c1a4372a9175e890b30",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:33:29.669265+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930.htm",
+          "sha256": "2b3c9ed5c20a43c6476772d60e86dbb3f29651b3300e43c994e068813409a7f4",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:37:24.102379+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm",
+          "sha256": "d6a9654a6e6d81249aff5842fecc2e7e95d50a11222328b0bbc8b110c5654a6a",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:37:25.083922+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2026-06-30",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-06-30: omzet 331.839.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 17.8%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 133.749.000.000 USD; operationele kasstroom 182.935.000.000 USD; vrije kasstroom 66.987.000.000 USD. Indicatieve nettomarge 40.3%. Operationele kasstroom/positieve jaarwinst 1.37×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 56.826.000.000 USD, liquide middelen 20.935.000.000 USD. Indicatieve netto-schuld 35.891.000.000 USD. Netto-schuld/vrije kasstroom 0.54×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -0.2%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 92.279.000.000 USD; 18.8% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "NVDA",
+      "name": "Nvidia",
+      "calendar_url": "https://investor.nvidia.com/events-and-presentations/events-and-presentations/default.aspx",
+      "questions": [
+        "Datacenteromzet en productovergangen",
+        "Brutomarge, voorraad en klantconcentratie",
+        "Exportbeperkingen, financiering en bestuursrisico"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/nvda-20260902.htm",
+          "sha256": "a3e9be927e212b654fefaf0e18657b7b71f352e3b7b71ac89893a9d87b348a14",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:33:28.624365+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+          "sha256": "3c136cf151d872295d2d7478ee03b053e78ef5ee8720a5b683b4255e37a3a272",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:33:29.168777+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+          "sha256": "e73d877b9beb873f8fd733e3eca68b5bacc3f3b0595db6627958f26e119b82aa",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:33:29.517702+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.nvidia.com/home/default.aspx",
+          "sha256": "1aa2abe2aa2883fd648d4199fd02102d381bc21282a6b6d12751839bfc647b62",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:33:30.312026+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.nvidia.com/financial-info/financial-reports/",
+          "sha256": "00efa2439525cebb2077736afb911bab669f4e887ea12ecd6ad750889d31f05f",
+          "kind": "linked_financial_publication",
+          "known_at": "2026-11-12T12:33:30.977744+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2026-01-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-01-31: omzet 215.938.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 65.5%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 120.067.000.000 USD; operationele kasstroom 102.718.000.000 USD; vrije kasstroom 96.676.000.000 USD. Indicatieve nettomarge 55.6%. Operationele kasstroom/positieve jaarwinst 0.86×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 11.040.000.000 USD, liquide middelen 10.605.000.000 USD. Indicatieve netto-schuld 435.000.000 USD. Netto-schuld/vrije kasstroom 0.00×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -1.2%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-07-31: 96.221.000.000 USD; 105.9% tegenover 2025-07-31. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": {
+        "cycle_key": "FY2027-Q3",
+        "release_at": "2026-11-17T21:20:00Z",
+        "call_at": "2026-11-17T22:00:00Z",
+        "source_url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Sets-Conference-Call-for-Third-Quarter-Financial-Results/default.aspx",
+        "evidence": "NVIDIA kondigt resultaten aan op 17 november 2026 om circa 13:20 Pacific; call om 14:00 Pacific.",
+        "time_precision": "approximate_official_release"
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "name": "Amazon",
+      "calendar_url": "https://ir.aboutamazon.com/events/",
+      "questions": [
+        "AWS-groei en operationele winst",
+        "Retailmarges en advertentieomzet",
+        "AI-investeringen tegenover vrije kasstroom"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000040/amzn-20260930.htm",
+          "sha256": "0d04a41a98dcbca4ae764b0fb9acc09c9a46948f467824640de3f3bb029f8647",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:34:28.841105+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000038/amzn-20261029.htm",
+          "sha256": "f73533aba17ad8c1f9311c7fee07cb204ab0b571f728646f1b6d8fec095152a6",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:34:29.040693+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+          "sha256": "58d84fe1da98b8b743a9b002cf3bf041512f467ba5d05718db3418f4df8c4f90",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:34:29.422655+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://ir.aboutamazon.com/overview/default.aspx",
+          "sha256": "fe234c0d7424f8403b4776e12d6f2c65090c0c6c1485e0e40bba03e167140a65",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:34:29.959965+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T16:56:21.322Z",
+      "financial_period": "2025-12-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2025-12-31: omzet 716.924.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 12.4%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 77.670.000.000 USD; operationele kasstroom 139.514.000.000 USD; vrije kasstroom 7.695.000.000 USD. Indicatieve nettomarge 10.8%. Operationele kasstroom/positieve jaarwinst 1.80×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 152.987.000.000 USD, liquide middelen 86.810.000.000 USD. Indicatieve netto-schuld 66.177.000.000 USD. Netto-schuld/vrije kasstroom 8.60×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met 1.0%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Resultaattrend",
+          "text": "Opgeslagen jaarresultaat: 59.248.000.000 USD (2024-12-31) naar 77.670.000.000 USD (2025-12-31). Vergelijk consolidatiekring en eenmalige posten voordat dit als structurele trend geldt."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet",
+      "calendar_url": "https://abc.xyz/investor/",
+      "questions": [
+        "Zoek- en YouTube-advertenties",
+        "Cloudgroei, marges en AI-investeringen",
+        "Mededinging en verandering zoekgedrag"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526449835/d174184d8k.htm",
+          "sha256": "c1cc2befc43feb1cdbd003ca9cbea16e96fabb93b22c79037737c7e8236983cd",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:34:33.054007+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000084/goog-20260930.htm",
+          "sha256": "2e9349f56ef8c054aa204e37cf60d71c5fa66ab630edddcaaa16b8db20d33c30",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:34:33.443658+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+          "sha256": "cc684e02ec4e8edd2e25637a14348ca780633670631db86f58004ed7050444f3",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:34:33.947004+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://abc.xyz/investor/",
+          "sha256": "e59d28058cac72e3f0e15374b4f8bda3d1f946276a4e8a2cc117cf225eb64805",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:34:34.467237+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2025-12-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2025-12-31: omzet 402.836.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 15.1%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 132.170.000.000 USD; operationele kasstroom 164.713.000.000 USD; vrije kasstroom 73.266.000.000 USD. Indicatieve nettomarge 32.8%. Operationele kasstroom/positieve jaarwinst 1.25×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 59.291.000.000 USD, liquide middelen 30.708.000.000 USD. Indicatieve netto-schuld 28.583.000.000 USD. Netto-schuld/vrije kasstroom 0.39×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -1.7%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 127.577.000.000 USD; 24.7% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "META",
+      "name": "Meta Platforms",
+      "calendar_url": "https://investor.atmeta.com/investor-events/default.aspx",
+      "questions": [
+        "Advertentievolume en prijzen",
+        "Kosten, AI-investeringen en kasstroom",
+        "Reality Labs, privacy en regelgeving"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000119312526450074/d166273d8k.htm",
+          "sha256": "296fa083939c5b3e964d306ba88c6082c17a69ec4a7e4621ba54f02d13167da4",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:34:33.258738+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026066773/meta-20260930.htm",
+          "sha256": "8699bfe743b37da1ddac04ff0146dbe1d774399b7c418a7791619ef33703ead4",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:34:33.629159+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm",
+          "sha256": "d1ac32b2a731fe3fcd07e91b24b5670028477fa8bdbdeb896c2559cba704c11d",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:34:34.239717+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.atmeta.com/home/default.aspx",
+          "sha256": "7affcf18c7d477f451b51b4b94b8ea25878f6a7fa5d7eecebad4305b281962b2",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:34:35.037282+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2025-12-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2025-12-31: omzet 200.966.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 22.2%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 60.458.000.000 USD; operationele kasstroom 115.800.000.000 USD; vrije kasstroom 46.109.000.000 USD. Indicatieve nettomarge 30.1%. Operationele kasstroom/positieve jaarwinst 1.92×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 83.897.000.000 USD, liquide middelen 35.873.000.000 USD. Indicatieve netto-schuld 48.024.000.000 USD. Netto-schuld/vrije kasstroom 1.04×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -1.5%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 64.601.000.000 USD; 26.1% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "WMT",
+      "name": "Walmart",
+      "calendar_url": "https://corporate.walmart.com/news/events/fy2027-q3-earnings-release",
+      "questions": [
+        "Vergelijkbare winkelomzet en e-commerce",
+        "Brutomarge, voorraad en productmix",
+        "Consumentenvraag en winstvooruitzichten"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/104169/000119312526429539/d184548d8k.htm",
+          "sha256": "cdc971f2cdafcca754fda7c132bdcb9c9ea56817942d6e8d2521a99d0d4a7358",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:34:23.630883+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "sha256": "dbb36922d9c88d49f4cde0dbce4f26101a26248efb21dc0629d3596ce004e933",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:34:23.884300+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000055/wmt-20260131.htm",
+          "sha256": "492882232f53d24814380a5ca5e0da98a4788d2be61a0f57d56c55a119b56744",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:34:24.420270+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://stock.walmart.com/",
+          "sha256": "d875d03ce20adb4755ccc84573eb7e9936b1b7ec31bb5b7ec76bbd9de6464d15",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:34:26.046417+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://corporate.walmart.com/news/2026/08/20/walmart-releases-q2-fy27-earnings",
+          "sha256": "e07f7400f8e960349813945308fd30595f681fe564db28b323a2b60a87e3893b",
+          "kind": "linked_financial_publication",
+          "known_at": "2026-11-12T12:34:26.490216+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2026-01-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-01-31: omzet 713.163.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 4.7%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 21.893.000.000 USD; operationele kasstroom 41.565.000.000 USD; vrije kasstroom 14.923.000.000 USD. Indicatieve nettomarge 3.1%. Operationele kasstroom/positieve jaarwinst 1.90×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 67.095.000.000 USD, liquide middelen 10.727.000.000 USD. Indicatieve netto-schuld 56.368.000.000 USD. Netto-schuld/vrije kasstroom 3.78×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -0.7%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-07-31: 187.937.000.000 USD; 5.9% tegenover 2025-07-31. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": {
+        "cycle_key": "FY2027-Q3",
+        "release_at": "2026-11-19T12:00:00Z",
+        "call_at": "2026-11-19T13:00:00Z",
+        "source_url": "https://corporate.walmart.com/news/events/fy2027-q3-earnings-release",
+        "evidence": "Walmart vermeldt publicatie op 19 november 2026 om circa 06:00 Central; call om 07:00 Central.",
+        "time_precision": "approximate_official_release"
+      }
+    },
+    {
+      "symbol": "COST",
+      "name": "Costco",
+      "calendar_url": "https://investor.costco.com/events-and-presentations/",
+      "questions": [
+        "Maandverkopen en vergelijkbare omzet",
+        "Lidmaatschapsinkomsten en verlengingen",
+        "Marge exclusief brandstof- en valuta-effecten"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000134/cost-20261107.htm",
+          "sha256": "0410bb88813b999fe27d5b953ec5ef92c0eda4b5cbcd184f95f357fd2db601c5",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:34:22.911687+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000093/cost-20260830.htm",
+          "sha256": "0f8b3c0ce52a5182d5d5182b978abce7b093092ee97aa14bbd6ddf643eb910b0",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:34:23.272761+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000051/cost-20260510.htm",
+          "sha256": "d24388a4accc05464684b70cab829e6797022053f15ddee35cbd36e86217dce0",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:34:23.597153+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.costco.com/overview/default.aspx",
+          "sha256": "43526a3fdba889fc8eed172e1fbf2d3c1603703cb855bff96e2310bf01104d15",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:34:24.276092+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2026-08-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-08-31: omzet 303.154.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 10.1%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 9.226.000.000 USD; operationele kasstroom 15.817.000.000 USD; vrije kasstroom 9.382.000.000 USD. Indicatieve nettomarge 3.0%. Operationele kasstroom/positieve jaarwinst 1.71×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 8.576.000.000 USD, liquide middelen 20.207.000.000 USD. Indicatieve netto-schuld -11.631.000.000 USD. Netto-schuld/vrije kasstroom -1.24×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met 0.0%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-08-31: 95.723.000.000 USD; 11.1% tegenover 2025-08-31. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "V",
+      "name": "Visa",
+      "calendar_url": "https://investor.visa.com/events-calendar/default.aspx",
+      "questions": [
+        "Betaalvolumes en grensoverschrijdende betalingen",
+        "Verwerkte transacties en vergoedingen",
+        "Kosten, regelgeving en consumentenvraag"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000134/v-20260930.htm",
+          "sha256": "4cbf0658f8e2032f1e9d0caae3d8659ad8abf136fcb65b57cb5957356f992935",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:33:57.295280+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000126/v-20261027.htm",
+          "sha256": "981e039be20b53d4fdfcc9b71d652a2d61cb9bce8d74d5b0add33c59fdf7931b",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:33:57.566816+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "sha256": "80fc9b30db07e489f1482b32884af3bc147429fc81734e49b79601d97ade11f2",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:33:58.046457+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.visa.com/",
+          "sha256": "7442a1d83f1c36ff2077a74de8a5983d8ae1789bbfa998b059bd8aa9e5d268e4",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:33:58.517895+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2026-09-30",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2026-09-30: omzet 45.903.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 14.8%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 23.504.000.000 USD; operationele kasstroom 23.728.000.000 USD; vrije kasstroom 22.057.000.000 USD. Indicatieve nettomarge 51.2%. Operationele kasstroom/positieve jaarwinst 1.01×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 22.071.000.000 USD, liquide middelen 12.938.000.000 USD. Indicatieve netto-schuld 9.133.000.000 USD. Netto-schuld/vrije kasstroom 0.41×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -4.0%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 12.139.000.000 USD; 13.2% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    },
+    {
+      "symbol": "MA",
+      "name": "Mastercard",
+      "calendar_url": "https://investor.mastercard.com/investor-news/default.aspx",
+      "questions": [
+        "Betaalvolumes en grensoverschrijdende groei",
+        "Value-added services en operationele marge",
+        "Valuta, regelgeving en consumentenvraag"
+      ],
+      "source_refs": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1141391/000114139126000124/ma-20260930.htm",
+          "sha256": "94b396995ecc812017535efcd063a13c022ae54c3f31b1b007973157c0717a1b",
+          "kind": "10-Q",
+          "known_at": "2026-11-12T12:33:57.875820+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1141391/000114139126000122/ma-20261029.htm",
+          "sha256": "a7968fae939595314133ab173509488b3d3941e42afc8f09c51d3bf7516c08df",
+          "kind": "8-K",
+          "known_at": "2026-11-12T12:33:58.089410+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1141391/000114139126000013/ma-20251231.htm",
+          "sha256": "8c721fb2c41b9f637d59c3514ad6cfc20cd5a13df3c0ef4c051599b3c5d3440d",
+          "kind": "10-K",
+          "known_at": "2026-11-12T12:33:58.632466+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        },
+        {
+          "url": "https://investor.mastercard.com/overview/default.aspx",
+          "sha256": "205a00d5f85045374d8a8f40804ef4f9b859314c0c107e734aaa0555c074eb67",
+          "kind": "issuer_IR",
+          "known_at": "2026-11-12T12:33:59.351237+00:00",
+          "read_scope": "HTML text extraction; selected passages, not full audited review"
+        }
+      ],
+      "financial_known_at": "2026-11-10T10:18:20.037Z",
+      "financial_period": "2025-12-31",
+      "context": [
+        {
+          "topic": "Omzet en groei",
+          "text": "Jaarperiode 2025-12-31: omzet 32.791.000.000 USD. Verandering tegenover de vergelijkbare opgeslagen jaarperiode: 16.4%. Groei kan mede door overnames of valuta komen."
+        },
+        {
+          "topic": "Winstkwaliteit",
+          "text": "Jaarwinst 14.968.000.000 USD; operationele kasstroom 17.648.000.000 USD; vrije kasstroom 16.433.000.000 USD. Indicatieve nettomarge 45.6%. Operationele kasstroom/positieve jaarwinst 1.18×; eenmalige posten, werkkapitaal en aandelenbeloning moeten apart worden beoordeeld."
+        },
+        {
+          "topic": "Financiering",
+          "text": "Binnen dezelfde jaarmomentopname: schuld 19.000.000.000 USD, liquide middelen 10.566.000.000 USD. Indicatieve netto-schuld 8.434.000.000 USD. Netto-schuld/vrije kasstroom 0.51×. Dit is geen volledige liquiditeitstoets: recente emissies, aflossingskalender, leaseverplichtingen en convenanten kunnen ontbreken."
+        },
+        {
+          "topic": "Verwatering",
+          "text": "Gewogen verwaterd jaaraandelenaantal verandert met -2.3%. Dit is niet hetzelfde als het actuele uitstaande aantal; aandelenbeloning en terugkoop vragen verdere controle."
+        },
+        {
+          "topic": "Recente kwartaalontwikkeling",
+          "text": "Kwartaalomzet 2026-09-30: 9.807.000.000 USD; 14.0% tegenover 2025-09-30. Geen consensusvergelijking of verrassing vastgesteld."
+        }
+      ],
+      "gaps": [
+        "Analistenconsensus niet onafhankelijk geverifieerd.",
+        "Nieuwe kwartaalverwachting nog inhoudelijk op te stellen; bronkaart is geen voorspelling.",
+        "Calltranscript en volgende publicatiedatum alleen bevestigd indien afzonderlijk onderbouwd."
+      ],
+      "selection": "Officiële SEC-rapportteksten reeds opgehaald; selectie op bronbeschikbaarheid, niet op verwacht rendement.",
+      "checked_at": "2026-11-12T16:11:40.597135+00:00",
+      "event": null
+    }
+  ]
+}
