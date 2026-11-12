@@ -1,0 +1,13 @@
+import assert from'node:assert/strict';
+import{referenceResult,collectReference}from'../functions/_shared/project-followup.js';
+import{encryptArchive,decryptArchive}from'../functions/_shared/private-archive.js';
+import{followupMarkup}from'../web/project-followup.js';
+const time=Date.parse('2026-11-16T06:55:00Z'),input={started_at:'2026-11-12T13:00:00Z',benchmark:{}},bar=d=>Date.parse(d+'T08:00:00Z')/1000;
+const data={chart:{result:[{meta:{symbol:'VWCE.DE',currency:'EUR',instrumentType:'ETF',exchangeTimezoneName:'Europe/Berlin'},timestamp:[bar('2026-11-12'),bar('2026-11-13'),bar('2026-11-16')],indicators:{quote:[{close:[140,142,150]}]},events:{}}]}};
+assert.equal(referenceResult(data,input,time).day,'2026-11-13');assert.equal(referenceResult(data,{...input,started_at:'2026-11-13T13:00:00Z'},time).status,'waiting_future_session');
+const other=structuredClone(data);other.chart.result[0].meta.currency='USD';assert.throws(()=>referenceResult(other,input,time),/identity/);
+const split=structuredClone(data);split.chart.result[0].events.splits={a:{date:bar('2026-11-13')}};assert.equal(referenceResult(split,{...input,benchmark:{entry_day:'2026-11-13'}},time).status,'corporate_action_review');
+await assert.rejects(()=>collectReference(input,{fetcher:async()=>new Response('blocked',{status:429}),time}),/http_429/);
+const secret='12'.repeat(32),raw='{"amount":0.12345678901234567890,"tables":{"capital_runtime":[{"cash":2000}]}}';const encrypted=await encryptArchive(raw,secret);assert(!encrypted.includes('capital_runtime'));assert.equal(await decryptArchive(encrypted,secret),raw);await assert.rejects(()=>decryptArchive(encrypted,'34'.repeat(32)));const broken=JSON.parse(encrypted);broken.aad='wrong';await assert.rejects(()=>decryptArchive(JSON.stringify(broken),secret));
+const html=followupMarkup({runtime:{diagnostics:{},broker_tax:{}},queue:[{symbol:'<img src=x>',reasons:['qualitative_review_missing']}],history:[],archives:[]});assert(!html.includes('<img'));assert(html.includes('nog niet persoonlijk geverifieerd'));assert(html.includes('geen realtime brokerstop')||!html.includes('geverifieerd realtime'));assert(html.includes('geen bevestigd archief')||html.includes('Nog geen bevestigd archief'));
+console.log('Followup passed: prospective timing, identity, corporate-action gate, HTTP429 stop, authenticated encryption, exact precision preservation, wrong-key rejection and inert UI.');
