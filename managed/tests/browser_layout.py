@@ -71,7 +71,7 @@ async def main():
     if name=='settings':
      await page.locator('#mainRoutineStatus').get_by_text('Hoofdkoersroutine:',exact=False).wait_for(state='visible')
      if'traffic-budget'in fixtures:
-      await page.locator('#trafficBudget h2').wait_for(state='visible');assert'Dataverkeer en opslag zijn aparte meters'in await page.locator('#trafficBudget').inner_text();assert'4 GB'in await page.locator('#trafficBudget').inner_text();assert'500 MB'in await page.locator('#trafficBudget').inner_text();await page.locator('#trafficBudget').screenshot(path=str(ROOT/f'.data/managed/traffic-budget-{width}.png'))
+      await page.locator('#trafficBudget h2').wait_for(state='visible');assert'Dataverkeer en opslag zijn aparte meters'in await page.locator('#trafficBudget').inner_text();assert'4 GB'in await page.locator('#trafficBudget').inner_text();assert'500 MB'in await page.locator('#trafficBudget').inner_text();assert await page.locator('#trafficBudget .table-wrap').evaluate('(e)=>e.scrollWidth<=e.clientWidth');await page.locator('#trafficBudget').screenshot(path=str(ROOT/f'.data/managed/traffic-budget-{width}.png'))
     assert await page.locator('body').evaluate('(e)=>e.scrollWidth<=innerWidth'),(width,name)
     assert not errors,errors
    assert not actions,actions
