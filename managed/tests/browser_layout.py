@@ -68,7 +68,10 @@ async def main():
      await page.locator('#fundComparison summary').click();await page.locator('#fundComparison table').wait_for(state='visible');assert'Berkshire'in await page.locator('#strategyReview').inner_text();assert'undefined'not in await page.locator('#learningBody').inner_text()
      if'companies'in fixtures:
       await page.locator('#companyReview h2').wait_for(state='visible');await page.locator('#companyReview summary').filter(has_text='Dekking van alle').click();assert await page.locator('#companyCoverage tbody tr').count()==100;assert'Eerst het bedrijf'in await page.locator('#companyReview').inner_text()
-    if name=='settings':await page.locator('#mainRoutineStatus').get_by_text('Hoofdkoersroutine:',exact=False).wait_for(state='visible')
+    if name=='settings':
+     await page.locator('#mainRoutineStatus').get_by_text('Hoofdkoersroutine:',exact=False).wait_for(state='visible')
+     if'traffic-budget'in fixtures:
+      await page.locator('#trafficBudget h2').wait_for(state='visible');assert'Dataverkeer en opslag zijn aparte meters'in await page.locator('#trafficBudget').inner_text();assert'4 GB'in await page.locator('#trafficBudget').inner_text();assert'500 MB'in await page.locator('#trafficBudget').inner_text();await page.locator('#trafficBudget').screenshot(path=str(ROOT/f'.data/managed/traffic-budget-{width}.png'))
     assert await page.locator('body').evaluate('(e)=>e.scrollWidth<=innerWidth'),(width,name)
     assert not errors,errors
    assert not actions,actions

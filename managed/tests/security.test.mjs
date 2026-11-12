@@ -32,6 +32,7 @@ function mock({user={id:uid},session=true}={}){
   if(String(url).endsWith('/paper_session'))return Response.json(session);
   if(String(url).endsWith('/paper_iex_read'))return Response.json({runtime:{status:'observing'}});
   if(String(url).endsWith('/paper_iex_action'))return Response.json(true);
+  if(String(url).endsWith('/paper_traffic_budget_read'))return Response.json({policy:{version:'traffic-budget-v2'}});
   if(String(url).endsWith('/paper_source_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_coverage_read'))return Response.json({counts:{companies:100},records:[]});
   if(String(url).endsWith('/paper_company_summary'))return Response.json({profile:'test'});
@@ -182,3 +183,5 @@ test('source reliability stays owner-MFA private and source collection needs the
  globalThis.fetch=()=>{throw Error('Must not reach database');};
  for(const headers of [{},{Authorization:'Bearer '+jwt()}])assert.equal((await sourceHandler(new Request('https://test/functions/v1/paper-source-resilience',{method:'POST',headers,body:'{}'}))).status,401);
 });
+
+test('traffic and storage meters require owner MFA and a current application session',async()=>{mock();assert.equal((await apiHandler(req({query:'?traffic-budget=1',token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?traffic-budget=1'}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?traffic-budget=1'}))).status,401);});

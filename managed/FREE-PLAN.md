@@ -1,5 +1,14 @@
 # Gratis proef: verbruik en grenzen
 
+**Actualisatie 12 november 2026:** de gezamenlijke app-raming voor dataverkeer is
+op verzoek verhoogd naar maximaal **4 GB per UTC-kalendermaand**. Waarschuwing vanaf
+2,8 GB; extra onderzoek en nieuwe instappen worden vanaf 3,2 GB begrensd. De oude
+lagere globale transferwaarden in historische onderdelen hieronder worden door
+SQL026 overschreven. Opslag- en eigen onderzoeksbudgetten blijven behouden.
+Zie [de actuele begroting en beperkingen](TRAFFIC-BUDGET.md). Supabase Free biedt
+5 GB ongecachet verkeer en afzonderlijk 5 GB gecachet verkeer; databaseopslag is
+500 MB. De app-raming is geen volledige provider- of organisatiemeting.
+
 Bijgewerkt op 4 november 2026. Op aanvullend verzoek loopt de paperproef
 **door zonder vaste einddatum**, zolang risico- en gratis verbruiksbudgetten dit toelaten.
 Er is geen betaald plan, betaalde server, disk, domein, SMS of AI-model geactiveerd.

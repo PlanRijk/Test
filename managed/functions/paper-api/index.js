@@ -32,6 +32,7 @@ export async function handler(request){
       return reply({error:'Sessie verlopen. Meld opnieuw aan.'},401,origin);
     }
     if(request.method==='GET'){
+      if(url.searchParams.has('traffic-budget'))return reply(await rpc('paper_traffic_budget_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('strategy-audit')){const d=await rpc('paper_strategy_audit_read',{p_owner:user.id});try{d.exit_diagnostic=exitAudit(await rpc('paper_exit_audit_input',{p_owner:user.id}));}catch{d.exit_diagnostic_unavailable=true;}return reply(d,200,origin);}
       if(url.searchParams.has('profit-exits'))return reply(await rpc('paper_net_exit_read',{p_owner:user.id}),200,origin);
       if(url.searchParams.has('dashboard')){const d=await rpc('paper_dashboard_read',{p_owner:user.id});try{d.profit_exits=await rpc('paper_net_exit_read',{p_owner:user.id});}catch{d.exits_unavailable=true;}try{d.company_entry=await rpc('paper_company_summary',{p_owner:user.id});}catch{d.company_unavailable=true;}return reply(d,200,origin);}
