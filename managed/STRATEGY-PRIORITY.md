@@ -1,3 +1,5 @@
+> Deze onderzoeksstop beschrijft de eerdere fase. Na expliciet verzoek van de eigenaar is de nieuwe **paper**motor ingevoerd; zie [DAILY-WEEKLY-SWING.md](DAILY-WEEKLY-SWING.md). Eerdere resultaten en bestaande lots blijven behouden.
+
 # Nieuwe prioriteit: samenhang en netto bewijs vóór nieuwe instap
 
 Besluit op 12 november 2026 na opdracht van de eigenaar om de beste benadering
