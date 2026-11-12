@@ -1,0 +1,14 @@
+{
+  "version": "qualitative-pilot-v1",
+  "enabled": false,
+  "monthly_limit_usd": 0,
+  "model": "gpt-6.1-sol",
+  "input_usd_per_million": 2,
+  "output_usd_per_million": 10,
+  "pricing_checked_at": "2026-11-12",
+  "pricing_source": "https://developers.openai.com/api/docs/pricing",
+  "max_source_characters": 80000,
+  "max_output_tokens": 4000,
+  "automatic_trade_approval": false,
+  "status": "Awaiting protected API key, user budget and pilot evaluation"
+}
