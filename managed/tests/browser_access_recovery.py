@@ -20,7 +20,10 @@ async def main():
     if host!='paperlab.test':await r.continue_();return
     file=ROOT/'managed/web'/u.path.lstrip('/');assert file.is_file()
     await r.fulfill(body=file.read_bytes(),content_type='text/html'if file.suffix=='.html'else'text/css'if file.suffix=='.css'else'application/json'if file.suffix=='.json'else'text/javascript')
-   await context.route('**/*',route);await page.goto(target+'/access-recovery.html');await page.locator('#accessRecoveryEncrypt').wait_for(state='visible')
+   await context.route('**/*',route);await page.goto(target+'/access-recovery.html')
+   if os.environ.get('PAPERLAB_RECOVERY_EXPECT_CLOSED')=='1':
+    await page.locator('#accessRecoveryStatus').filter(has_text='Deze herstelronde is afgesloten').wait_for();assert await page.locator('#accessRecoveryForm').is_hidden();assert await page.locator('#accessRecoveryEncrypt').is_disabled();assert not errors;assert all(r['method']=='GET'for r in requests);print('Recovery closed browser passed',width,': closed form, disabled encryption and no network writes.');await context.close();continue
+   await page.locator('#accessRecoveryEncrypt').wait_for(state='visible')
    await page.wait_for_function("()=>!document.getElementById('accessRecoveryEncrypt').disabled")
    await page.locator('#accessRecoveryToken').fill(dummy);count=len(requests);await page.locator('#accessRecoveryEncrypt').click();await page.locator('#accessRecoveryResult').wait_for(state='visible');envelope=await page.locator('#accessRecoveryOutput').input_value()
    assert decode(envelope)['t']==dummy;assert not await page.locator('#accessRecoveryToken').input_value();assert dummy not in await page.locator('body').inner_text();assert len(requests)==count
