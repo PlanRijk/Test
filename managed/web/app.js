@@ -269,3 +269,5 @@ $('#closeCompanyDossier').onclick=()=>$('#companyDossier').close();
 document.addEventListener('click',e=>{const b=e.target.closest('[data-company-source]');if(!b)return;busy(b,async()=>{const [d,r]=await Promise.all([api('?company-coverage='+encodeURIComponent(b.dataset.companySource)),api('?source-reliability='+encodeURIComponent(b.dataset.companySource)).catch(()=>({}))]);$('#companyDossierBody').innerHTML=sourceReliabilityDetail(r)+coverageDetail(d);$('#companyDossier').showModal();});});
 
 async function loadTrafficBudget(){try{$('#trafficBudget').innerHTML=trafficBudgetMarkup(await api('?traffic-budget=1'));}catch{$('#trafficBudget').textContent='De verkeers- en opslagmeters konden niet worden opgehaald.';}}
+
+document.addEventListener('click',e=>{const b=e.target.closest('[data-project-archive]');if(!b)return;busy(b,async()=>{const d=await api('?project-archive='+encodeURIComponent(b.dataset.projectArchive));const u=new URL(d.url);if(u.protocol!=='https:'||u.hostname!==new URL(CONFIG.url).hostname)throw Error('Ongeldige downloadlink.');const a=document.createElement('a');a.href=d.url;a.target='_blank';a.rel='noopener noreferrer';a.click();});});
