@@ -226,3 +226,5 @@ in chat of Git. Het beheercommando na herstel is
 `python scripts/access_recovery.py run scripts/managed_status.py`.
 
 De actuele paperhandelsmotor en alle vastgelegde dag-/weekregels staan in [DAILY-WEEKLY-SWING.md](DAILY-WEEKLY-SWING.md). Nieuwe posities gebruiken `quality-swing-paper-v1`; oude lots houden hun eerdere verkoopbeleid.
+
+De gratis, afzonderlijke kwartaalpilot voor tien bedrijven, planning, vastlegging en beperkingen staan in [EARNINGS-PILOT.md](EARNINGS-PILOT.md). De pilot geeft geen koopgoedkeuring.
