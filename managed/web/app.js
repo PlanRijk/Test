@@ -1,3 +1,4 @@
+import {forecastFromForm} from './earnings-pilot.js';
 import{trafficBudgetMarkup}from'./traffic-budget.js';
 import{sourceReliabilityOverview,sourceReliabilityDetail}from'./source-reliability.js';
 import{strategyAuditMarkup}from'./strategy-audit.js';
@@ -271,3 +272,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-company-so
 async function loadTrafficBudget(){try{$('#trafficBudget').innerHTML=trafficBudgetMarkup(await api('?traffic-budget=1'));}catch{$('#trafficBudget').textContent='De verkeers- en opslagmeters konden niet worden opgehaald.';}}
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-project-archive]');if(!b)return;busy(b,async()=>{const d=await api('?project-archive='+encodeURIComponent(b.dataset.projectArchive));const u=new URL(d.url);if(u.protocol!=='https:'||u.hostname!==new URL(CONFIG.url).hostname)throw Error('Ongeldige downloadlink.');const a=document.createElement('a');a.href=d.url;a.target='_blank';a.rel='noopener noreferrer';a.click();});});
+
+document.addEventListener('submit',e=>{const f=e.target.closest('[data-earnings-form]');if(!f)return;e.preventDefault();const button=f.querySelector('button[type=submit]');busy(button,async()=>{const status=f.querySelector('[data-earnings-status]');try{await api('',{action:'earnings-freeze',...forecastFromForm(f)});status.textContent='Verwachting definitief opgeslagen. Heropen het dossier om de vastgelegde versie te bekijken.';f.innerHTML='<p role="status">Definitief opgeslagen. Heropen het dossier om de actuele vastgelegde gegevens te bekijken.</p>';}catch{status.textContent='Niet opgeslagen. Controleer de scenario’s, bronnen en deadline. Een eerdere vastlegging kan niet worden overschreven.';}});});
+
+document.addEventListener('submit',e=>{const f=e.target.closest('[data-earnings-review]');if(!f)return;e.preventDefault();busy(f.querySelector('button'),async()=>{const v=new FormData(f),status=f.querySelector('[role=status]');try{await api('',{action:'earnings-review',task:f.dataset.earningsReview,note:v.get('note'),source_url:v.get('source_url')});status.textContent='Controle met tijdstip en bron opgeslagen. Heropen het dossier voor de actuele status.';f.innerHTML='<p role="status">Definitief opgeslagen. Heropen het dossier om de actuele vastgelegde gegevens te bekijken.</p>';}catch{status.textContent='Controle niet opgeslagen: bron, planning of eerdere afronding controleren.';}});});
