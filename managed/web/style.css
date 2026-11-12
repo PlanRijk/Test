@@ -26,3 +26,5 @@
 #trafficBudget table{table-layout:fixed}#trafficBudget th{width:62%;white-space:normal}#trafficBudget th,#trafficBudget td{padding:12px}#trafficBudget td{overflow-wrap:anywhere}
 
 .company-research{min-width:0;overflow-wrap:anywhere}.company-research blockquote{margin:12px 0;padding:12px;border-left:3px solid var(--line,#aaa);max-width:100%;white-space:normal}.company-research details{min-width:0}
+
+.company-research form{max-width:100%;min-width:0}.company-research form select,.company-research form textarea{width:100%;max-width:100%;min-width:0}.company-research textarea{font:inherit;min-height:110px;background:#0c1420;color:var(--text);border:1px solid #34445c;border-radius:9px;padding:12px;resize:vertical}
