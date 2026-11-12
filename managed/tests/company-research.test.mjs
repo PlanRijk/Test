@@ -1,0 +1,5 @@
+import assert from'node:assert/strict';
+import{researchOverview,researchDetail}from'../web/company-research.js';
+const r={checked_at:new Date().toISOString(),findings:[{topic:'Liquiditeit',text:'<img src=x onerror=alert(1)>'}],sources:[{url:'javascript:alert(1)',kind:'<script>',passages:[{text:'<svg onload=alert(1)>',truncated:true}]}],gaps:['Niet volledig beoordeeld'],filings:[],source_failures:[]};
+const html=researchDetail({record:r});assert(!html.includes('<img'));assert(!html.includes('<svg'));assert(!html.includes('href="javascript:'));assert(html.includes('&lt;script&gt;'));assert(html.includes('geen koopgoedkeuring'));assert(html.includes('Niet volledig beoordeeld'));assert(researchOverview({counts:{companies:100,with_documents:99,with_gaps:100}}).includes('100 bedrijven'));assert(researchDetail({}).includes('nog geen uitgebreid onderzoek'));assert(researchOverview(null).includes('niet beschikbaar'));
+console.log('Research UI: source escaping, unsafe links, missing data and no implied approval passed.');
