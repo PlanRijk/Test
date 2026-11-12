@@ -12,6 +12,23 @@ daguitkomsten bij Onderzoeksresultaten; koopkritiek en modellen apart. De oude
 €500-referentie blijft bereikbaar via Instellingen. Zie [IEX-RESEARCH.md](IEX-RESEARCH.md)
 en [FUND-COMPARISON.md](FUND-COMPARISON.md).
 
+## Actualisatie onderzoek en herstel — 12 november 2026
+
+Alle honderd bedrijven hebben een uitgebreid financieel onderzoeksdossier.
+Er zijn 314 officiële pagina's/documenten opgehaald voor 99 bedrijven; ontbrekend
+bewijs blijft zichtbaar. De dagelijkse onderzoekswachtrij en publicatiemonitor,
+begrensde versiegeschiedenis, prospectieve wereldwijde ETF-referentie en
+versleutelde bron-/applicatiearchieven staan beschreven in
+[PROJECT-FOLLOWUP.md](PROJECT-FOLLOWUP.md). De eerste herstelkopie is teruggelezen,
+ontsleuteld en met geselecteerde financiële gegevens offline gerepeteerd; dit
+is geen volledige Supabase Auth/MFA/providerbackup.
+
+Volledige modelmatige tekstbeoordeling is **niet geactiveerd**. De geteste
+pilotadapter, broncontroles en kostenraming staan in
+[QUALITATIVE-AUTOMATION.md](QUALITATIVE-AUTOMATION.md). API-key, expliciet budget,
+gedeeld kostenregister en pilotbeoordeling zijn nodig vóór betaalde verwerking.
+Er is geen bewezen winstgevendheid of automatische goedkeuring toegevoegd.
+
 ## Vijf bedrijfspijlers
 
 Vanaf 10 november krijgen nieuwe actieve €10.000-paperaankopen een verplichte
