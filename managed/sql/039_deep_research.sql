@@ -1,6 +1,7 @@
 -- Full cached-document research, per-model quotas and durable task checkpoints.
 begin;
 create table if not exists paperlab.deep_runtime(singleton boolean primary key default true check(singleton),enabled boolean not null default false,token uuid,lease_until timestamptz,job_id text,last_attempt timestamptz,last_success timestamptz,status text not null default 'not_enabled',month date,estimated_bytes bigint not null default 0);
+alter table paperlab.deep_runtime add column if not exists transfer_reserved int not null default 0;
 insert into paperlab.deep_runtime(singleton)values(true)on conflict do nothing;
 create table if not exists paperlab.deep_models(model text primary key,daily_limit int not null,rpm int not null,tpm int not null,day date,used int not null default 0,minute timestamptz,minute_used int not null default 0,minute_tokens int not null default 0,retry_after timestamptz,last_status text,check(model in('gemini-3.5-flash-lite','gemini-3.8-flash')),check(daily_limit between 1 and 500));
 insert into paperlab.deep_models(model,daily_limit,rpm,tpm)values('gemini-3.5-flash-lite',500,15,250000),('gemini-3.8-flash',20,5,250000)on conflict do nothing;
@@ -16,7 +17,7 @@ create or replace function paperlab.deep_add_document(x jsonb)returns text langu
  if pg_database_size(current_database())>97000000 then raise exception 'Document cache database budget';end if;
  insert into paperlab.deep_companies(symbol,priority)values(s,coalesce((select priority from paperlab.research_queue where symbol=s),10))on conflict do nothing;
  i:=encode(sha256(convert_to(s||'|'||(x->>'url')||'|'||(x->>'sha256'),'UTF8')),'hex');
- if exists(select 1 from paperlab.deep_documents where id=i)then update paperlab.deep_documents set body=x->>'text'where id=i and body=''and body_sha256=encode(sha256(convert_to(x->>'text','UTF8')),'hex');return i;end if;
+ if exists(select 1 from paperlab.deep_documents where id=i)then update paperlab.deep_documents set body=x->>'text'where id=i and body=''and body_sha256=encode(sha256(convert_to(x->>'text','UTF8')),'hex');for n in 0..coalesce((select chunks-1 from paperlab.deep_documents where id=i and active),-1)loop insert into paperlab.deep_jobs(id,symbol,stage,model,doc_id,chunk_no,priority)values(i||':chunk:'||n,s,'extract','gemini-3.5-flash-lite',i,n,coalesce((select priority from paperlab.deep_companies where symbol=s),10))on conflict do nothing;end loop;return i;end if;
  count_chunks:=ceil(length(x->>'text')/7000.0)::int;
  insert into paperlab.deep_documents(id,symbol,url,sha256,body_sha256,body,kind,role,known_at,filed_at,scope,complete_extraction,characters,chunks)values(i,s,x->>'url',x->>'sha256',encode(sha256(convert_to(x->>'text','UTF8')),'hex'),x->>'text',x->>'kind',x->>'role',(x->>'known_at')::timestamptz,nullif(x->>'filed_at','')::date,x->>'scope',(x->>'complete_extraction')::boolean,length(x->>'text'),count_chunks);
  -- Same URL content editions supersede older editions; annual/quarter forms keep one latest edition each.
@@ -83,16 +84,22 @@ declare r paperlab.deep_runtime;j paperlab.deep_jobs;b paperlab.deep_models;doc 
   update paperlab.deep_models set used=used+1,minute_used=minute_used+1,minute_tokens=minute_tokens+token_bound,last_status='reserved'where model=j.model;
  end if;
  t:=gen_random_uuid();update paperlab.deep_jobs set status='leased',token=t,lease_until=now()+interval'240 seconds',attempts=attempts+1 where id=j.id;
- update paperlab.deep_runtime set token=t,lease_until=now()+interval'240 seconds',job_id=j.id,last_attempt=now(),status='processing_'||j.stage,month=m,estimated_bytes=r.estimated_bytes+charge where singleton;
+ update paperlab.deep_runtime set token=t,lease_until=now()+interval'240 seconds',job_id=j.id,last_attempt=now(),status='processing_'||j.stage,transfer_reserved=0,month=m,estimated_bytes=r.estimated_bytes+charge where singleton;
  update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+charge where month=m;
  return jsonb_build_object('token',t,'job',jsonb_build_object('id',j.id,'symbol',j.symbol,'stage',j.stage,'model',j.model,'pillar',j.pillar),'input',payload);
 end$$;
 create or replace function public.paper_deep_reserve_transfer(p_token uuid,p_bytes int)returns boolean language plpgsql security definer set search_path=pg_catalog,pg_temp as $$declare r paperlab.deep_runtime;m date:=date_trunc('month',now()at time zone'UTC')::date;begin
  select *into r from paperlab.deep_runtime where singleton and token=p_token and lease_until>now()for update;
- if not found or p_bytes not between 1 and 22000000 then raise exception 'Active bounded source request required';end if;
+ if not found or r.transfer_reserved<>0 or not exists(select 1 from paperlab.deep_jobs where token=p_token and stage='discover'and status='leased')or p_bytes not between 1 and 22000000 then raise exception 'Active bounded source request required';end if;
  insert into paperlab.free_usage(month)values(m)on conflict do nothing;perform 1 from paperlab.free_usage where month=m for update;
  if r.estimated_bytes+p_bytes>1200000000 or(select estimated_worker_egress_bytes+p_bytes from paperlab.free_usage where month=m)>paperlab.traffic_limit('soft')then raise exception 'Source transfer budget';end if;
- update paperlab.deep_runtime set estimated_bytes=estimated_bytes+p_bytes where singleton;update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+p_bytes where month=m;return true;
+ update paperlab.deep_runtime set estimated_bytes=estimated_bytes+p_bytes,transfer_reserved=p_bytes where singleton;update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+p_bytes where month=m;return true;
+end$$;
+create or replace function public.paper_deep_settle_transfer(p_token uuid,p_used int)returns boolean language plpgsql security definer set search_path=pg_catalog,pg_temp as $$declare r paperlab.deep_runtime;m date:=date_trunc('month',now()at time zone'UTC')::date;refund int;begin
+ select *into r from paperlab.deep_runtime where singleton and token=p_token and lease_until>now()for update;
+ if not found or r.transfer_reserved=0 or p_used not between 1000 and r.transfer_reserved then raise exception 'Active transfer reservation required';end if;
+ refund:=r.transfer_reserved-p_used;update paperlab.deep_runtime set transfer_reserved=0,estimated_bytes=greatest(0,estimated_bytes-refund)where singleton;
+ update paperlab.free_usage set estimated_worker_egress_bytes=greatest(0,estimated_worker_egress_bytes-refund)where month=m;return true;
 end$$;
 create or replace function public.paper_deep_ingest(p_token uuid,p_rows jsonb,p_gaps jsonb default '[]')returns int language plpgsql security definer set search_path=pg_catalog,pg_temp as $$declare j paperlab.deep_jobs;x jsonb;n int:=0;begin
  select *into j from paperlab.deep_jobs where token=p_token and status='leased'and lease_until>now()and stage='discover'for update;if not found then raise exception 'Active discovery required';end if;
@@ -149,6 +156,6 @@ create or replace function public.paper_deep_read(p_owner uuid,p_symbol text def
 end$$;
 do $$begin if to_regprocedure('public.paper_project_read_deep_base_v1(uuid,text)')is null then alter function public.paper_project_read(uuid,text)rename to paper_project_read_deep_base_v1;end if;end$$;
 create or replace function public.paper_project_read(p_owner uuid,p_symbol text default null)returns jsonb language plpgsql security definer set search_path=pg_catalog,pg_temp as $$begin return public.paper_project_read_deep_base_v1(p_owner,p_symbol)||jsonb_build_object('deep_research',public.paper_deep_read(p_owner,p_symbol));end$$;
-revoke all on function public.paper_deep_seed(uuid,jsonb),public.paper_deep_enable(uuid),public.paper_deep_claim(),public.paper_deep_ingest(uuid,jsonb,jsonb),public.paper_deep_reserve_transfer(uuid,int),public.paper_deep_commit(uuid,jsonb),public.paper_deep_read(uuid,text),public.paper_project_read_deep_base_v1(uuid,text),public.paper_project_read(uuid,text)from public,anon,authenticated,service_role;
-grant execute on function public.paper_deep_claim(),public.paper_deep_ingest(uuid,jsonb,jsonb),public.paper_deep_reserve_transfer(uuid,int),public.paper_deep_commit(uuid,jsonb),public.paper_deep_read(uuid,text),public.paper_project_read(uuid,text)to service_role;
+revoke all on function public.paper_deep_seed(uuid,jsonb),public.paper_deep_enable(uuid),public.paper_deep_claim(),public.paper_deep_ingest(uuid,jsonb,jsonb),public.paper_deep_reserve_transfer(uuid,int),public.paper_deep_settle_transfer(uuid,int),public.paper_deep_commit(uuid,jsonb),public.paper_deep_read(uuid,text),public.paper_project_read_deep_base_v1(uuid,text),public.paper_project_read(uuid,text)from public,anon,authenticated,service_role;
+grant execute on function public.paper_deep_claim(),public.paper_deep_ingest(uuid,jsonb,jsonb),public.paper_deep_reserve_transfer(uuid,int),public.paper_deep_settle_transfer(uuid,int),public.paper_deep_commit(uuid,jsonb),public.paper_deep_read(uuid,text),public.paper_project_read(uuid,text)to service_role;
 commit;
