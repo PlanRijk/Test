@@ -236,3 +236,7 @@ De afzonderlijke openbare providerconsensus, aantallen analisten, periode-/valut
 De inhoudelijke onderzoeksvolgorde, afgebakende beoordelingen en hun kwaliteitsgrenzen staan in [RESEARCH-QUALITY.md](RESEARCH-QUALITY.md).
 
 De gratis, geplande Gemini-keten voor automatische tekstconcepten, broncontrole, limieten en beperkingen staat in [GEMINI-AUTOMATION.md](GEMINI-AUTOMATION.md). Hiervoor is geen actieve Codex-chat nodig; koopgoedkeuring blijft afzonderlijk.
+
+## Volledige bronteksten en automatische quotahervatting
+
+De nieuwe onderzoekswachtrij gebruikt het bestaande bevestigde gratis Google-project, met onafhankelijke daglimieten van 500 lichte en 20 zwaardere aanvragen, vaste tekstblokken en zes bedrijfspijlers. Een minuutcron hervat na quotavernieuwing of uitval. Zie [werking en beperkingen](DEEP-RESEARCH-PLAN.md). Modeldossiers zijn geen handelsgoedkeuring.
