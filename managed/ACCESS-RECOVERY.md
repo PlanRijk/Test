@@ -36,3 +36,24 @@ De wrapper leest de opgeslagen waarde vers uit Render, houdt haar in het geheuge
 en gebruikt uitsluitend `https://api.supabase.com/v1/`. Andere beheerclients en de
 geërfde proxy/CA-configuratie blijven intact. Scripts moeten onder `scripts/` staan.
 Geen extra hosting, betaald plan of echte brokerorders worden aangemaakt.
+
+## Gemini API-sleutel via versleuteld bericht
+
+`/gemini-connect.html` is een afzonderlijk browserformulier voor `GEMINI_API_KEY`.
+Genereer de publieke verbindingsconfiguratie met `python scripts/gemini_recovery.py generate`.
+De RSA-4096 privésleutel blijft buiten Git onder `/tmp/paperlab-gemini-connect/`.
+De publieke configuratie is maximaal 24 uur geldig; een bericht 30 minuten.
+Het formulier verstuurt de ingevulde sleutel niet en gebruikt geen browseropslag.
+
+Na ontvangst wordt uitsluitend het versleutelde bericht in een afgeschermd lokaal
+bestand gezet. `scripts/gemini_recovery.py accept ENCRYPTED_FILE` controleert de
+berichtcontext en vervaltijden, slaat de sleutel als Supabase Edge Function secret
+op en vergelijkt de teruggelezen SHA-256 digest. Het commando gebruikt de bestaande
+beheerclient. De provider-sleutel is daarmee nog niet getest: er worden geen
+modelaanvragen uitgevoerd en geen betaalde facturatie of handelsregels geactiveerd.
+Na succesvolle opslag worden de lokale verbinding gesloten en privésleutel verwijderd.
+Publiceer daarna ook de gesloten publieke configuratie om het formulier af te sluiten.
+Bij verlies van de tijdelijke privésleutel is een nieuwe verbindingsronde nodig.
+
+Controle met synthetische sleutel: `python managed/tests/browser_gemini_connect.py`.
+Voor de live pagina: `PAPERLAB_BROWSER_URL=https://paperlab-prive.onrender.com python managed/tests/browser_gemini_connect.py`.
