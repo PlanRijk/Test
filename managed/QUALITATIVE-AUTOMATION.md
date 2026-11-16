@@ -1,3 +1,5 @@
+> Update 16 november 2026: de aparte gratis [Gemini-keten](GEMINI-AUTOMATION.md) wordt gepland uitgevoerd. Het onderstaande is het eerdere OpenAI-voorstel; deze betaalde adapter blijft uitgeschakeld.
+
 # Automatische tekstbeoordeling: pilot en kostenraming
 
 Status op 12 november 2026: koppeling voorbereid en met synthetische antwoorden
