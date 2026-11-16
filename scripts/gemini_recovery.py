@@ -41,7 +41,7 @@ def accept(path):
  api.request('supabase','/v1/projects/'+REF+'/secrets','POST',[{'name':'GEMINI_API_KEY','value':token}])
  stored=api.request('supabase','/v1/projects/'+REF+'/secrets')
  row=next((x for x in stored if x.get('name')=='GEMINI_API_KEY'),{})
- if not secrets.compare_digest(row.get('digest',''),hashlib.sha256(token.encode()).hexdigest()):raise RuntimeError('Secret persistence could not be verified')
+ if not secrets.compare_digest(row.get('digest',row.get('value','')),hashlib.sha256(token.encode()).hexdigest()):raise RuntimeError('Secret persistence could not be verified')
  config=json.loads(PUBLIC.read_text());config['enabled']=False;PUBLIC.write_text(json.dumps(config,separators=(',',':'))+'\n');PRIVATE.unlink()
  return {'stored':True,'location':'Supabase Edge Function secret GEMINI_API_KEY','project':REF,'persistence_digest_verified':True,'provider_key_validated':False,'model_execution_enabled':False,'billing_changed':False,'connection_closed_locally':True,'private_key_removed':True}
 if __name__=='__main__':
