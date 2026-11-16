@@ -234,3 +234,5 @@ Automatische gratis rekenramingen voor de volledige catalogus staan in [QUARTERL
 De afzonderlijke openbare providerconsensus, aantallen analisten, periode-/valutacontroles en beperkingen staan in [ANALYST-CONSENSUS.md](ANALYST-CONSENSUS.md). Zij vervangt geen inhoudelijke goedkeuring.
 
 De inhoudelijke onderzoeksvolgorde, afgebakende beoordelingen en hun kwaliteitsgrenzen staan in [RESEARCH-QUALITY.md](RESEARCH-QUALITY.md).
+
+De gratis, geplande Gemini-keten voor automatische tekstconcepten, broncontrole, limieten en beperkingen staat in [GEMINI-AUTOMATION.md](GEMINI-AUTOMATION.md). Hiervoor is geen actieve Codex-chat nodig; koopgoedkeuring blijft afzonderlijk.
