@@ -232,3 +232,5 @@ De gratis, afzonderlijke kwartaalpilot voor tien bedrijven, planning, vastleggin
 Automatische gratis rekenramingen voor de volledige catalogus staan in [QUARTERLY-EXPECTATIONS.md](QUARTERLY-EXPECTATIONS.md). Zij zijn apart van de tienbedrijvenpilot, bedrijfsprognoses, consensus en handelsgoedkeuringen.
 
 De afzonderlijke openbare providerconsensus, aantallen analisten, periode-/valutacontroles en beperkingen staan in [ANALYST-CONSENSUS.md](ANALYST-CONSENSUS.md). Zij vervangt geen inhoudelijke goedkeuring.
+
+De inhoudelijke onderzoeksvolgorde, afgebakende beoordelingen en hun kwaliteitsgrenzen staan in [RESEARCH-QUALITY.md](RESEARCH-QUALITY.md).
