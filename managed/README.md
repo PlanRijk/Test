@@ -230,3 +230,5 @@ De actuele paperhandelsmotor en alle vastgelegde dag-/weekregels staan in [DAILY
 De gratis, afzonderlijke kwartaalpilot voor tien bedrijven, planning, vastlegging en beperkingen staan in [EARNINGS-PILOT.md](EARNINGS-PILOT.md). De pilot geeft geen koopgoedkeuring.
 
 Automatische gratis rekenramingen voor de volledige catalogus staan in [QUARTERLY-EXPECTATIONS.md](QUARTERLY-EXPECTATIONS.md). Zij zijn apart van de tienbedrijvenpilot, bedrijfsprognoses, consensus en handelsgoedkeuringen.
+
+De afzonderlijke openbare providerconsensus, aantallen analisten, periode-/valutacontroles en beperkingen staan in [ANALYST-CONSENSUS.md](ANALYST-CONSENSUS.md). Zij vervangt geen inhoudelijke goedkeuring.
