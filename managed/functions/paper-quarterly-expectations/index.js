@@ -1,0 +1,6 @@
+import {constantEqual,env,reply,rpc} from '../_shared/platform.js';
+import {fetchQuarterly,quarterlyBaseline} from '../_shared/quarterly-expectations.js';
+export async function handler(request){const secret=env('PAPERLAB_CRON_TOKEN');if(!secret||!constantEqual(request.headers.get('X-PaperLab-Cron')||'',secret))return reply({error:'Niet toegestaan.'},401);if(request.method!=='POST')return reply({error:'POST vereist.'},405);
+ try{const input=await rpc('paper_quarterly_claim');if(!input)return reply({status:'not_due_busy_or_budget'});const rows=[];let at=0;async function work(){while(at<input.targets.length){const t=input.targets[at++];try{rows.push(await fetchQuarterly(t));}catch{const x=quarterlyBaseline({...t,known_at:null,values:{} });rows.push({...x,status:'source_unavailable',gaps:['Financiële bron niet bevestigd; vorige raming wordt niet als actueel voorgesteld.']});}}}await Promise.all([work(),work(),work(),work()]);const saved=await rpc('paper_quarterly_commit',{p_token:input.token,p_rows:rows});return reply({status:saved?'updated':'superseded',companies:rows.length,baselines:rows.filter(r=>r.status==='baseline_available').length,paid_calls:false,trade_changes:false});}
+ catch{return reply({error:'Kwartaalramingen niet bevestigd; geen handelswijzigingen.'},503);}}
+if(globalThis.Deno?.serve)Deno.serve(handler);
