@@ -31,6 +31,11 @@ try:
  heavy=json.loads(q('select public.paper_deep_claim()'));assert heavy['job']['model']=='gemini-3.8-flash'
  pillar={'status':'completed','trade_approval':False,'independently_verified':False,'pillar':'risks','assessment':'This is an evidence-limited risk assessment and identifies missing financial and source coverage.','evidence_ids':[],'limitations':['No complete interim report'],'requires_more_data':True}
  assert q("select public.paper_deep_commit('"+heavy['token']+"',"+js(pillar)+')')=='t'
+ # When Lite is exhausted, free Flash can also read a real queued source block.
+ overflow=json.loads(q('select public.paper_deep_claim()'));assert overflow['job']['stage']=='extract';assert overflow['job']['model']=='gemini-3.8-flash'
+ q("select public.paper_deep_commit('"+overflow['token']+"',"+js(failure)+')')
+ q("update paperlab.deep_models set used=daily_limit")
+ assert q('select public.paper_deep_claim()')==''
  q("update paperlab.deep_models set used=0,retry_after=null;update paperlab.deep_jobs set available_at=now()where status='retry'")
  again=json.loads(q('select public.paper_deep_claim()'));assert again['job']['id']==c['job']['id'];assert again['input']['source']['text']==c['input']['source']['text']
  bad={'status':'completed','trade_approval':False,'independently_verified':False,'claims':[{'topic':'cash_earnings','finding':'A fabricated unsupported financial conclusion.','quote':'not in this source text'}],'no_material_information':False}
@@ -59,6 +64,14 @@ try:
  # Provider day is Pacific, not UTC; a new day clears local exhausted counters automatically.
  q("update paperlab.deep_models set day=(now()at time zone'America/Los_Angeles')::date-1,used=daily_limit;select public.paper_deep_claim()")
  assert q("select sum(used)from paperlab.deep_models")=='0'
+ # Source reservations are settled once against measured bytes, without weakening the shared guard.
+ q("insert into paperlab.deep_jobs(id,symbol,stage,priority)values('source-fixture','TEST','discover',999)")
+ dc=json.loads(q('select public.paper_deep_claim()'));assert dc['job']['stage']=='discover'
+ old=int(q('select estimated_bytes from paperlab.deep_runtime'))
+ q("select public.paper_deep_reserve_transfer('"+dc['token']+"',100000)")
+ q("select public.paper_deep_settle_transfer('"+dc['token']+"',10000)")
+ assert int(q('select estimated_bytes from paperlab.deep_runtime'))==old+10000
+ q("select public.paper_deep_settle_transfer('"+dc['token']+"',10000)",'Active transfer')
  for role in ['anon','authenticated','service_role']:q('set role '+role+';select *from paperlab.deep_documents','permission denied')
  q('select public.paper_deep_read(null)','Owner required');d=json.loads(q("select public.paper_project_read('"+owner+"')"));assert d['existing'];assert d['deep_research']['counts']['chunks_completed']==2
  print('Deep SQL passed: complete-text chunking, idempotent cache, independent model quota, durable same-chunk retry, exact evidence and private owner read.')
