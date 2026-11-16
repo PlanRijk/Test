@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {analyzeGemini,validateClaims,checkedClaims,geminiFailure,htmlText,excerpt} from '../functions/_shared/gemini-research.js';
+import {analyzeGemini,validateClaims,checkedClaims,geminiFailure,htmlText,excerpt,collectGeminiSources} from '../functions/_shared/gemini-research.js';
 import {handler} from '../functions/paper-gemini-research/index.js';
 const target={symbol:'TEST',sources:[{url:'https://issuer.example/report',kind:'official'}]},key='synthetic-key-not-a-real-credential';
 const quote='Reported revenue was 100 million USD',text=quote+'; cash flow was 80 million USD. '+('Revenue 100 cash flow 80 debt 90 margin 20. '.repeat(15)),html='<html><body><h1>Quarterly report</h1><p>'+text+'</p></body></html>';
@@ -15,3 +15,5 @@ test('extraction removes executable content and retains bounded cash-flow contex
 test('cron authentication is checked before any RPC or provider request',async()=>{globalThis.Deno={env:{get:()=>''}};assert.equal((await handler(new Request('https://example.test',{method:'POST'}))).status,401);});
 import {geminiResearchMarkup} from '../web/gemini-research.js';
 test('UI escapes model text, rejects executable links and preserves model/failure scope',()=>{const html=geminiResearchMarkup({runtime:{enabled:true},counts:{registered:100,drafts:1,pending:99},records:[{symbol:'<img>',checked_at:'2026-11-16T12:00Z',status:'rate_limited',stale:true,draft:{summary:'<script>unsafe</script>',claims:[],sources:[{id:'s1',url:'javascript:alert(1)',kind:'source'}],uncertainties:['Incomplete report'],counterarguments:[]}}]});assert(!html.includes('<img>'));assert(!html.includes('<script>'));assert(!html.includes('href="javascript:'));assert(html.includes('uitgesteld wegens limiet'));assert(html.includes('Geen volledige bedrijfsanalyse'));assert(html.includes('100 dossiers'));});
+
+test('SEC CIK identity accepts both official padded strings and numeric identifiers',async()=>{for(const cik of ['0001045810',1045810]){const index={cik,filings:{recent:{form:['10-Q','8-K'],accessionNumber:['0001045810-26-000075','0001045810-26-000082'],primaryDocument:['report.htm','news.htm'],filingDate:['2026-08-26','2026-11-12']}}};const result=await collectGeminiSources({...target,cik:'0001045810'},{fetcher:async url=>url.includes('data.sec.gov')?Response.json(index):new Response(html)});assert(!result.gaps.includes('Actuele SEC-publicatie-index niet bevestigd.'));assert(result.sources.some(x=>x.url.includes('/1045810/000104581026000082/news.htm')));}});
