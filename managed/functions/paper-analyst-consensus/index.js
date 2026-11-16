@@ -1,0 +1,6 @@
+import {constantEqual,env,reply,rpc} from '../_shared/platform.js';
+import {fetchConsensus} from '../_shared/analyst-consensus.js';
+export async function handler(request){const secret=env('PAPERLAB_CRON_TOKEN');if(!secret||!constantEqual(request.headers.get('X-PaperLab-Cron')||'',secret))return reply({error:'Niet toegestaan.'},401);if(request.method!=='POST')return reply({error:'POST vereist.'},405);
+ try{const input=await rpc('paper_consensus_claim');if(!input)return reply({status:'not_due_busy_or_budget'});const rows=[];let i=0;async function work(){while(i<input.targets.length){const t=input.targets[i++];try{rows.push(await fetchConsensus(t));}catch{rows.push({version:'analyst-consensus-v1',symbol:t.symbol,status:'unavailable',known_at:new Date().toISOString(),trade_approval:false,qualitative_approval:false,reason:'Openbare consensusbron niet toegankelijk of onvoldoende kwartaalbewijs.'});}}}await Promise.all([work(),work(),work()]);const saved=await rpc('paper_consensus_commit',{p_token:input.token,p_rows:rows});return reply({status:saved?'updated':'superseded',companies:rows.length,reported:rows.filter(x=>x.status==='provider_reported').length,paid_calls:false,trade_changes:false});}
+ catch{return reply({error:'Consensusverwerking niet bevestigd; geen handelswijzigingen.'},503);}}
+if(globalThis.Deno?.serve)Deno.serve(handler);
