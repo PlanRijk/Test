@@ -23,7 +23,7 @@ def extract_bytes(raw):
    if not text.strip():empty.append(index+1)
    parts.append('[PAGINA '+str(index+1)+']\n'+text)
   text='\n'.join(parts)
-  return {'version':'paperlab-pdf-text-v1','sha256':hashlib.sha256(raw).hexdigest(),'text':text,'text_sha256':hashlib.sha256(text.encode()).hexdigest(),'pages_total':len(doc),'pages_processed':len(doc),'empty_pages':empty,'complete_extraction':not empty,'scope':'Text extracted from every PDF page; tables, images and reading order are not independently audited','ocr_required':bool(empty)}
+  return {'version':'paperlab-pdf-text-v1','sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'text':text,'text_sha256':hashlib.sha256(text.encode()).hexdigest(),'pages_total':len(doc),'pages_processed':len(doc),'empty_pages':empty,'complete_extraction':not empty,'scope':'Text extracted from every PDF page; tables, images and reading order are not independently audited','ocr_required':bool(empty)}
 lock=threading.BoundedSemaphore(1)
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
