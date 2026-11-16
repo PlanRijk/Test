@@ -1,0 +1,102 @@
+{
+  "version": "deep-research-work-estimate-v1",
+  "chunk_characters": 7000,
+  "companies": [
+    {
+      "symbol": "NVDA",
+      "documents": [
+        {
+          "form": "10-Q",
+          "characters": 174497,
+          "chunks": 25,
+          "model_calls_with_one_review_per_chunk": 50
+        },
+        {
+          "form": "10-K",
+          "characters": 360422,
+          "chunks": 52,
+          "model_calls_with_one_review_per_chunk": 104
+        }
+      ],
+      "document_calls": 154,
+      "minimum_days_at_daily_calls": {
+        "4": 39,
+        "20": 8,
+        "100": 2
+      },
+      "excludes": "Valuation, competitor analysis, extra sources, retries, provider failures and synthesis. This full-document workflow is not yet running."
+    },
+    {
+      "symbol": "WMT",
+      "documents": [
+        {
+          "form": "10-Q",
+          "characters": 143325,
+          "chunks": 21,
+          "model_calls_with_one_review_per_chunk": 42
+        },
+        {
+          "form": "10-K",
+          "characters": 383293,
+          "chunks": 55,
+          "model_calls_with_one_review_per_chunk": 110
+        }
+      ],
+      "document_calls": 152,
+      "minimum_days_at_daily_calls": {
+        "4": 38,
+        "20": 8,
+        "100": 2
+      },
+      "excludes": "Valuation, competitor analysis, extra sources, retries, provider failures and synthesis. This full-document workflow is not yet running."
+    },
+    {
+      "symbol": "AAPL",
+      "documents": [
+        {
+          "form": "10-K",
+          "characters": 246979,
+          "chunks": 36,
+          "model_calls_with_one_review_per_chunk": 72
+        },
+        {
+          "form": "10-Q",
+          "characters": 94959,
+          "chunks": 14,
+          "model_calls_with_one_review_per_chunk": 28
+        }
+      ],
+      "document_calls": 100,
+      "minimum_days_at_daily_calls": {
+        "4": 25,
+        "20": 5,
+        "100": 1
+      },
+      "excludes": "Valuation, competitor analysis, extra sources, retries, provider failures and synthesis. This full-document workflow is not yet running."
+    },
+    {
+      "symbol": "MSFT",
+      "documents": [
+        {
+          "form": "10-Q",
+          "characters": 223386,
+          "chunks": 32,
+          "model_calls_with_one_review_per_chunk": 64
+        },
+        {
+          "form": "10-K",
+          "characters": 357668,
+          "chunks": 52,
+          "model_calls_with_one_review_per_chunk": 104
+        }
+      ],
+      "document_calls": 168,
+      "minimum_days_at_daily_calls": {
+        "4": 42,
+        "20": 9,
+        "100": 2
+      },
+      "excludes": "Valuation, competitor analysis, extra sources, retries, provider failures and synthesis. This full-document workflow is not yet running."
+    }
+  ]
+}
