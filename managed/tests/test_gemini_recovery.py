@@ -15,7 +15,7 @@ with tempfile.TemporaryDirectory()as folder:
  def request(provider,path,method='GET',body=None):
   assert provider=='supabase'and path=='/v1/projects/'+g.REF+'/secrets';events.append(method)
   if method=='POST':assert body==[{'name':'GEMINI_API_KEY','value':dummy}];return None
-  return [{'name':'GEMINI_API_KEY','digest':hashlib.sha256(dummy.encode()).hexdigest()if good else'0'*64}]
+  return [{'name':'GEMINI_API_KEY','value':hashlib.sha256(dummy.encode()).hexdigest()if good else'0'*64}]
  g.api.request=request
  try:g.accept(f);raise AssertionError('Unverified persistence accepted')
  except RuntimeError:pass
