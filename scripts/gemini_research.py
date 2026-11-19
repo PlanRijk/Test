@@ -9,6 +9,7 @@ def configure(ref,confirm_free=False):
  if ref!='kdyzlbknygeqinqduuic':raise RuntimeError('Select the existing Paperlab project')
  api.ROOT=ROOT;before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,"select jobid,jobname,schedule,command,active from cron.job where jobname<>'paperlab-gemini-research'order by jobid",True)
  api.sql(ref,(ROOT/'managed/sql/037_gemini_research.sql').read_text());api.sql(ref,(ROOT/'managed/sql/038_gemini_resume.sql').read_text());api.sql(ref,(ROOT/'managed/sql/029_private_archives.sql').read_text())
+ api.sql(ref,(ROOT/'managed/sql/040_storage_capacity.sql').read_text())
  if confirm_free:
   owner=api.sql(ref,'select owner_id from paperlab.settings where singleton',True)[0]['owner_id']
   api.sql(ref,'select public.paper_gemini_enable('+literal(owner)+'::uuid,true)')
