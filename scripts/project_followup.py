@@ -19,7 +19,7 @@ def archive_key():
  return value
 def configure(ref):
  before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,"select jobid,jobname,schedule,active from cron.job where jobname<>'paperlab-project-followup'order by jobid",True)
- for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql','032_daily_weekly_swing.sql','033_earnings_pilot.sql','034_quarterly_expectations.sql','035_analyst_consensus.sql','036_scoped_research.sql','037_gemini_research.sql','038_gemini_resume.sql','039_deep_research.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
+ for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql','032_daily_weekly_swing.sql','033_earnings_pilot.sql','034_quarterly_expectations.sql','035_analyst_consensus.sql','036_scoped_research.sql','037_gemini_research.sql','038_gemini_resume.sql','039_deep_research.sql','040_storage_capacity.sql','041_cold_source_archive.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
  value=archive_key();api.request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_ARCHIVE_KEY','value':value}])
  service=api.keys(ref)['service_role']
  try:b=api.project_request(ref,service,'/storage/v1/bucket/'+BUCKET)
@@ -58,8 +58,9 @@ def archive_sources(ref,root):
   envelope=json.dumps({'v':1,'algorithm':'AES-256-GCM','compression':'gzip','aad':LABEL.decode(),'nonce':base64.b64encode(nonce).decode(),'ciphertext':base64.b64encode(cipher).decode()},separators=(',',':')).encode()
   if len(envelope)>15000000:raise RuntimeError('Encrypted source archive too large')
   path='sources/'+day+'-batch-'+str(i+1).zfill(2)+'.json.enc'
-  stored_bytes=api.sql(ref,"select coalesce(sum((record->>'bytes')::bigint),0)as bytes from paperlab.archive_manifest where record->>'kind'='extracted_source_texts'",True)[0]['bytes']
-  if int(stored_bytes)+len(envelope)>100000000:raise RuntimeError('Source archive storage budget; select retention explicitly')
+  stored_bytes=api.sql(ref,"select coalesce(sum((metadata->>'size')::bigint),0)as bytes from storage.objects",True)[0]['bytes']
+  capacity=api.sql(ref,"select coalesce((select(policy->>'object_hard_bytes')::bigint from paperlab.storage_budget_runtime where singleton),800000000)bytes",True)[0]['bytes']
+  if int(stored_bytes)+len(envelope)>capacity:raise RuntimeError('Source archive storage budget; select retention explicitly')
   charge=4*len(envelope)+8192
   # Reserve before transfer. Never reset the existing month meter.
   api.sql(ref,"do $$begin perform 1 from paperlab.free_usage where month=date_trunc('month',now()at time zone'UTC')::date for update;if(select estimated_worker_egress_bytes+"+str(charge)+" from paperlab.free_usage where month=date_trunc('month',now()at time zone'UTC')::date)>paperlab.traffic_limit('soft')then raise exception'Archive transfer budget';end if;update paperlab.free_usage set estimated_worker_egress_bytes=estimated_worker_egress_bytes+"+str(charge)+" where month=date_trunc('month',now()at time zone'UTC')::date;end$$;")
