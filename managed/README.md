@@ -244,3 +244,7 @@ De nieuwe onderzoekswachtrij gebruikt het bestaande bevestigde gratis Google-pro
 ## Opslagcapaciteit en verliesloze archieven
 
 De gemeenschappelijke opslagbewaking volgt het bevestigde gratis plan: 500 MB database en 1 GB private bestandsopslag, met interne reserves. Oude bronteksten kunnen na exacte herstelcontrole naar een gecomprimeerd, versleuteld archief. Zie [opslag, compressie en herstel](STORAGE-CAPACITY.md).
+
+## Automatisch dossiers afronden
+
+Sinds migratie 042 krijgen twee bijna afgeronde dossiers voorrang, met exacte bronpassages, gescheiden foutentellers, automatisch herstel en zichtbare waarschuwingen. Zie [werking, bewijsregels en grenzen](DOSSIER-AUTOMATION.md).
