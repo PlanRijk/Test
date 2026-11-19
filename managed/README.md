@@ -240,3 +240,7 @@ De gratis, geplande Gemini-keten voor automatische tekstconcepten, broncontrole,
 ## Volledige bronteksten en automatische quotahervatting
 
 De nieuwe onderzoekswachtrij gebruikt het bestaande bevestigde gratis Google-project, met onafhankelijke daglimieten van 500 lichte en 20 zwaardere aanvragen, vaste tekstblokken en zes bedrijfspijlers. Een minuutcron hervat na quotavernieuwing of uitval. Zie [werking en beperkingen](DEEP-RESEARCH-PLAN.md). Modeldossiers zijn geen handelsgoedkeuring.
+
+## Opslagcapaciteit en verliesloze archieven
+
+De gemeenschappelijke opslagbewaking volgt het bevestigde gratis plan: 500 MB database en 1 GB private bestandsopslag, met interne reserves. Oude bronteksten kunnen na exacte herstelcontrole naar een gecomprimeerd, versleuteld archief. Zie [opslag, compressie en herstel](STORAGE-CAPACITY.md).
