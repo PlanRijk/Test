@@ -36,3 +36,7 @@ De Render-webservice `paperlab-pdf-reader` draait expliciet op het gratis plan. 
 ## Grenzen van de kwaliteit
 
 Niet voor elk van de honderd bedrijven bestaat al een compleet beschikbaar jaar-/tussenverslag, bruikbaar transcript, vergelijkbare peerdata of geverifieerde consensus. Tabellen, beelden, boekhoudkundige definities en toekomstige verwachtingen vragen inhoudelijke controle. Automatisch verwerken maakt ontbrekende gegevens niet bekend. Modeluitkomsten, broncitaten en een tweede modelcontrole sluiten fouten niet uit. Nieuwe bronversies starten nieuwe taken; ongewijzigde teksten worden hergebruikt.
+
+## Opslagoverlay sinds 19 november
+
+Migraties 040/041 vervangen de te lage gemeenschappelijke databaseguards door 350/400/450 MB-bewaking binnen het bevestigde 500 MB-plan. Alleen vervangen inactieve bronteksten worden na verliesloze upload/download/hashcontrole apart gecomprimeerd gearchiveerd. Zie [opslagcapaciteit en herstel](STORAGE-CAPACITY.md).
