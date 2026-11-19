@@ -19,7 +19,7 @@ def archive_key():
  return value
 def configure(ref):
  before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,"select jobid,jobname,schedule,active from cron.job where jobname<>'paperlab-project-followup'order by jobid",True)
- for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql','032_daily_weekly_swing.sql','033_earnings_pilot.sql','034_quarterly_expectations.sql','035_analyst_consensus.sql','036_scoped_research.sql','037_gemini_research.sql','038_gemini_resume.sql','039_deep_research.sql','040_storage_capacity.sql','041_cold_source_archive.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
+ for name in ['028_project_followup.sql','029_private_archives.sql','030_publication_watch.sql','031_strategy_priority.sql','032_daily_weekly_swing.sql','033_earnings_pilot.sql','034_quarterly_expectations.sql','035_analyst_consensus.sql','036_scoped_research.sql','037_gemini_research.sql','038_gemini_resume.sql','039_deep_research.sql','040_storage_capacity.sql','041_cold_source_archive.sql','042_dossier_automation.sql']:api.sql(ref,(ROOT/'managed/sql'/name).read_text())
  value=archive_key();api.request('supabase','/v1/projects/'+ref+'/secrets','POST',[{'name':'PAPERLAB_ARCHIVE_KEY','value':value}])
  service=api.keys(ref)['service_role']
  try:b=api.project_request(ref,service,'/storage/v1/bucket/'+BUCKET)
