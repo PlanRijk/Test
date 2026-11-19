@@ -4,7 +4,7 @@ Migratie 042 en de bijgewerkte `paper-deep-research`-worker gebruiken de bestaan
 
 ## Voorrang aan afronden
 
-De planner houdt twee dossiers met beschikbare jaar- en tussentijdse verslagen vooraan. Bij gelijke brondekking krijgen dossiers die bijna klaar zijn voorrang, gevolgd door de bestaande onderzoeksprioriteit. Afgeronde leesblokken blijven bewaard. Na bronlezing worden automatisch zes pijlers ingepland: financiële positie, winst/kasstroom, concurrentie, management/kapitaalallocatie, waardering en risico's. Daarna volgt een afzonderlijke controle door het zwaardere model.
+De planner houdt twee dossiers met beschikbare jaar- en tussentijdse verslagen vooraan. Bij gelijke brondekking krijgen dossiers die bijna klaar zijn voorrang, gevolgd door de bestaande onderzoeksprioriteit. Afgeronde leesblokken blijven bewaard. Na bronlezing worden automatisch zes pijlers ingepland: financiële positie, winst/kasstroom, concurrentie, management/kapitaalallocatie, waardering en risico's. Daarna volgt een afzonderlijke controle door een Flash-model. Bij herhaalde tijdelijke capaciteitsuitval van Gemini 3.8 Flash kan Gemini 3 Flash Preview uit het door de eigenaar getoonde gratis quotascherm deze eindcontrole overnemen.
 
 De peergroepen voor onder meer Nvidia, Walmart, Linde en Novo Nordisk zijn expliciet gekozen met beperkingen voor segmentmix en valuta. Dit is een onderzoekshypothese, geen bewijs dat geconsolideerde cijfers economisch vergelijkbaar zijn. Waar geen gekozen groep bestaat, blijft de catalogussector slechts een suggestie. Ontbrekende peerdata wordt niet verzonnen.
 
@@ -25,13 +25,15 @@ Een **afgerond dossier** kan ontbrekende informatie bevatten. `full_ai_dossier` 
 - Daarna zijn maximaal twee dagelijkse herstelcycli mogelijk. Onoplosbare gevallen blijven zichtbaar als bewijsprobleem. De andere dossiers kunnen verdergaan.
 - Verlopen leases worden opnieuw ingepland; verouderde taken uit een eerdere bronversie worden niet als actuele beoordeling opgeslagen.
 
-Er blijven maximaal 500 lichte en 20 zware aanvragen per Pacific-dag beschikbaar. Twee zware aanvragen blijven gereserveerd voor eindcontroles wanneer vrije zware capaciteit bronlezing overneemt. Iedere werkelijke poging wordt vooraf gereserveerd. Er is geen betaald alternatief en geen reset van reeds gebruikt quotum.
+Er blijven maximaal 500 lichte en **20 zware aanvragen samen** per Pacific-dag beschikbaar. Gemini 3.8 Flash en de gratis Gemini 3 Flash Preview-uitwijk delen binnen de app hetzelfde plafond van twintig; hun afzonderlijke providerquota worden niet bij elkaar opgeteld. De uitwijk wordt alleen bij herhaalde capaciteitsproblemen gebruikt, niet om een bereikt app-dagmaximum te omzeilen. De werkelijk gebruikte modelnaam wordt opgeslagen. Twee zware aanvragen blijven gereserveerd voor eindcontroles wanneer vrije zware capaciteit bronlezing overneemt. Iedere werkelijke poging wordt vooraf gereserveerd. Er is geen betaald alternatief en geen reset van reeds gebruikt quotum.
 
 ## Bijwerken en zichtbare opvolging
 
 Nieuwe bronversies en gewijzigde financiële/consensusinvoer starten automatisch een nieuwe beoordeling. Ongewijzigde gelezen teksten worden hergebruikt. Rond officieel bekende cijferpublicaties zoekt de planner vanaf twintig minuten na de publicatietijd maximaal eenmaal per uur naar een nieuw tussentijds verslag, gedurende twee dagen. De reguliere broncontrole blijft daarbuiten dagelijks rond kwartaalcijfers en wekelijks daarbuiten werken.
 
-Dossiers met bewijsgebreken plannen een nieuwe broncontrole in. Alleen nieuwe invoer activeert opnieuw dezelfde beoordelingen; dezelfde onvoldoende gegevens worden niet eindeloos als nieuw onderzoek herhaald.
+Dossiers met bewijsgebreken zoeken eerst gericht in reeds opgeslagen volledige teksten naar onder meer schuldlooptijden, acquisities, eenmalige posten, investeringen, concurrentie en regelgeving. Per bronset zijn maximaal twee zoekrondes met twee korte passages per onderwerp mogelijk. Dit verbruikt normale Lite-capaciteit en geen nieuwe downloads. Alleen nieuw gevonden primaire feiten vernieuwen de beoordeling. Daarna plannen dossiers met bewijsgebreken een nieuwe broncontrole in. Alleen nieuwe invoer activeert opnieuw dezelfde beoordelingen; dezelfde onvoldoende gegevens worden niet eindeloos als nieuw onderzoek herhaald.
+
+Een afzonderlijke SQL-controle draait elk kwartier, ook als de Edge-worker geen voortgang maakt. Bij beschikbare capaciteit en klaarstaand werk kan die een stilgevallen actieve worker opnieuw aanroepen. Een door de eigenaar gepauzeerde runtime of uitgeschakelde minuutcron wordt gerespecteerd en niet stilzwijgend aangezet. Ontbrekende serverauthenticatie en uitgeschakelde planning blijven zichtbaar. Deze controle gebruikt geen taalmodelaanvraag.
 
 In Paperlab staan het huidige tweetal dossiers, gelezen blokken, afgeronde pijlers, verouderde rapportversies en blijvende aandachtspunten. Er zijn waarschuwingen voor ontbrekende verslagen, geblokkeerde verwerking, te grote context, opslag/verkeer en meer dan 24 uur stilstand bij een actief dossier. Dit zijn **meldingen in de app**, geen e-mail- of chatberichten. Ze maken een storing zichtbaar, maar garanderen niet dat ontbrekende externe bronnen automatisch beschikbaar worden.
 
@@ -42,3 +44,5 @@ Bij het bedrijfsdetail zijn de gebruikte primaire broncitaten, periodes, cijferb
 `python scripts/dossier_automation.py kdyzlbknygeqinqduuic` installeert 042 en publiceert de worker. De bestaande cron, financiële profielen, posities, bevroren kwartaalvoorspellingen en gebruikstellers worden niet gereset. De bekende herinstallatiescripts passen 042 na oudere bronmigraties opnieuw toe.
 
 Regressies controleren het volledige pad van bron naar zes pijlers en audit, ontbrekende versus complete brondekking, afzonderlijke foutentellers, tekstbehoud bij splitsing, quote- en bewijs-ID-controle, quota, begrensde herstelpogingen, herinstallatie zonder gebruiksreset, geen onnodige rijupdates en eigenaarisolatie. Nieuwe modeluitkomsten worden niet als historische onafhankelijke handelsprestaties geteld.
+
+De aanvankelijk geteste 2.5 Flash-uitwijk bleek bij generatie HTTP 404 te geven, ondanks vermelding in de modelcatalogus. Die route wordt niet meer voor nieuwe eindcontroles gekozen; de mislukte aanvraag blijft conservatief in het gedeelde dagverbruik meetellen.
