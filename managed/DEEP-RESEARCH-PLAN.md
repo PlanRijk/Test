@@ -40,3 +40,7 @@ Niet voor elk van de honderd bedrijven bestaat al een compleet beschikbaar jaar-
 ## Opslagoverlay sinds 19 november
 
 Migraties 040/041 vervangen de te lage gemeenschappelijke databaseguards door 350/400/450 MB-bewaking binnen het bevestigde 500 MB-plan. Alleen vervangen inactieve bronteksten worden na verliesloze upload/download/hashcontrole apart gecomprimeerd gearchiveerd. Zie [opslagcapaciteit en herstel](STORAGE-CAPACITY.md).
+
+## Automatisch dossiers afronden
+
+Sinds migratie 042 krijgen twee bijna afgeronde dossiers voorrang, met exacte bronpassages, gescheiden foutentellers, automatisch herstel en zichtbare waarschuwingen. Zie [werking, bewijsregels en grenzen](DOSSIER-AUTOMATION.md).
