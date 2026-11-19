@@ -7,3 +7,7 @@ Volledige beschikbare bronteksten worden gehasht, in blokken gelezen, tot zes be
 Zie [de volledige werking, quota, PDF-verwerking en herstelgrenzen](DEEP-RESEARCH-PLAN.md).
 
 De eerdere `paper-gemini-research`-worker (migraties 037/038) las geselecteerde HTML-passages. De cron en runtime daarvan staan uit om dubbele quotaconsumptie te voorkomen. Eerdere concepten en gedeeltelijke resultaten blijven opgeslagen; de pagina toont deze als historische fragmentbeoordelingen. De oude installer alleen gebruiken voor een expliciete terugrol, anders activeert die opnieuw de oude verwerking.
+
+## Automatisch dossiers afronden
+
+Sinds migratie 042 krijgen twee bijna afgeronde dossiers voorrang, met exacte bronpassages, gescheiden foutentellers, automatisch herstel en zichtbare waarschuwingen. Zie [werking, bewijsregels en grenzen](DOSSIER-AUTOMATION.md).
