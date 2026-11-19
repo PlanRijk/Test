@@ -14,6 +14,7 @@ def configure(ref):
  api.sql(ref,(ROOT/'managed/sql/039_deep_research.sql').read_text())
  api.sql(ref,(ROOT/'managed/sql/040_storage_capacity.sql').read_text())
  api.sql(ref,(ROOT/'managed/sql/041_cold_source_archive.sql').read_text())
+ api.sql(ref,(ROOT/'managed/sql/042_dossier_automation.sql').read_text())
  api.deploy_function(ref,'paper-deep-research')
  # Preserve today's legacy reservations once. Subsequent installs never reset counters.
  api.sql(ref,"update paperlab.deep_models set day=(now()at time zone'America/Los_Angeles')::date,used=case when model='gemini-3.5-flash-lite'then coalesce((select daily_reserved from paperlab.gemini_runtime where day=(now()at time zone'America/Los_Angeles')::date),0)else 0 end where day is null")
