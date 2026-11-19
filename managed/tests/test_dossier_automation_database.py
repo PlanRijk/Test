@@ -124,6 +124,27 @@ try:
  peers=json.loads(q("select paperlab.dossier_peers('NVDA')"));assert {p['symbol']for p in peers}=={'AMD','AVGO'}
  peers=json.loads(q("select paperlab.dossier_peers('WMT')"));assert {p['symbol']for p in peers}=={'COST','AMZN'}
  evidence=json.loads(q("select public.paper_dossier_automation_read('"+owner+"','TEST')"))['evidence'];assert evidence and evidence[0]['quote']=='Interim revenue was 150 million USD'
+ # Independent watchdog respects owner pauses, flags inactive cron and only queues a wakeup when useful.
+ q("create schema cron;create table cron.job(jobname text,active boolean);create schema vault;create table vault.decrypted_secrets(name text,decrypted_secret text);insert into vault.decrypted_secrets values('paperlab_cron_token','synthetic-cron');create schema net;create table net.test_calls(id bigserial);create function net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds int)returns bigint language plpgsql as $$declare i bigint;begin insert into net.test_calls default values returning id into i;return i;end$$;")
+ q("update paperlab.deep_runtime set enabled=false");assert json.loads(q('select public.paper_dossier_watchdog()'))['status']=='owner_paused'
+ q("update paperlab.deep_runtime set enabled=true");assert json.loads(q('select public.paper_dossier_watchdog()'))['status']=='scheduler_inactive_owner_action_respected'
+ q("insert into cron.job values('paperlab-deep-research',true);insert into paperlab.deep_jobs(id,symbol,stage,priority)values('watch-fixture','TEST','discover',1);update paperlab.deep_runtime set last_attempt=now()-interval'20 minutes',lease_until=null")
+ assert json.loads(q('select public.paper_dossier_watchdog()'))['status']=='worker_wakeup_queued';assert q('select count(*)from net.test_calls')=='1'
+ # Sustained primary-heavy capacity failures can use the verified free fallback.
+ q("update paperlab.deep_jobs set status='completed'where id='watch-fixture';update paperlab.deep_models set minute=null,retry_after=null;update paperlab.deep_models set provider_failures=3,last_status='provider_unavailable',retry_after=now()+interval'15 minutes'where model='gemini-3.8-flash';insert into paperlab.deep_jobs(id,symbol,stage,model,generation)select 'fallback-audit','TEST','audit','gemini-3.8-flash',generation from paperlab.deep_companies where symbol='TEST'")
+ q("update paperlab.deep_jobs set status='retry',available_at=now()+interval'15 minutes',result='\"PLACEHOLDER\"'::jsonb where id='fallback-audit'".replace("'\"PLACEHOLDER\"'::jsonb",js({**transient,'provider_http_status':None,'diagnostic':'TimeoutError'})))
+ old_primary=q("select used from paperlab.deep_models where model='gemini-3.8-flash'")
+ alt=json.loads(q('select public.paper_deep_claim()'));assert alt['job']['model']=='gemini-3-flash-preview';q("select public.paper_deep_commit('"+alt['token']+"',"+js({**transient,'provider_http_status':None,'diagnostic':'TimeoutError'})+')')
+ assert q("select used from paperlab.deep_models where model='gemini-3.8-flash'")==old_primary
+ assert q("select used from paperlab.deep_models where model='gemini-3-flash-preview'")=='1'
+ q("update paperlab.deep_models set used=case when model='gemini-3.5-flash-lite'then 500 when model='gemini-2.5-flash'then 0 else 10 end;insert into paperlab.deep_jobs(id,symbol,stage,model,generation)select 'pool-exhausted','TEST','audit','gemini-3.8-flash',generation from paperlab.deep_companies where symbol='TEST'")
+ assert q('select public.paper_deep_claim()')==''
+
+ q("update cron.job set active=false");assert json.loads(q('select public.paper_dossier_watchdog()'))['status']=='scheduler_inactive_owner_action_respected';assert q('select active from cron.job')=='f'
+
+
+ # Evidence-gap remediation reads bounded cached passages and stops after two rounds.
+ q("begin;update paperlab.deep_documents set body=repeat('Debt maturities and weighted average interest rates. ',100) where symbol='TEST';do $$declare n int;begin n:=paperlab.dossier_gap_work('TEST','gap-fixture','[\"schuldlooptijden en rente\"]'::jsonb);assert n=2;assert(select count(*)=2 from paperlab.deep_jobs where id like 'gap:gap-fixture:%' and part_length<=3500 and research_question is not null);assert paperlab.dossier_gap_work('TEST','gap-fixture','[\"schuld\"]'::jsonb)=0;update paperlab.deep_jobs set status='completed'where id like 'gap:gap-fixture:%';assert paperlab.dossier_gap_work('TEST','gap-fixture','[\"schuld\"]'::jsonb)=2;update paperlab.deep_jobs set status='completed'where id like 'gap:gap-fixture:%';assert paperlab.dossier_gap_work('TEST','gap-fixture','[\"schuld\"]'::jsonb)=0;end$$;rollback;")
 
  for role in ['anon','authenticated','service_role']:q('set role '+role+';select *from paperlab.deep_documents','permission denied')
  q('select public.paper_deep_read(null)','Owner required');d=json.loads(q("select public.paper_project_read('"+owner+"')"));assert d['existing'];assert d['deep_research']['counts']['chunks_completed']==4
