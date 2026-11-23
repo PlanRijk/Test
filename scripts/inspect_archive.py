@@ -8,12 +8,12 @@ from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 LABEL=b'PaperLab private archive v1'
 def decrypt(data,key):
- if len(data)>15000000:raise ValueError('Encrypted archive bound')
+ if len(data)>30000000:raise ValueError('Encrypted archive bound')
  x=json.loads(data)
  if x.get('v')!=1 or x.get('algorithm')!='AES-256-GCM'or x.get('compression')!='gzip'or x.get('aad')!=LABEL.decode():raise ValueError('Unsupported archive')
  zipped=AESGCM(bytes.fromhex(key.strip())).decrypt(base64.b64decode(x['nonce'],validate=True),base64.b64decode(x['ciphertext'],validate=True),LABEL)
- with gzip.GzipFile(fileobj=io.BytesIO(zipped))as r:raw=r.read(30000001)
- if len(raw)>30000000:raise ValueError('Decrypted archive bound')
+ with gzip.GzipFile(fileobj=io.BytesIO(zipped))as r:raw=r.read(80000001)
+ if len(raw)>80000000:raise ValueError('Decrypted archive bound')
  return raw
 def rehearse(snapshot,container):
  env={k:v for k,v in os.environ.items()if k not in ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH']}
