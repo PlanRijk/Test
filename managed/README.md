@@ -15,15 +15,14 @@ en [FUND-COMPARISON.md](FUND-COMPARISON.md).
 ## Actieve strategische prioriteit
 
 Vanaf 12 november: **beheer bestaande posities, onderzoek vóór nieuwe instap**.
-Nieuwe aankopen in capital10k zijn afzonderlijk geblokkeerd totdat kosten,
-uitvoering en een samenhangend meerdaags protocol voldoende zijn onderbouwd.
+Nieuwe paperinstappen zijn toegestaan binnen de geversioneerde dag-/weekregels, maar vereisen actuele, onderbouwde handelspijlers en koerssignalen. Kosten, uitvoering en strategievoordeel zijn nog niet persoonlijk geverifieerd.
 Posities en beschermende verkopen blijven behouden. De bestaande bevroren
 context-kandidaat krijgt onderzoeksvoorrang, geen handelspromotie.
 Zie [STRATEGY-PRIORITY.md](STRATEGY-PRIORITY.md) voor de keuze, voorwaarden en behoudscontroles.
 
 ## Actualisatie onderzoek en herstel — 12 november 2026
 
-Alle honderd bedrijven hebben een uitgebreid financieel onderzoeksdossier.
+Alle honderd bedrijven hebben bronkaarten; de dekking en inhoudelijke voltooiing verschillen per bedrijf.
 Er zijn 314 officiële pagina's/documenten opgehaald voor 99 bedrijven; ontbrekend
 bewijs blijft zichtbaar. De dagelijkse onderzoekswachtrij en publicatiemonitor,
 begrensde versiegeschiedenis, prospectieve wereldwijde ETF-referentie en
@@ -32,7 +31,7 @@ versleutelde bron-/applicatiearchieven staan beschreven in
 ontsleuteld en met geselecteerde financiële gegevens offline gerepeteerd; dit
 is geen volledige Supabase Auth/MFA/providerbackup.
 
-Volledige modelmatige tekstbeoordeling is **niet geactiveerd**. De geteste
+Modelmatige tekstbeoordeling draait automatisch via de bevestigde gratis Gemini-API. Het bron-/pijler-/eindcontrolepad en de expliciete bewijsgebreken staan in [DOSSIER-AUTOMATION.md](DOSSIER-AUTOMATION.md). De historische betaalde pilot hieronder is niet de actieve gratis route. De geteste
 pilotadapter, broncontroles en kostenraming staan in
 [QUALITATIVE-AUTOMATION.md](QUALITATIVE-AUTOMATION.md). API-key, expliciet budget,
 gedeeld kostenregister en pilotbeoordeling zijn nodig vóór betaalde verwerking.
@@ -248,3 +247,7 @@ De gemeenschappelijke opslagbewaking volgt het bevestigde gratis plan: 500 MB da
 ## Automatisch dossiers afronden
 
 Sinds migratie 042 krijgen twee bijna afgeronde dossiers voorrang, met exacte bronpassages, gescheiden foutentellers, automatisch herstel en zichtbare waarschuwingen. Zie [werking, bewijsregels en grenzen](DOSSIER-AUTOMATION.md).
+
+## Herstel na kritische audit, 23 november 2026
+
+De persoonlijke audit wordt afzonderlijk en privé bewaard. Migratie 043 herstelt dossierlabels en voegt dagelijkse operationele meetwaarden toe. De ontbrekende valutafunctie in tweede-posities is gerepareerd met een regressietest; financiële selectiedrempels veranderen niet. Back-upcodec en inspectietool ondersteunen nu maximaal 80 MB logische invoer, met maximaal 30 MB versleutelde envelop. Volledig provider/Auth-herstel en winstgevendheid blijven afzonderlijk te toetsen.
