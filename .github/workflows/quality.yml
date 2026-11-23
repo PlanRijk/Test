@@ -1,5 +1,5 @@
 name: Paperlab quality
-on: [push, pull_request]
+on: [workflow_dispatch]
 jobs:
   javascript:
     runs-on: ubuntu-latest
@@ -20,3 +20,6 @@ jobs:
       - run: python managed/tests/test_swing_database.py
       - run: python managed/tests/test_earnings_database.py
       - run: python managed/tests/test_dossier_automation_database.py
+      - run: python managed/tests/test_backup_snapshot.py
+      - run: python -m pip install cryptography==50.0.0
+      - run: python managed/tests/test_backup_codec.py
