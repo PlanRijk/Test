@@ -3,13 +3,26 @@
 Keep the 64-character PAPERLAB_ARCHIVE_KEY in a private key file outside Git.
 --extract-to writes the original JSON text, not a reserialized numeric payload.
 """
-import argparse,base64,gzip,io,json,os,secrets,subprocess
+import argparse,base64,gzip,io,json,os,secrets,subprocess,hashlib
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 LABEL=b'PaperLab private archive v1'
 def decrypt(data,key):
  if len(data)>30000000:raise ValueError('Encrypted archive bound')
  x=json.loads(data)
+ if x.get('v')==2:
+  if x.get('format')!='paperlab-multipart-archive-v1'or not isinstance(x.get('parts'),list)or not 1<=len(x['parts'])<=80:raise ValueError('Multipart archive format')
+  texts=[];identity=None;expected=None;size=0
+  for i,part in enumerate(x['parts']):
+   item=json.loads(decrypt(json.dumps(part).encode(),key));ident=(item.get('token'),item.get('source_sha256'))
+   if i==0:identity=ident;expected=item.get('source_sha256')
+   if ident!=identity or item.get('part')!=i or item.get('total')!=len(x['parts'])or not isinstance(item.get('text'),str):raise ValueError('Multipart order or identity')
+   raw=item['text'].encode();size+=len(raw)
+   if size>80000000:raise ValueError('Multipart plaintext bound')
+   texts.append(raw)
+  raw=b''.join(texts)
+  if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('Multipart whole snapshot hash')
+  return raw
  if x.get('v')!=1 or x.get('algorithm')!='AES-256-GCM'or x.get('compression')!='gzip'or x.get('aad')!=LABEL.decode():raise ValueError('Unsupported archive')
  zipped=AESGCM(bytes.fromhex(key.strip())).decrypt(base64.b64decode(x['nonce'],validate=True),base64.b64decode(x['ciphertext'],validate=True),LABEL)
  with gzip.GzipFile(fileobj=io.BytesIO(zipped))as r:raw=r.read(80000001)
