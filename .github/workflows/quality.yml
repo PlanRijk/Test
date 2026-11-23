@@ -1,5 +1,5 @@
 name: Paperlab quality
-on: [workflow_dispatch]
+on: [push, pull_request]
 jobs:
   javascript:
     runs-on: ubuntu-latest
