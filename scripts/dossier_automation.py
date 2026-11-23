@@ -9,6 +9,7 @@ def configure(ref):
  if ref!='kdyzlbknygeqinqduuic':raise RuntimeError('Existing Paperlab project required')
  api.ROOT=ROOT;before=api.sql(ref,SNAPSHOT,True)[0]['frozen'];jobs=api.sql(ref,"select jobid,jobname,schedule,command,active from cron.job where jobname<>'paperlab-dossier-watchdog'order by jobid",True)
  api.sql(ref,(ROOT/'managed/sql/042_dossier_automation.sql').read_text())
+ api.sql(ref,(ROOT/'managed/sql/043_audit_repairs.sql').read_text())
  api.deploy_function(ref,'paper-deep-research')
  existing=api.sql(ref,"select jobid from cron.job where jobname='paperlab-dossier-watchdog'",True)
  if not existing:api.sql(ref,"select cron.schedule('paperlab-dossier-watchdog','*/15 * * * *','select public.paper_dossier_watchdog();')")
