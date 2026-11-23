@@ -1,0 +1,22 @@
+name: Paperlab quality
+on: [push, pull_request]
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test --prefix managed
+      - run: node managed/check-public.mjs
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker run -d --network none --name paperlab-research-sql -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17
+      - run: until docker exec paperlab-research-sql pg_isready -U postgres; do sleep 1; done
+      - run: docker exec paperlab-research-sql psql -U postgres -c 'create role anon; create role authenticated; create role service_role;'
+      - run: python managed/tests/test_swing_database.py
+      - run: python managed/tests/test_earnings_database.py
+      - run: python managed/tests/test_dossier_automation_database.py
