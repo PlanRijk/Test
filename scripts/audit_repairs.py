@@ -31,3 +31,13 @@ finally:q(R,'select cron.alter_job('+str(job['jobid'])+',active:='+str(job['acti
 cron=q(R,"select jobid from cron.job where jobname='paperlab-operations'",True)
 if not cron:q(R,"select cron.schedule('paperlab-operations','20 * * * *','select public.paper_operations_check();')")
 print(json.dumps(q(R,'select public.paper_operations_check()as health')[0]),flush=True)
+
+# Weekly SQL preparation and one bounded encrypted part per active minute.
+prepare="set statement_timeout='120s';select public.paper_project_backup_prepare();"
+worker="select net.http_post(url:='https://"+R+".supabase.co/functions/v1/paper-project-followup',headers:=jsonb_build_object('Content-Type','application/json','X-PaperLab-Cron',(select decrypted_secret from vault.decrypted_secrets where name='paperlab_cron_token')),body:='{\"backup\":true}'::jsonb,timeout_milliseconds:=120000)where exists(select 1 from paperlab.project_followup where singleton and enabled and backup_info is not null and backup_until>now());"
+for name,schedule,command in [('paperlab-backup-prepare','50 6 * * 0',prepare),('paperlab-backup-upload','* * * * *',worker)]:
+ ids=api.sql(R,"select jobid from cron.job where jobname='"+name+"'",True)
+ esc=command.replace("'","''")
+ if ids:api.sql(R,"select cron.alter_job("+str(ids[0]['jobid'])+",schedule:='"+schedule+"',command:='"+esc+"',active:=true)")
+ else:api.sql(R,"select cron.schedule('"+name+"','"+schedule+"','"+esc+"')")
+ print(name,schedule)
