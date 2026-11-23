@@ -13,7 +13,7 @@ declare name text;rows jsonb;data jsonb:='{}';total_bytes bigint:=0;begin
   execute format('select coalesce(jsonb_agg((to_jsonb(t)%s)-''token''-''lease''-''lease_until''-''backup_token''-''backup_until''-''backup_info''-''watch_token''-''watch_until''),''[]''::jsonb)from paperlab.%I t%s',case when name='deep_documents'then ' - ''body'' || jsonb_build_object(''body'','''')'else ''end,name,case when name='deep_jobs'then ' where t.status in (''completed'',''retry'',''blocked'') and (t.doc_id is null or exists(select 1 from paperlab.deep_documents d where d.id=t.doc_id and d.active))'else ''end)into rows;
   data:=data||jsonb_build_object(name,rows);
   total_bytes:=total_bytes+octet_length(rows::text);
-  if total_bytes>80000000 then raise exception'Logical backup exceeds 30MB bound';end if;
+  if total_bytes>80000000 then raise exception'Logical backup exceeds 80MB bound';end if;
  end loop;
  return data;
 end$$;
@@ -25,7 +25,7 @@ declare r paperlab.project_followup;m date:=(date_trunc('month',now()at time zon
  if not r.enabled or r.backup_until>now()or exists(select 1 from paperlab.archive_manifest where record->>'kind'='application_snapshot'and (created_at at time zone'UTC')::date=(now()at time zone'UTC')::date)then return null;end if;
  if r.archive_month is distinct from m then r.archive_bytes:=0;end if;
  insert into paperlab.free_usage(month)values(m)on conflict do nothing;perform 1 from paperlab.free_usage where month=m for update;
- if r.archive_bytes+50000000>800000000 or(select estimated_worker_egress_bytes+50000000 from paperlab.free_usage where month=m)>paperlab.traffic_limit('soft')or pg_database_size(current_database())>100000000 then return null;end if;
+ if r.archive_bytes+50000000>300000000 or(select estimated_worker_egress_bytes+50000000 from paperlab.free_usage where month=m)>paperlab.traffic_limit('soft')or pg_database_size(current_database())>100000000 then return null;end if;
  -- STABLE helper reads one MVCC snapshot, with lossless float output.
  data:=paperlab.project_snapshot();
  archive_token:=gen_random_uuid();update paperlab.project_followup set backup_token=archive_token,backup_until=now()+interval'120 seconds',archive_month=m,archive_bytes=r.archive_bytes+50000000 where singleton;
