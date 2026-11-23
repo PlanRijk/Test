@@ -1,4 +1,4 @@
-import {iso,entryBudget,purchase,validQuote,profile,currency,profitTarget,equity,sale} from './engine.js';
+import {iso,entryBudget,purchase,validQuote,profile,currency,profitTarget,equity,sale,fx} from './engine.js';
 import {SWING_POLICY,swingExitPlan} from './swing-rules.js';
 function event(out,kind,reason,time,symbol='',data={}){out.events.push({time:iso(time),kind,symbol,reason,data});}
 function affordable(s,k,price,budget) {
