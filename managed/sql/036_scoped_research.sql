@@ -29,7 +29,7 @@ create or replace function public.paper_project_refresh()returns void language p
  perform public.paper_project_refresh_scoped_base_v1();
  -- Recomputed from the original priorities on every run: no accumulating boosts.
  update paperlab.research_queue q set priority=q.priority+case when exists(select 1 from paperlab.earnings_cycles c where c.symbol=q.symbol and c.release_at>now()-interval'7 days'and c.release_at<now()+interval'3 days'and c.status<>'superseded_unconfirmed')then 300 when exists(select 1 from paperlab.earnings_cycles c where c.symbol=q.symbol and c.release_at>now()-interval'7 days'and c.release_at<now()+interval'21 days'and c.status<>'superseded_unconfirmed')then 120 else 0 end,
- reasons=q.reasons||case when exists(select 1 from paperlab.earnings_cycles c where c.symbol=q.symbol and c.release_at>now()-interval'7 days'and c.release_at<now()+interval'21 days'and c.status<>'superseded_unconfirmed')then '["earnings_review_priority"]'::jsonb else '[]'::jsonb end;
+ reasons=q.reasons||case when exists(select 1 from paperlab.earnings_cycles c where c.symbol=q.symbol and c.release_at>now()-interval'7 days'and c.release_at<now()+interval'21 days'and c.status<>'superseded_unconfirmed')then '["earnings_review_priority"]'::jsonb else '[]'::jsonb end where q.symbol is not null;
 end$$;
 do $$begin if to_regprocedure('public.paper_project_read_scoped_base_v1(uuid,text)')is null then alter function public.paper_project_read(uuid,text)rename to paper_project_read_scoped_base_v1;end if;end$$;
 create or replace function public.paper_project_read(p_owner uuid,p_symbol text default null)returns jsonb language plpgsql security definer set search_path=pg_catalog,pg_temp as $$begin
