@@ -253,3 +253,9 @@ Sinds migratie 042 krijgen twee bijna afgeronde dossiers voorrang, met exacte br
 De persoonlijke audit wordt afzonderlijk en privé bewaard. Migratie 043 herstelt dossierlabels en voegt dagelijkse operationele meetwaarden toe. De ontbrekende valutafunctie in tweede-posities is gerepareerd met een regressietest; financiële selectiedrempels veranderen niet. Back-ups worden in SQL voorbereid en per minuut in één begrensd deel versleuteld en teruggelezen. Het uiteindelijke v2-archief bevat alle versleutelde delen in één bestand; de inspectietool controleert volgorde, identiteit en de hash van de volledige originele tekst. Logische invoer is maximaal 80 MB; de samengestelde envelop blijft maximaal 15 MB. Oude v1-archieven blijven leesbaar. Volledig provider/Auth-herstel en winstgevendheid blijven afzonderlijk te toetsen.
 
 Binnen de bestaande harde appgrens van 4 GB krijgt dossierverwerking uit reeds opgeslagen bronnen voorrang tot 3,5 GB; 500 MB blijft gereserveerd voor kritieke werking. Nieuwe downloads en aanvullende onderzoeken behouden hun zachte grens van 3,2 GB. Geen providerquota, abonnementen, financiële selectieregels of gebruikte tellers zijn verhoogd of gereset.
+
+## Automatische kwartaalcyclus
+
+[Doorlopend kwartaalonderzoek](QUARTER-CYCLE.md) plant voor alle honderd gevolgde bedrijven T−7/T−2-onderzoek, een vóór publicatie vastgelegde modelverwachting en brongebonden verwerking/evaluatie na publicatie. Officiële onbekende datums en ontbrekend bewijs blijven zichtbaar. De bestaande handelspijlers en menselijke pilotvoorspellingen blijven afzonderlijk.
+
+Voor de kwartaalcyclus is maximaal 60 MB per maand voor officiële kalenderverzoeken gereserveerd binnen de bestaande prioritaire 3,5 GB-grens. Conditionele verzoeken en ongewijzigde kalenderinhoud worden hergebruikt; bron- en modelquota blijven gedeeld en begrensd.
