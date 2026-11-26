@@ -1,3 +1,5 @@
+import{portfolioChart}from'./portfolio-chart.js';
+import{researchHubMarkup}from'./research-hub.js';
 import {forecastFromForm} from './earnings-pilot.js';
 import{trafficBudgetMarkup}from'./traffic-budget.js';
 import{sourceReliabilityOverview,sourceReliabilityDetail}from'./source-reliability.js';
@@ -28,7 +30,7 @@ import {breadthMarkup} from './breadth-study.js';
 const $=q=>document.querySelector(q),money=new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}),num=new Intl.NumberFormat('nl-BE',{maximumFractionDigits:4});
 const euros=n=>money.format(Number(n)||0),when=t=>t?new Intl.DateTimeFormat('nl-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(t)):'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false,refreshInFlight=null,cacheActive=false,sessionStartedAt=Date.now(),lastCacheWrite=0,currentPage='overview',dashboardData=null,lastDashboardLoad=0;
+let session=null,data=null,factor=null,challenge=null,enrolling=false,receipt=null,lastActivity=Date.now(),polling=false,refreshInFlight=null,cacheActive=false,sessionStartedAt=Date.now(),lastCacheWrite=0,currentPage='overview',dashboardData=null,lastDashboardLoad=0,projectData=null,lastProjectLoad=0;
 function authError(message){$('#authError').textContent=message;$('#authError').hidden=!message;}
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000);}
 function form(id,title,text){for(const x of ['loginForm','passwordForm','factorForm','recoveryForm','recoveryCodes'])$('#'+x).hidden=x!==id;$('#authTitle').textContent=title;$('#authText').textContent=text;authError('');}
@@ -73,7 +75,7 @@ async function enter({restoring=false}={}){
 async function logout(remote=true){
  cacheActive=false;clearTabSession(tabStorage());
  if(remote&&session){try{await api('',{action:'logout'});}catch{}try{await auth('/logout','POST',{});}catch{}}
- session=null;data=null;factor=null;dashboardData=null;lastDashboardLoad=0;$('#app').hidden=true;$('#auth').hidden=false;$('#password').value='';$('#manualSecret').textContent='';$('#qr').removeAttribute('src');$('#codes').replaceChildren();form('loginForm','Welkom terug','Meld aan met je wachtwoord en authenticator.');
+ session=null;data=null;factor=null;dashboardData=null;lastDashboardLoad=0;projectData=null;lastProjectLoad=0;closeNavigation();$('#app').hidden=true;$('#auth').hidden=false;$('#password').value='';$('#manualSecret').textContent='';$('#qr').removeAttribute('src');$('#codes').replaceChildren();form('loginForm','Welkom terug','Meld aan met je wachtwoord en authenticator.');
 }
 async function busy(button,work){const text=button.textContent;button.disabled=true;try{await work();}catch(e){if($('#app').hidden)authError(e.message);else toast(e.message);}finally{button.disabled=false;button.textContent=text;}}
 $('#loginForm').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{setSession(await auth('/token?grant_type=password','POST',{email:$('#email').value.trim(),password:$('#password').value},true));$('#password').value='';await setupFactor();});};
@@ -86,7 +88,7 @@ $('#finishSetup').onclick=e=>busy(e.currentTarget,async()=>{$('#codes').replaceC
 $('#logout').onclick=()=>logout();$('#logoutHeader').onclick=()=>logout();$('#newRecovery').onclick=e=>busy(e.currentTarget,recoveryCodes);
 for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,()=>{if(session&&!$('#app').hidden){lastActivity=Date.now();if(lastActivity-lastCacheWrite>5000)saveTab();}},{passive:true});
 window.addEventListener('pagehide',saveTab);
-const titles={overview:'Overzicht',catalogue:'Aandelen',trades:'Mijn portefeuille',research:'Marktdata',learning:'Koopaanpak & modellen',opportunities:'Onderzoeksresultaten',settings:'Instellingen',reference:'€500-referentie'};
+const titles={overview:'Overzicht',catalogue:'Aandelen',trades:'Mijn portefeuille',research:'Marktdata',learning:'Koopaanpak & modellen',opportunities:'Strategietests',dossiers:'Onderzoekscentrum',settings:'Instellingen',reference:'€500-referentie'};
 async function loadTaxReport(){await Promise.allSettled([loadReading(),loadIexStudy()]);}
 async function loadStrategyAudit(){try{$('#strategyAudit').innerHTML=strategyAuditMarkup(await api('?strategy-audit=1'));}catch{$('#strategyAudit').textContent='Strategieaudit niet opgehaald; nieuwe controles zijn niet bevestigd.';}}
 async function loadWeeklyReflection(){try{$('#weeklyReflection').innerHTML=weeklyReflectionMarkup(await api('?weekly-reflection=1'));}catch{$('#weeklyReflection').textContent='Weekreflectie niet opgehaald; laatste uitvoering is niet bevestigd.';}}
@@ -129,20 +131,17 @@ function renderLearning(result,purchases,history,breadth,candidates,capital){
  }));
 }
 async function showPage(page){
- currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];saveTab();
- if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();await loadCompanyCoverage();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization(),loadWeeklyReflection(),loadStrategyAudit()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();if(currentPage==='settings')await loadTrafficBudget();}
+ currentPage=Object.hasOwn(titles,page)?page:'overview';document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==currentPage+'Page');document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));$('#pageTitle').textContent=titles[currentPage];document.querySelectorAll('[data-page]').forEach(b=>{if(b.dataset.page===currentPage)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});saveTab();
+ if(['overview','trades'].includes(currentPage))await loadDashboard();if(currentPage==='catalogue'){data=await api();render();await loadCompanyCoverage();}if(currentPage==='learning')await Promise.allSettled([loadCompanies(),loadLearning(),loadReading(),loadGeopolitics(),loadOptimization(),loadWeeklyReflection(),loadStrategyAudit()]);if(currentPage==='opportunities')await loadOpportunities();if(currentPage==='dossiers')await loadProject();if(currentPage==='research')await loadTaxReport();if(['settings','reference'].includes(currentPage)){await loadDashboard();await loadTaxOnly();if(currentPage==='settings')await loadTrafficBudget();}
 }
-document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>showPage(button.dataset.page));
+document.querySelectorAll('[data-page]').forEach(button=>button.onclick=()=>navigateTo(button.dataset.page));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(b)navigateTo(b.dataset.jump);});
 $('#refreshData').onclick=e=>busy(e.currentTarget,async()=>{
  if(polling){toast('Gegevens worden al opgehaald.');return;}polling=true;
- try{if(['overview','trades'].includes(currentPage)){if(!await loadDashboard(true))return;}else{data=await api();render();}await showPage(currentPage);$('#globalError').hidden=true;toast('Laatste gegevens opgehaald.');}finally{polling=false;}
+ try{if(['overview','trades'].includes(currentPage)){if(!await loadDashboard(true))return;}else if(currentPage==='dossiers'){lastProjectLoad=0;}else{data=await api();render();}await showPage(currentPage);$('#globalError').hidden=true;toast('Laatste gegevens opgehaald.');}finally{polling=false;}
 });
-function plot(points){
- if(!points.length)return '<p class="muted">Nog geen koersmetingen.</p>';
- const values=points.map(p=>Number(p.value)),lo=Math.min(...values)*.999,hi=Math.max(...values)*1.001,range=hi-lo||1;
- const path=values.map((v,i)=>`${i?'L':'M'}${(i*780/Math.max(1,values.length-1)).toFixed(2)},${(195-(v-lo)/range*165).toFixed(2)}`).join(' ');
- return `<svg viewBox="0 0 800 220" role="img" aria-label="Verloop van de virtuele portefeuille"><path d="M0 50H800 M0 120H800 M0 195H800" stroke="#263448" fill="none"/><path d="${path}" stroke="#65dcb1" stroke-width="2.5" fill="none"/><text x="5" y="18" fill="#94a3b8" font-size="12">${esc(euros(Math.max(...values)))}</text></svg>`;
-}
+const plot=portfolioChart;
+
 function sign(node,value){node.classList.toggle('negative',value<0);node.classList.toggle('positive',value>0);}
 function render(){
  if(!data?.state)return;const s=data.state,eq=data.equity;
@@ -223,7 +222,7 @@ $('#png').onclick=()=>{
  for(const line of lines){x.font=line.font;x.fillStyle=line.color;x.fillText(line.text,45,line.y);}c.toBlob(blob=>blob&&download(blob,'paperlab-transactie-'+receipt.id+'.png'),'image/png');
 };
 $('#export').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?export=1'),headers=['id','time_utc','symbol','side','quantity','price_local','currency','fee_eur','pnl_eur','fx_units_per_eur','transaction_tax_eur','capital_gains_reserve_eur','foreign_tax_reserve_eur','adr_reserve_eur','strategy_version','reason','purchase_rationale_json'];const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[headers,...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.currency||'USD',t.fee,t.pnl,t.fx,t.tax_detail?.transaction_tax_eur||0,t.tax_detail?.capital_gains_reserve_eur||0,t.tax_detail?.foreign_tax_reserve_eur||0,t.tax_detail?.adr_reserve_eur||0,t.strategy_version||'momentum-v1',t.reason,t.purchase_rationale?JSON.stringify(t.purchase_rationale):''])];download(new Blob(['\uFEFF'+lines.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-transacties.csv');});
-setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now()-lastActivity>1800000){await logout();return;}polling=true;try{if(['overview','trades'].includes(currentPage)){await loadDashboard(true);return;}if(!['catalogue','reference','settings'].includes(currentPage))return;const next=await api('?revision='+data.revision);if(next.unchanged){data.collector_status=next.collector_status;renderCatalogue();}else{data=next;render();}}catch(e){$('#globalError').textContent=e.message;$('#globalError').hidden=false;}finally{polling=false;}},60000);
+setInterval(async()=>{if(!session||$('#app').hidden||polling)return;if(Date.now()-lastActivity>1800000){await logout();return;}if(document.hidden)return;polling=true;try{if(['overview','trades'].includes(currentPage)){await loadDashboard(true);return;}if(!['catalogue','reference','settings'].includes(currentPage))return;const next=await api('?revision='+data.revision);if(next.unchanged){data.collector_status=next.collector_status;renderCatalogue();}else{data=next;render();}}catch(e){$('#globalError').textContent=e.message;$('#globalError').hidden=false;}finally{polling=false;}},60000);
 async function boot(){
  if(!CONFIG.url||!CONFIG.key){authError('De beveiligde installatie wordt voorbereid.');$('#loginForm').hidden=true;return;}
  const fragment=new URLSearchParams(location.hash.slice(1));if(fragment.has('access_token')){
@@ -236,8 +235,8 @@ async function boot(){
 window.addEventListener('hashchange',()=>boot().catch(()=>authError('De activatielink kon niet worden geopend.')));
 boot().catch(()=>authError('De aanmelding kon niet worden voorbereid.'));
 
-setInterval(()=>{if(session&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);
-setInterval(()=>{if(session&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);
+setInterval(()=>{if(session&&!document.hidden&&!$('#app').hidden&&!$('#learningPage').hidden)loadLearning();},300000);
+setInterval(()=>{if(session&&!document.hidden&&!$('#app').hidden&&!$('#opportunitiesPage').hidden)loadOpportunities();},300000);
 
 async function loadReading(){
  $('#booksReport').innerHTML=booksMarkup();$('#latencyReport').innerHTML=latencyMarkup();
@@ -247,13 +246,14 @@ async function loadReading(){
 async function loadGeopolitics(){try{const response=await fetch("./geopolitics-data.json");if(!response.ok)throw Error("Geopolitiek dossier niet beschikbaar.");const root=$("#geopoliticsReport");root.innerHTML=geopoliticsMarkup(await response.json());bindGeopolitics(root);}catch(e){$("#geopoliticsReport").textContent=e.message;}}
 
 async function loadIexStudy(){try{const root=$('#iexResearch');root.innerHTML=iexMarkup(await api('?iex-study=1'));const button=$('#iexToggle');if(button)button.onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'iex-study',command:e.currentTarget.dataset.command});await loadIexStudy();});}catch{$('#iexResearch').textContent='IEX-onderzoeksstatus kon niet worden opgehaald. Er is daarmee geen nieuwe meting bevestigd.';}}
-setInterval(()=>{if(session&&!$('#app').hidden&&currentPage==='research')loadIexStudy();},60000);
+setInterval(()=>{if(session&&!document.hidden&&!$('#app').hidden&&currentPage==='research')loadIexStudy();},60000);
 
 async function loadDashboard(force=false){
  try{if(force||!dashboardData||Date.now()-lastDashboardLoad>5000){dashboardData=await api('?dashboard=1');lastDashboardLoad=Date.now();}
+ if(dashboardData.entry_status?.traffic?.blocked){$('#usageWarning').textContent='Nieuwe instap wacht op de verkeersbegroting. De ingestelde strategie blijft actief; de voorwaarden staan hieronder bij Instapcontrole.';$('#usageWarning').hidden=false;}
  $('#dashboardBody').innerHTML=dashboardMarkup(dashboardData);$('#portfolioBody').innerHTML=portfolioMarkup(dashboardData);$('#strategyReview').innerHTML=strategyReviewMarkup();
  if($('#dashboardChart'))$('#dashboardChart').innerHTML=plot((dashboardData.curve||[]).map(c=>({time:c.last_at,value:c.last_value})));
- document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>showPage(b.dataset.jump));
+
  document.querySelectorAll('[data-dashboard-receipt]').forEach(b=>b.onclick=()=>openReceipt(Number(b.dataset.dashboardReceipt),'capital'));
  if($('#dashboardExport'))$('#dashboardExport').onclick=e=>busy(e.currentTarget,async()=>{const rows=await api('?capital-export=1'),q=v=>'"'+String(v??'').replaceAll('"','""')+'"';download(new Blob(['\uFEFF'+[['id','time','symbol','side','qty','price','fee','pnl','reason'],...rows.map(t=>[t.id,t.time,t.symbol,t.side,t.qty,t.price,t.fee,t.pnl,t.reason])].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'paperlab-10000-transacties.csv');});
  const account=dashboardData.account||{};$('#dashboardPause').textContent=account.enabled?'€10.000-proef pauzeren':'€10.000-proef hervatten';$('#dashboardPause').onclick=e=>busy(e.currentTarget,async()=>{await api('',{action:'capital',command:account.enabled?'pause':'resume'});await loadDashboard(true);});
@@ -263,9 +263,9 @@ async function loadDashboard(force=false){
  }catch(e){$('#globalError').textContent='Actief dashboard kon niet worden vernieuwd: '+e.message;$('#globalError').hidden=false;return false;}
 }
 
-async function loadCompanies(){try{$('#companyReview').innerHTML=companiesMarkup(await api('?companies=1'));}catch{$('#companyReview').textContent='Bedrijfsvoorwaarden konden niet worden opgehaald. Geen nieuwe goedkeuring bevestigd.';}}
+async function loadCompanies(){try{$('#companyReview').innerHTML=companiesMarkup({...await api('?companies=1'),swing_active:!!dashboardData?.account?.summary?.swing_policy});}catch{$('#companyReview').textContent='Bedrijfsvoorwaarden konden niet worden opgehaald. Geen nieuwe goedkeuring bevestigd.';}}
 
-async function loadCompanyCoverage(){try{const [coverage,reliability]=await Promise.all([api('?company-coverage=1'),api('?source-reliability=1').catch(()=>({}))]);$('#companyCoverageOverview').innerHTML=coverageOverview(coverage)+sourceReliabilityOverview(reliability);}catch{$('#companyCoverageOverview').textContent='De brede brondekking kon niet worden opgehaald. Er is geen koopgoedkeuring bevestigd.';}}
+async function loadCompanyCoverage(){try{const [coverage,reliability]=await Promise.all([api('?company-coverage=1'),api('?source-reliability=1').catch(()=>({}))]);$('#companyCoverageOverview').innerHTML=coverageOverview(coverage)+sourceReliabilityOverview(reliability);if(coverage.research?.followup){projectData=coverage.research.followup;lastProjectLoad=Date.now();}}catch{$('#companyCoverageOverview').textContent='De brede brondekking kon niet worden opgehaald. Er is geen koopgoedkeuring bevestigd.';}}
 $('#closeCompanyDossier').onclick=()=>$('#companyDossier').close();
 document.addEventListener('click',e=>{const b=e.target.closest('[data-company-source]');if(!b)return;busy(b,async()=>{const [d,r]=await Promise.all([api('?company-coverage='+encodeURIComponent(b.dataset.companySource)),api('?source-reliability='+encodeURIComponent(b.dataset.companySource)).catch(()=>({}))]);$('#companyDossierBody').innerHTML=sourceReliabilityDetail(r)+coverageDetail(d);$('#companyDossier').showModal();});});
 
@@ -276,3 +276,13 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-project-ar
 document.addEventListener('submit',e=>{const f=e.target.closest('[data-earnings-form]');if(!f)return;e.preventDefault();const button=f.querySelector('button[type=submit]');busy(button,async()=>{const status=f.querySelector('[data-earnings-status]');try{await api('',{action:'earnings-freeze',...forecastFromForm(f)});status.textContent='Verwachting definitief opgeslagen. Heropen het dossier om de vastgelegde versie te bekijken.';f.innerHTML='<p role="status">Definitief opgeslagen. Heropen het dossier om de actuele vastgelegde gegevens te bekijken.</p>';}catch{status.textContent='Niet opgeslagen. Controleer de scenario’s, bronnen en deadline. Een eerdere vastlegging kan niet worden overschreven.';}});});
 
 document.addEventListener('submit',e=>{const f=e.target.closest('[data-earnings-review]');if(!f)return;e.preventDefault();busy(f.querySelector('button'),async()=>{const v=new FormData(f),status=f.querySelector('[role=status]');try{await api('',{action:'earnings-review',task:f.dataset.earningsReview,note:v.get('note'),source_url:v.get('source_url')});status.textContent='Controle met tijdstip en bron opgeslagen. Heropen het dossier voor de actuele status.';f.innerHTML='<p role="status">Definitief opgeslagen. Heropen het dossier om de actuele vastgelegde gegevens te bekijken.</p>';}catch{status.textContent='Controle niet opgeslagen: bron, planning of eerdere afronding controleren.';}});});
+
+async function loadProject(){try{if(!projectData||Date.now()-lastProjectLoad>300000){const coverage=await api('?company-coverage=1');if(!coverage.research?.followup)throw Error('Onderzoeksopvolging niet beschikbaar');projectData=coverage.research.followup;lastProjectLoad=Date.now();}$('#projectBody').innerHTML=researchHubMarkup(projectData);}catch{$('#projectBody').innerHTML='<article class="panel"><h2>Onderzoek kon niet worden opgehaald</h2><p>Probeer Gegevens vernieuwen. Eerdere onderzoeksresultaten blijven opgeslagen.</p></article>';}}
+function closeNavigation(){document.body.classList.remove('nav-open');$('#navToggle').setAttribute('aria-expanded','false');$('#navBackdrop').hidden=true;$('.workspace').inert=false;$('#sidebar').inert=window.matchMedia('(max-width:900px)').matches;}
+function openNavigation(){document.body.classList.add('nav-open');$('#sidebar').inert=false;$('#navToggle').setAttribute('aria-expanded','true');$('#navBackdrop').hidden=false;$('.workspace').inert=true;$('#navClose').focus();}
+async function navigateTo(page){closeNavigation();try{await showPage(page);$('#pageTitle').focus({preventScroll:true});window.scrollTo({top:0,behavior:'auto'});}catch{toast('Deze pagina kon niet worden geladen. Probeer Gegevens vernieuwen.');}}
+$('#navToggle').onclick=openNavigation;$('#navClose').onclick=()=>{closeNavigation();$('#navToggle').focus();};$('#navBackdrop').onclick=()=>{closeNavigation();$('#navToggle').focus();};
+document.addEventListener('keydown',e=>{if(!document.body.classList.contains('nav-open'))return;if(e.key==='Escape'){e.preventDefault();closeNavigation();$('#navToggle').focus();}if(e.key==='Tab'){const items=[...$('#sidebar').querySelectorAll('button:not([disabled])')].filter(b=>b.getClientRects().length);const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+window.matchMedia('(max-width:900px)').addEventListener('change',closeNavigation);closeNavigation();
+
+setInterval(()=>{if(session&&!document.hidden&&!$('#app').hidden&&currentPage==='dossiers')loadProject();},300000);
