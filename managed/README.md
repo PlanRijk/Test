@@ -263,3 +263,7 @@ Voor de kwartaalcyclus is maximaal 60 MB per maand voor officiële kalenderverzo
 ## Gratis onderzoekswerkbank
 
 [Integratie, werking en grenzen](OPEN-SOURCE-INTEGRATION.md): vaste cijferextractie uit de SEC-broncache, vier onderzoeksperspectieven, een onderzoekshistoriek met hashketen en automatische slotkoersdiagnoses. Alle verwerking blijft binnen bestaande gratis grenzen; de oorspronkelijke financiële profielen en forecasts blijven behouden.
+
+## Werkruimte en instapstatus
+
+De website heeft een portefeuilleoverzicht, een rechtstreeks onderzoekscentrum en mobiele navigatie. Migratie 046 voegt alleen eigenaargebonden diagnosevelden toe: ingestelde strategie, actuele uitvoeringsruimte, verkeers-/opslagbegrotingen en actualiteit van handelsreviews blijven afzonderlijk zichtbaar. De instapregels en financiële profielen veranderen niet. Verborgen tabbladen halen geen periodieke dashboard- of onderzoeksgegevens op; sessiebeveiliging blijft gelden. Installatie: `python scripts/website_refresh.py kdyzlbknygeqinqduuic`.
