@@ -267,3 +267,5 @@ Voor de kwartaalcyclus is maximaal 60 MB per maand voor officiële kalenderverzo
 ## Werkruimte en instapstatus
 
 De website heeft een portefeuilleoverzicht, een rechtstreeks onderzoekscentrum en mobiele navigatie. Migratie 046 voegt alleen eigenaargebonden diagnosevelden toe: ingestelde strategie, actuele uitvoeringsruimte, verkeers-/opslagbegrotingen en actualiteit van handelsreviews blijven afzonderlijk zichtbaar. De instapregels en financiële profielen veranderen niet. Verborgen tabbladen halen geen periodieke dashboard- of onderzoeksgegevens op; sessiebeveiliging blijft gelden. Installatie: `python scripts/website_refresh.py kdyzlbknygeqinqduuic`.
+
+Migratie 047 begrenst de interne herhaalpauze na tijdelijke model-HTTP-5xx-fouten op maximaal vijftien minuten, tenzij de provider zelf langer wachten vraagt. HTTP 429 en dag-/minuutquota behouden de bestaande logica. Bestaande providerpauzes en tellers worden niet aangepast. De instapdiagnose onderscheidt ook de actualiteit van financiële handelsdossiers van die van AI-onderzoeksteksten. Het herstellen van de primaire aanvoer en het vernieuwen van handelsreviews blijven afzonderlijke werkzaamheden.

@@ -15,6 +15,10 @@ try:
  q("create table paperlab.history_snapshots(symbol text,status text,hash text,data jsonb,created_at timestamptz default now());create table paperlab.quarterly_expectations(symbol text,record jsonb);")
  migration=(R/'managed/sql/044_quarter_cycle.sql').read_text();q(migration);q(migration)
  workbench=(R/'managed/sql/045_free_research_workbench.sql').read_text();q(workbench);q(workbench)
+ retry_sql=(R/'managed/sql/047_research_retry.sql').read_text();q(retry_sql);q(retry_sql)
+ assert q("select paperlab.quarter_retry_time('{\"status\":\"provider_unavailable\",\"provider_http_status\":503}',99,now())=now()+interval'15 minutes'")=='t'
+ assert q("select paperlab.quarter_retry_time('{\"status\":\"provider_unavailable\",\"provider_http_status\":503,\"retry_after_seconds\":7200}',99,now())=now()+interval'2 hours'")=='t'
+ assert q("select paperlab.quarter_retry_time('{\"status\":\"rate_limited\",\"quota_kind\":\"day\"}',99,now())=paperlab.gemini_retry_time('{}')")=='t'
  assert q('select count(*)from paperlab.quarter_companies')=='2'
  q("insert into paperlab.quarter_cycles(id,symbol,release_at,fiscal_label,event)values('future','NVDA',now()+interval'6 days','FY2027-Q3','{}');insert into paperlab.deep_documents values('s','NVDA',true,'Source supports revenue and cash flow.',now()-interval'1 day','10-Q','interim','"+'a'*64+"','https://issuer.example/report');select paperlab.quarter_plan();")
  c=json.loads(q('select public.paper_quarter_claim()'));assert c['job']['phase']=='pre7';assert q('select public.paper_quarter_claim()')==''
