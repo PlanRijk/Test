@@ -1,5 +1,8 @@
 # Dataverkeer en opslag — 12 november 2026
 
+**26 november 2026:** SQL048 vervangt de globale grenzen en onderscheidt de historische werkmeter van de veiligheidsraming na een Supabase-dashboardafstempunt. Actueel: 3,5 / 4 / 4,5 GB onder 5 GB inbegrepen. Zie [de actuele afstemming](FREE-PLAN-RECONCILIATION.md). Onderstaande 4 / 3,2 / 2,8 GB beschrijven de oudere versie.
+
+
 De eigenaar heeft een interne maandgrens van 4 GB gevraagd, binnen Supabase Free.
 De officiële prijslijst en gebruiksdocumentatie zijn op 12 november gecontroleerd:
 5 GB ongecachet egress, afzonderlijk 5 GB gecachet egress, 500 MB databasegrootte.

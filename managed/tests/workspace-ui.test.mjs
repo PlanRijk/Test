@@ -10,3 +10,5 @@ test('new research navigation persists within an existing tab session only',()=>
 test('missing measurements stay unknown instead of becoming a passed risk or traffic check',()=>{const d=data();delete d.account.summary.daily_halted;d.entry_status.traffic.blocked=null;const c=entryConditions(d);assert.equal(c.find(x=>x.key==='risk').state,'unknown');assert.equal(c.find(x=>x.key==='traffic').state,'unknown');});
 
 test('stale financial trade inputs remain a separate block from newer research text',()=>{const d=data();d.entry_status.sources={fresh:0,dossiers:46,max_age_days:8,collector_status:'source_access_blocked'};assert(entryConditions(d).some(c=>c.key==='sources'&&c.state==='blocked'));assert(buyReadiness(d).reasons.some(x=>x.includes('Financiële handelsdossiers')));assert(entryStatusMarkup(d).includes('bronweigering'));});
+
+test('unknown provider billing period does not promise a new calendar-month allowance',()=>{const d=data();d.entry_status.traffic.next_window_at=null;const h=entryStatusMarkup(d);assert(h.includes('providerperiode is onbekend'));assert(!h.includes('Nieuw maandvenster'));});

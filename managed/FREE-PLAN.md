@@ -1,5 +1,16 @@
 # Gratis proef: verbruik en grenzen
 
+**Actueel, 26 november 2026:** afgestemd op het aangeleverde Supabase Free-plan:
+5 GB egress, 500 MB database en 1 GB bestanden. Verkeerswaarschuwing 3,5 GB,
+pauze extra werk 4 GB, harde veiligheidsgrens 4,5 GB; database 350/400/450 MB;
+bestanden 700/900 MB. De door de eigenaar gemelde 0,25 GB egress staat los van
+de historische werkmeter van circa 3,5 GB. Een nieuwe private veiligheidsraming
+telt de dashboardstand, 250 MB meetreserve en latere positieve werkcharges.
+Geen live providergebruiksmeting en geen veronderstelde maandreset. Zie
+[de volledige afstemming](FREE-PLAN-RECONCILIATION.md). Oudere globale grenzen
+hieronder beschrijven de oorspronkelijke implementatie en zijn vervangen door
+SQL026, SQL040 en SQL048; de eigen onderzoeksbudgetten blijven gelden.
+
 **Actualisatie 12 november 2026:** de gezamenlijke app-raming voor dataverkeer is
 op verzoek verhoogd naar maximaal **4 GB per UTC-kalendermaand**. Waarschuwing vanaf
 2,8 GB; extra onderzoek en nieuwe instappen worden vanaf 3,2 GB begrensd. De oude
