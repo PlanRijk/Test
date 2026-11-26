@@ -185,3 +185,5 @@ test('source reliability stays owner-MFA private and source collection needs the
 });
 
 test('traffic and storage meters require owner MFA and a current application session',async()=>{mock();assert.equal((await apiHandler(req({query:'?traffic-budget=1',token:jwt(uid,'aal1')}))).status,403);assert.equal((await apiHandler(req({query:'?traffic-budget=1'}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?traffic-budget=1'}))).status,401);});
+
+test('research centre uses the existing owner/MFA/session protected coverage route',async()=>{mock();assert.equal((await apiHandler(req({query:'?company-coverage=1'}))).status,200);for(const token of[null,jwt(uid,'aal1')])assert.notEqual((await apiHandler(req({query:'?company-coverage=1',token}))).status,200);mock({session:false});assert.equal((await apiHandler(req({query:'?company-coverage=1'}))).status,401);});
