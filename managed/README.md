@@ -259,3 +259,7 @@ Binnen de bestaande harde appgrens van 4 GB krijgt dossierverwerking uit reeds o
 [Doorlopend kwartaalonderzoek](QUARTER-CYCLE.md) plant voor alle honderd gevolgde bedrijven T−7/T−2-onderzoek, een vóór publicatie vastgelegde modelverwachting en brongebonden verwerking/evaluatie na publicatie. Officiële onbekende datums en ontbrekend bewijs blijven zichtbaar. De bestaande handelspijlers en menselijke pilotvoorspellingen blijven afzonderlijk.
 
 Voor de kwartaalcyclus is maximaal 60 MB per maand voor officiële kalenderverzoeken gereserveerd binnen de bestaande prioritaire 3,5 GB-grens. Conditionele verzoeken en ongewijzigde kalenderinhoud worden hergebruikt; bron- en modelquota blijven gedeeld en begrensd.
+
+## Gratis onderzoekswerkbank
+
+[Integratie, werking en grenzen](OPEN-SOURCE-INTEGRATION.md): vaste cijferextractie uit de SEC-broncache, vier onderzoeksperspectieven, een onderzoekshistoriek met hashketen en automatische slotkoersdiagnoses. Alle verwerking blijft binnen bestaande gratis grenzen; de oorspronkelijke financiële profielen en forecasts blijven behouden.
